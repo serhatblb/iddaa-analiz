@@ -176,8 +176,23 @@ def calistir(simdi: datetime | None = None, veri_getir=gunluk_veri) -> dict:
     return ozet
 
 
+def kontrol() -> int:
+    """Kaynağa erişimi dener: bugünün verisinde kaç futbol maçı ve kaç iddaa eşleşmesi var."""
+    tarih = tr_tarih(datetime.now(timezone.utc))
+    try:
+        maclar = [m for m in (satiri_coz(s) for s in gunluk_veri(tarih)) if m]
+    except SonucHatasi as hata:
+        log.error("Kaynağa erişilemedi: %s", hata)
+        return 2
+    log.info("%s: %d futbol maçı, %d tanesinde iddaa numarası, %d bitmiş", tarih, len(maclar),
+             sum(1 for m in maclar if m["iddaa_id"] not in ("", "0")), sum(1 for m in maclar if m["durum"] in BITTI))
+    return 0 if maclar else 1
+
+
 def main():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
+    if "--kontrol" in sys.argv:
+        sys.exit(kontrol())
     ozet = calistir()
     log.info("özet: %s", ozet)
     if ozet["bekleyen"] and not ozet["gun"]:
