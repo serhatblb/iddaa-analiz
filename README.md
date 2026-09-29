@@ -10,7 +10,7 @@ Her şey GitHub Actions'ta çalışır, bilgisayarın açık olması gerekmez.
 
 | Workflow | Zaman | İş |
 |---|---|---|
-| Saatlik toplama | Her saat :07 | Bülten, oranlar, en çok oynananlar; biten maçların sonuçları (Mackolik); panel |
+| Saatlik toplama | Her saat :17 | Bülten, oranlar, en çok oynananlar; biten maçların sonuçları (Mackolik); panel |
 | Günlük kupon ve rapor | Her gün 09:43 | Dünkü kuponları değerlendirir, bugünün İY/MS ve 1-0-2 kuponlarını seçer, rapor yazar ve mail atar |
 | Geçmiş veri ve analiz | Her pazartesi 06:23 | football-data.co.uk'tan 22 lig, 2012'den bugüne maçlar; MS oran aralığı ve İY/MS adil oran tabloları |
 | Testler | Kod değişince | `pytest` |

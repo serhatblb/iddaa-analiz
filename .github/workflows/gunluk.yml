@@ -2,7 +2,7 @@ name: Günlük kupon ve rapor
 
 on:
   schedule:
-    - cron: "43 6 * * *"  # 09:43 Türkiye saati, 09:07 toplamasından sonra
+    - cron: "43 6 * * *"  # 09:43 Türkiye saati, 09:17 toplamasından sonra
   workflow_dispatch:
 
 concurrency:

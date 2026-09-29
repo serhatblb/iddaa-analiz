@@ -2,7 +2,7 @@ name: Saatlik toplama
 
 on:
   schedule:
-    - cron: "7 * * * *"   # her saat :07 (UTC)
+    - cron: "17 * * * *"  # her saat :17 (UTC)
   workflow_dispatch:
 
 concurrency:
