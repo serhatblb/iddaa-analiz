@@ -4,7 +4,8 @@ set -euo pipefail
 mesaj="${1:-veri}"
 git config user.name "github-actions[bot]"
 git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-git add data docs
+git add data
+[ -d docs ] && git add docs
 if git diff --cached --quiet; then
   echo "Kaydedilecek değişiklik yok."
   exit 0

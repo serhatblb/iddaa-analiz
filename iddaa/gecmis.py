@@ -100,7 +100,7 @@ def cozumle(icerik: bytes, lig: str, sezon: str) -> list[dict]:
 
 def indir(ligler: dict = LIGLER, sezonlar: list[str] | None = None, bekleme: float = 0.3) -> list[dict]:
     oturum = requests.Session()
-    oturum.headers["User-Agent"] = "iddaa-analiz (kişisel analiz projesi)"
+    oturum.headers["User-Agent"] = "Mozilla/5.0 (compatible; iddaa-analiz personal research)"
     tum = []
     for sezon in sezonlar or sezon_kodlari():
         for lig in ligler:
