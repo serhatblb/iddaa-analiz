@@ -94,21 +94,25 @@ def _gecmis_bolumu(rapor: Rapor):
     rapor.tablo(["Ev kazanma olasılığı", "Örnek"] + IYMS_SIRASI, satirlar)
 
 
-def _deger_bolumu(rapor: Rapor, simdi: datetime, kayitlar: dict):
-    kosullu = analiz.kosullu_oku()
-    if not kosullu:
-        return
-    oranlar = analiz.son_oranlar(simdi, {config.IYMS, analiz.MS})
-    adaylar = [a for a in analiz.deger_adaylari(oranlar, kayitlar, kosullu, simdi) if a["beklenen"] > 1]
-    rapor.bolum("Önümüzdeki 24 saat: geçmiş veriye göre değerli görünen seçimler")
-    if not adaylar:
-        rapor.yazi("iddaa oranı geçmiş sıklığın üstünde kalan seçim yok.")
-        return
-    rapor.yazi("Beklenen = iddaa oranı × geçmişteki gerçek sıklık. 1'in üstü teoride kârlı; lig farkları "
-               "hesaba katılmadığı için kesin değil, doğrulama verisi biriktikçe netleşecek.")
-    rapor.tablo(["Maç", "Lig", "Başlama", "Market", "Seçim", "iddaa oranı", "Adil oran", "Beklenen"],
-                [[f"{a['ev']} - {a['dep']}", a["lig"], _saat(a["baslama_utc"]), a["market"], a["secim"],
-                  a["oran"], a["adil_oran"], f"{a['beklenen']:.2f}"] for a in adaylar[:15]])
+def _aday_bolumu(rapor: Rapor, simdi: datetime):
+    adaylar = kupon.oneriler(simdi)
+    rapor.bolum("Şu anki 1-0-2 adayları (en iyi 10)")
+    if not adaylar["ms"]:
+        rapor.yazi("Aday yok.")
+    else:
+        rapor.yazi("Geçmişte tutma: kâr payı ayıklanmış olasılığı benzer geçmiş seçimlerin tutma oranı. "
+                   "1 TL'ye dönen 1'in altındaysa o seçim uzun vadede kaybettirir.")
+        rapor.tablo(["Maç", "Lig", "Başlama", "Seçim", "Oran", "Geçmişte tutma", "1 TL'ye dönen"],
+                    [[f"{a['ev']} - {a['dep']}", a["lig"], _saat(a["baslama_utc"]), a["secim"], a["oran"],
+                      _yuzde(a["tutma"]), f"{a['beklenen']:.2f}"] for a in adaylar["ms"][:10]])
+    rapor.bolum(f"Şu anki İY/MS adayları (oran {config.KUPON_MIN_ORAN:g}–{config.KUPON_MAX_ORAN:g})")
+    if not adaylar["iyms"]:
+        rapor.yazi("Aday yok.")
+    else:
+        rapor.tablo(["Maç", "Lig", "Başlama", "Seçim", "Oran", "Geçmişte sıklık", "1 TL'ye dönen"],
+                    [[f"{a['ev']} - {a['dep']}", a["lig"], _saat(a["baslama_utc"]), a["secim"], a["oran"],
+                      _yuzde(a["tutma"]) if a["tutma"] != "" else "-",
+                      f"{a['beklenen']:.2f}" if a["beklenen"] != "" else "-"] for a in adaylar["iyms"][:10]])
 
 
 def iyms_istatistik(kapanis: dict, sonuclar: dict, min_oran: float | None = None,
@@ -167,7 +171,8 @@ def _kupon_bolumu(rapor: Rapor, baslik: str, satirlar: list[dict] | None, tur: s
     ilk = satirlar[0]
     if ilk["durum"] == "aday_yok":
         neden = (f"Oranı {config.KUPON_MIN_ORAN:g}–{config.KUPON_MAX_ORAN:g} arası İY/MS seçeneği olan"
-                 if tur == "iyms" else "Beklenen dönüşü 1'in üstünde olan")
+                 if tur == "iyms" else
+                 f"Oranı {config.MS_KUPON_MIN_ORAN:.2f}–{config.MS_KUPON_MAX_ORAN:.2f} arası ve geçmiş verisi olan")
         rapor.yazi(f"{neden} yeterli maç yoktu ({ilk['secim']}), kupon oluşturulmadı.")
         return
     rapor.tablo(["Maç", "Lig", "Başlama", "Market", "Seçim", "Oran", "Sonuç"],
@@ -201,7 +206,7 @@ def olustur(simdi: datetime | None = None) -> Rapor:
     kapanis_tum = analiz.kapanis_oranlari(kayitlar, {config.IYMS, analiz.MS})
     kapanis = {m: v[config.IYMS] for m, v in kapanis_tum.items() if config.IYMS in v}
 
-    _deger_bolumu(rapor, simdi, kayitlar)
+    _aday_bolumu(rapor, simdi)
     _gecmis_bolumu(rapor)
 
     rapor.bolum("iddaa verisi: MS oranları (en çok örneği olan 10 oran)")

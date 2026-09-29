@@ -65,7 +65,7 @@ def test_kupon_secimi_ve_degerlendirme(veri_dizini):
     topla.calistir(istemci, SIMDI - timedelta(minutes=43))
     ozet = kupon.calistir(SIMDI)
     assert ozet["iyms"].startswith("bekliyor (3 aday)")
-    assert ozet["deger"].startswith("aday_yok")  # geçmiş analiz yok
+    assert ozet["ms"].startswith("aday_yok")  # geçmiş analiz yok
     satirlar = [s for s in kupon.kuponlari_oku() if s["tur"] == "iyms"]
     assert [(s["mac_id"], s["market"], s["secim"], s["oran"]) for s in satirlar] == [
         ("1", "İY/MS", "1/2", "28.0"), ("2", "İY/MS", "1/2", "25.0"), ("3", "İY/MS", "2/1", "22.0")]
@@ -99,7 +99,7 @@ def test_kupon_secimi_ve_degerlendirme(veri_dizini):
 
 
 def test_kupon_kazanir_iptal_oran_1_ve_ms_secimi():
-    satirlar = [{"tarih": "t", "tur": "deger", "sira": i, "mac_id": str(i), "market": m, "secim": sec,
+    satirlar = [{"tarih": "t", "tur": "ms", "sira": i, "mac_id": str(i), "market": m, "secim": sec,
                  "oran": str(o), "gercek": "", "tuttu": "", "toplam_oran": "", "tutar": "20", "durum": "bekliyor",
                  "kazanc": ""}
                 for i, m, sec, o in [(1, "İY/MS", "1/2", 20.0), (2, "MS", "0", 3.5), (3, "MS", "2", 4.0)]]

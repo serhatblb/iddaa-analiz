@@ -84,12 +84,28 @@ def test_deger_adaylari_ve_panel(veri_dizini):
     assert en_iyi["beklenen"] == 5.2 and en_iyi["adil_oran"] == 5.0
 
     oneriler = kupon.oneriler(simdi)
-    assert [(a["mac_id"], a["market"], a["secim"], a["beklenen"]) for a in oneriler["deger"]] == [("1", "İY/MS", "2/1", 5.2)]
+    assert oneriler["iyms"][0]["secim"] == "2/1" and oneriler["iyms"][0]["beklenen"] == 5.2  # 26 × %20
     metin = "\n".join(rapor.olustur(simdi).md)
-    assert "değerli görünen seçimler" in metin and "2/1" in metin
+    assert "Şu anki İY/MS adayları" in metin and "2/1" in metin
     assert "Geçmiş veri: MS 1-0-2" in metin
     sayfa, dosyalar = panel.olustur(simdi)
-    assert "<html" in sayfa and "MS 1-0-2 oranları tek tek" in sayfa and "Ev sahibi (1)" in sayfa
-    assert "Kupon önerileri" in sayfa and "Önizleme" in sayfa and "f-oran" in sayfa
+    assert "<html" in sayfa and "Oran sorgula" in sayfa and "Ev sahibi (1)" in sayfa
+    assert "İY/MS kuponu" in sayfa and "1-0-2 kuponu" in sayfa and "Önizleme" in sayfa and "f-oran" in sayfa
+    assert len(dosyalar["ms_olasilik.json"]["1"]) == 100
     ms = dosyalar["gecmis_ms.json"]
     assert ms["alanlar"][:2] == ["secim", "oran"] and ["1", "1.50"] in [r[:2] for r in ms["satirlar"]]
+
+
+def test_ms_olasilik_ve_adaylar(veri_dizini):
+    maclar = _gecmis_uret()  # ev 1.50 / 4.00 / 6.50; 5 maçta 3 ev galibiyeti
+    tablo = analiz.ms_olasilik_tablosu(maclar)
+    q1 = analiz.normal_olasiliklar(1.5, 4.0, 6.5)[0]
+    n, tutma = analiz.ms_tahmin(tablo, "1", q1)
+    assert n == 1200 and tutma == 0.6
+    analiz.gecmis_analizi_yaz(maclar)
+    simdi = datetime(2026, 9, 30, 6, 50, tzinfo=timezone.utc)
+    m = mac(1, int((simdi + timedelta(hours=8)).timestamp()))
+    m["m"][0]["o"] = [{"no": 1, "odd": 1.43, "n": "1"}, {"no": 2, "odd": 3.8, "n": "0"}, {"no": 3, "odd": 6.2, "n": "2"}]
+    topla.calistir(SahteIstemci([m]), simdi - timedelta(minutes=30))
+    ms = kupon.oneriler(simdi)["ms"]
+    assert ms and ms[0]["secim"] == "1" and ms[0]["tutma"] == 0.6 and ms[0]["beklenen"] == round(1.43 * 0.6, 3)

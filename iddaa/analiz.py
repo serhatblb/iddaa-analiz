@@ -205,6 +205,66 @@ def deger_adaylari(oranlar: dict, kayitlar: dict, kosullu: dict[str, dict], simd
     return sorted(adaylar, key=lambda a: -a["beklenen"])
 
 
+# --- 4. MS 1-0-2: oranı geçmişte ne sıklıkla tuttu (kâr payı ayıklanmış olasılıkla eşleştirme) ---
+#
+# iddaa ile yabancı şirketlerin kâr payı farklıdır: iddaa'da 1.55 olan bir seçim, kâr payı düşük bir şirkette
+# ~1.70 olur. Bu yüzden oranlar doğrudan değil, kâr payı ayıklanmış olasılık üzerinden eşleştirilir:
+# bugünkü iddaa seçiminin adil olasılığı %60 ise, geçmişte adil olasılığı %58–62 olan seçimlere bakılır.
+
+MS_OLASILIK_PENCERESI = 2   # ± yüzde puan
+MS_MIN_ORNEK = 300
+
+
+def ms_olasilik_tablosu(maclar: list[dict]) -> dict[str, list[list[int]]]:
+    """{seçim: [[örnek, tuttu] × 100]} — indeks = adil olasılık yüzdesi (0–99)."""
+    tablo = {s: [[0, 0] for _ in range(100)] for s in MS_SECENEKLERI}
+    for m in maclar:
+        oranlar = [m.get(f"ort_{s}") for s in MS_SECENEKLERI]
+        if any(o is None for o in oranlar):
+            continue
+        gercek = sonuc_isareti(m["ms_ev"], m["ms_dep"])
+        for secim, q in zip(MS_SECENEKLERI, normal_olasiliklar(*oranlar)):
+            hucre = tablo[secim][min(int(q * 100), 99)]
+            hucre[0] += 1
+            hucre[1] += secim == gercek
+    return tablo
+
+
+def ms_tahmin(tablo: dict, secim: str, olasilik: float, pencere: int = MS_OLASILIK_PENCERESI) -> tuple[int, float]:
+    """Adil olasılığı benzer geçmiş seçimlerde (örnek, tutma oranı)."""
+    merkez = min(int(olasilik * 100), 99)
+    n = t = 0
+    for i in range(max(0, merkez - pencere), min(99, merkez + pencere) + 1):
+        n += tablo[secim][i][0]
+        t += tablo[secim][i][1]
+    return n, (t / n if n else 0.0)
+
+
+def ms_adaylari(oranlar: dict, kayitlar: dict, tablo: dict, simdi: datetime,
+                ufuk: timedelta = timedelta(hours=24), min_ornek: int = MS_MIN_ORNEK) -> list[dict]:
+    """Bugünkü iddaa MS seçimleri: geçmişte tutma oranı ve 1 TL'ye beklenen dönüş."""
+    adaylar = []
+    if not tablo:
+        return adaylar
+    for mac_id, marketler in oranlar.items():
+        kayit = kayitlar.get(mac_id)
+        ms = (marketler.get(MS) or {}).get("oranlar", {})
+        if not kayit or not all(s in ms for s in MS_SECENEKLERI):
+            continue
+        if not (simdi < iso_oku(kayit["baslama_utc"]) <= simdi + ufuk):
+            continue
+        for secim, q in zip(MS_SECENEKLERI, normal_olasiliklar(ms["1"], ms["0"], ms["2"])):
+            n, tutma = ms_tahmin(tablo, secim, q)
+            if n < min_ornek:
+                continue
+            oran = ms[secim]
+            adaylar.append({"mac_id": mac_id, "lig": kayit.get("lig", ""), "ev": kayit["ev"], "dep": kayit["dep"],
+                            "baslama_utc": kayit["baslama_utc"], "market": "MS", "secim": secim, "oran": oran,
+                            "tutma": round(tutma, 4), "ornek": n, "beklenen": round(oran * tutma, 3),
+                            "hata": round(1.96 * oran * math.sqrt(tutma * (1 - tutma) / n), 3)})
+    return sorted(adaylar, key=lambda a: -a["beklenen"])
+
+
 # --- Kaydetme / okuma ---
 
 def analiz_yolu(ad: str):
@@ -219,11 +279,16 @@ def gecmis_analizi_yaz(maclar: list[dict]) -> dict:
     depo.csv_yaz(analiz_yolu("gecmis_iyms_kosullu.csv"), kosullu_satirlar(kosullu),
                  ["ev_olasiligi", "ornek"] + IYMS_SECENEKLERI + MS_SECENEKLERI)
     depo.json_yaz(analiz_yolu("gecmis_iyms_kosullu.json"), kosullu)
+    depo.json_yaz(analiz_yolu("gecmis_ms_olasilik.json"), ms_olasilik_tablosu(maclar))
     ozet = {"mac": len(maclar), "lig": len({m["lig"] for m in maclar}),
             "ilk": min((m["tarih"] for m in maclar), default=""),
             "son": max((m["tarih"] for m in maclar), default="")}
     depo.json_yaz(analiz_yolu("gecmis_ozet.json"), ozet)
     return ozet
+
+
+def ms_olasilik_oku() -> dict:
+    return depo.json_oku(analiz_yolu("gecmis_ms_olasilik.json")) or {}
 
 
 def kosullu_oku() -> dict[str, dict]:
