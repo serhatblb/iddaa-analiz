@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 from conftest import SahteIstemci, mac
 
-from iddaa import analiz, depo, gecmis, panel, rapor, topla
+from iddaa import analiz, depo, gecmis, kupon, panel, rapor, topla
 
 YENI_BICIM = (
     "Div,Date,Time,HomeTeam,AwayTeam,FTHG,FTAG,FTR,HTHG,HTAG,HTR,B365H,B365D,B365A,PSH,PSD,PSA,"
@@ -83,9 +83,13 @@ def test_deger_adaylari_ve_panel(veri_dizini):
     assert (en_iyi["market"], en_iyi["secim"]) == ("İY/MS", "2/1")  # geçmiş sıklık %20, iddaa 26 -> 5.2
     assert en_iyi["beklenen"] == 5.2 and en_iyi["adil_oran"] == 5.0
 
+    oneriler = kupon.oneriler(simdi)
+    assert [(a["mac_id"], a["market"], a["secim"], a["beklenen"]) for a in oneriler["deger"]] == [("1", "İY/MS", "2/1", 5.2)]
     metin = "\n".join(rapor.olustur(simdi).md)
     assert "değerli görünen seçimler" in metin and "2/1" in metin
     assert "Geçmiş veri: MS 1-0-2" in metin
-    sayfa = panel.olustur(simdi)
+    sayfa, dosyalar = panel.olustur(simdi)
     assert "<html" in sayfa and "MS 1-0-2 oranları tek tek" in sayfa and "Ev sahibi (1)" in sayfa
-    assert 'data-oran="1.50"' in sayfa and "f-oran" in sayfa
+    assert "Kupon önerileri" in sayfa and "Önizleme" in sayfa and "f-oran" in sayfa
+    ms = dosyalar["gecmis_ms.json"]
+    assert ms["alanlar"][:2] == ["secim", "oran"] and ["1", "1.50"] in [r[:2] for r in ms["satirlar"]]

@@ -18,9 +18,8 @@ IYMS_KONTROL_UFKU = timedelta(hours=36)  # sadece bu süre içinde başlayacak m
 ISTEK_ARALIGI = float(os.environ.get("IDDAA_ISTEK_ARALIGI", "0.4"))  # saniye
 
 # Sonuç arama
-SONUC_BEKLEME = timedelta(hours=2, minutes=15)  # başlama + bu süre sonra sonuç aranır
 SONUC_ARAMA_UFKU = timedelta(days=10)
-IPTAL_SURESI = timedelta(days=3)                # bu süre sonunda sonuç yoksa iptal sayılır
+IPTAL_SURESI = timedelta(days=3)                # bu süre sonunda sonuç yoksa "belirsiz" sayılır
 
 # Kağıt üstü kupon
 KUPON_MIN_ORAN = float(os.environ.get("KUPON_MIN_ORAN", "20"))

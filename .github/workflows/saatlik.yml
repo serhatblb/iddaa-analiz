@@ -25,8 +25,9 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Bülten, oranlar, en çok oynananlar
         run: python -m iddaa.topla
-      - name: Biten maçların sonuçları
+      - name: Biten maçların sonuçları (Mackolik)
         if: always()
+        continue-on-error: true
         run: python -m iddaa.sonuc
       - name: Paneli güncelle
         if: always()

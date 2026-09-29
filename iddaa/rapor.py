@@ -10,9 +10,8 @@ import smtplib
 from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
 
-from . import analiz, config, depo
+from . import analiz, config, depo, kupon
 from .bulten import iso_oku, iyms_sonucu
-from .kupon import gunlere_ayir, kupon_yolu
 
 log = logging.getLogger("rapor")
 MAIL_ORANLARI = ["1.20", "1.30", "1.40", "1.50", "1.60", "1.70", "1.80", "1.90", "2.00", "2.20", "2.50",
@@ -156,22 +155,27 @@ def _istatistik_tablosu(rapor: Rapor, tablo: dict):
     rapor.tablo(["Seçim", "Örnek", "Tuttu", "Gerçek %", "Oranın vaadi %", "Getiri (1 TL'ye)"], satirlar)
 
 
-def _kupon_bolumu(rapor: Rapor, baslik: str, satirlar: list[dict] | None):
+SONUC_ETIKETI = {"1": "✅", "0": "❌", "iptal": "iptal", "?": "sonuç yok"}
+DURUM_ETIKETI = {"bekliyor": "Bekliyor", "kaybetti": "Kaybetti", "belirsiz": "Sonuç bulunamadı"}
+
+
+def _kupon_bolumu(rapor: Rapor, baslik: str, satirlar: list[dict] | None, tur: str):
     rapor.bolum(baslik)
     if not satirlar:
         rapor.yazi("Kupon yok.")
         return
     ilk = satirlar[0]
     if ilk["durum"] == "aday_yok":
-        rapor.yazi(f"Oranı {config.KUPON_MIN_ORAN:g}–{config.KUPON_MAX_ORAN:g} arası İY/MS seçeneği olan "
-                   f"yeterli maç yoktu ({ilk['secim']}), kupon oluşturulmadı.")
+        neden = (f"Oranı {config.KUPON_MIN_ORAN:g}–{config.KUPON_MAX_ORAN:g} arası İY/MS seçeneği olan"
+                 if tur == "iyms" else "Beklenen dönüşü 1'in üstünde olan")
+        rapor.yazi(f"{neden} yeterli maç yoktu ({ilk['secim']}), kupon oluşturulmadı.")
         return
-    rapor.tablo(["Maç", "Lig", "Başlama", "Seçim", "Oran", "Sonuç"],
-                [[f"{s['ev']} - {s['dep']}", s["lig"], _saat(s["baslama_utc"]), s["secim"], s["oran"],
-                  {"1": f"✅ {s['gercek']}", "0": f"❌ {s['gercek']}", "iptal": "iptal"}.get(s["tuttu"], "bekliyor")]
+    rapor.tablo(["Maç", "Lig", "Başlama", "Market", "Seçim", "Oran", "Sonuç"],
+                [[f"{s['ev']} - {s['dep']}", s["lig"], _saat(s["baslama_utc"]), s["market"], s["secim"], s["oran"],
+                  f"{SONUC_ETIKETI[s['tuttu']]} {s['gercek']}".strip() if s["tuttu"] in SONUC_ETIKETI else "bekliyor"]
                  for s in satirlar])
-    durum = {"bekliyor": "Bekliyor", "kazandi": f"KAZANDI: {_tl(float(ilk['kazanc']))}",
-             "kaybetti": "Kaybetti"}.get(ilk["durum"], ilk["durum"])
+    durum = (f"KAZANDI: {_tl(float(ilk['kazanc']))}" if ilk["durum"] == "kazandi"
+             else DURUM_ETIKETI.get(ilk["durum"], ilk["durum"]))
     rapor.yazi(f"Toplam oran: {ilk['toplam_oran']} · Tutar: {_tl(float(ilk['tutar']))} · Durum: {durum}")
 
 
@@ -179,22 +183,20 @@ def olustur(simdi: datetime | None = None) -> Rapor:
     simdi = (simdi or datetime.now(timezone.utc)).replace(microsecond=0)
     bugun = simdi.astimezone(config.TR).date()
     dun = bugun - timedelta(days=1)
-    kuponlar = gunlere_ayir(depo.csv_oku(kupon_yolu()))
+    kuponlar = kupon.kuponlara_ayir(kupon.kuponlari_oku())
     kayitlar = depo.maclari_oku()
     sonuclar = depo.sonuclari_oku()
 
     rapor = Rapor(f"iddaa günlük rapor — {bugun.strftime('%d.%m.%Y')}")
-    _kupon_bolumu(rapor, "Dünkü kupon", kuponlar.get(dun.isoformat()))
-    _kupon_bolumu(rapor, "Bugünkü kupon", kuponlar.get(bugun.isoformat()))
+    for tur, ad in kupon.TURLER.items():
+        _kupon_bolumu(rapor, f"Bugünkü {ad}", kuponlar.get((bugun.isoformat(), tur)), tur)
+    for tur, ad in kupon.TURLER.items():
+        _kupon_bolumu(rapor, f"Dünkü {ad}", kuponlar.get((dun.isoformat(), tur)), tur)
 
     rapor.bolum("Kağıt üstü kasa")
-    oynanan = [g for g in kuponlar.values() if g[0]["durum"] != "aday_yok"]
-    yatirilan = sum(float(g[0]["tutar"]) for g in oynanan)
-    donen = sum(float(g[0]["kazanc"] or 0) for g in oynanan if g[0]["durum"] == "kazandi")
-    kazanan = sum(1 for g in oynanan if g[0]["durum"] == "kazandi")
-    rapor.tablo(["Kupon", "Kazanan", "Yatırılan", "Dönen", "Net", "Bütçeden kalan"],
-                [[len(oynanan), kazanan, _tl(yatirilan), _tl(donen), _tl(donen - yatirilan),
-                  _tl(config.KUPON_BUTCE - yatirilan + donen)]])
+    rapor.tablo(["Kupon türü", "Kupon", "Kazanan", "Yatırılan", "Dönen", "Net", "Bütçeden kalan"],
+                [[ad, k["kupon"], k["kazanan"], _tl(k["yatirilan"]), _tl(k["donen"]), _tl(k["net"]), _tl(k["kalan"])]
+                 for tur, ad in kupon.TURLER.items() for k in [kupon.kasa(kuponlar, tur)]])
 
     kapanis_tum = analiz.kapanis_oranlari(kayitlar, {config.IYMS, analiz.MS})
     kapanis = {m: v[config.IYMS] for m, v in kapanis_tum.items() if config.IYMS in v}

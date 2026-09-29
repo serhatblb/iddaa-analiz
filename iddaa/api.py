@@ -98,6 +98,6 @@ class IddaaIstemci:
     def mac_oynanma(self):
         return self.getir(f"{SPORTSBOOK}/played-event-percentage", {"sportType": FUTBOL})
 
-    # --- statistics ---
+    # --- statistics (maç öncesi istatistikler; biten maçın skorunu içermez) ---
     def son_maclar(self, mac_id: int):
         return self.getir(f"{STATISTICS}/soccer/recent-matches/{mac_id}")
