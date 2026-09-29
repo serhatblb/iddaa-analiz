@@ -14,7 +14,7 @@ mac_id,lig_id,lig,ulke,ev,dep,baslama_utc,ilk_gorulme_utc,acilis,kapanis,iyms_va
 3170362,273100,U21 Avrupa Şampiyonası,INT,K.Makedonya Cum. U21,Karadağ U21,2026-10-01T16:00:00Z,2026-09-29T19:48:21Z,1,0,0,2026-09-29T19:48:21Z
 3208032,54684,UEFA Şamp. Ligi Kadınlar,INT,FK Austria Wien (K),Inter (K),2026-10-01T16:45:00Z,2026-09-29T19:48:21Z,1,0,0,2026-09-29T19:48:21Z
 3208064,54684,UEFA Şamp. Ligi Kadınlar,INT,HB Koege (K),Servette FC (K),2026-10-01T16:45:00Z,2026-09-29T19:48:21Z,1,0,0,2026-09-29T19:48:21Z
-3176341,1310,Fransa Ulusal Lig,FR,SC Bastia,Orleans,2026-10-01T18:45:00Z,2026-09-29T19:48:21Z,1,0,1,2026-09-29T19:48:21Z
+3176341,1310,Fransa Ulusal Lig,FR,SC Bastia,Orleans,2026-10-01T18:45:00Z,2026-09-29T19:48:21Z,1,0,1,2026-09-29T21:18:30Z
 3170295,3523,"CONCACAF Uluslar C Ligi, Grp A",INT,İngiliz Virjin Adaları,Montserrat,2026-10-01T19:00:00Z,2026-09-29T19:48:21Z,1,0,0,2026-09-29T19:48:21Z
 3208047,54684,UEFA Şamp. Ligi Kadınlar,INT,Manchester City (K),Real Madrid (K),2026-10-01T19:00:00Z,2026-09-29T19:48:21Z,1,0,0,2026-09-29T19:48:21Z
 3208107,54684,UEFA Şamp. Ligi Kadınlar,INT,Paris Saint-Germain (K),OH Leuven (K),2026-10-01T19:00:00Z,2026-09-29T19:48:21Z,1,0,0,2026-09-29T19:48:21Z
@@ -24,5 +24,5 @@ mac_id,lig_id,lig,ulke,ev,dep,baslama_utc,ilk_gorulme_utc,acilis,kapanis,iyms_va
 3170355,21641,"El Salvador Primera Division, Açılış",SV,CD Fuerte San Francisco Morazan,Angel Firpo,2026-10-01T21:30:00Z,2026-09-29T19:48:21Z,1,0,0,2026-09-29T19:48:21Z
 3170387,2902,"CONCACAF Uluslar A Ligi, Grp A",INT,Curaçao,Trinidad ve Tobago,2026-10-01T22:00:00Z,2026-09-29T19:48:21Z,1,0,0,2026-09-29T19:48:21Z
 3172879,21641,"El Salvador Primera Division, Açılış",SV,CD Inca,Municipal Li,2026-10-02T00:00:00Z,2026-09-29T19:48:21Z,1,0,0,2026-09-29T19:48:21Z
-3243452,1207,Arjantin Kupası,AR,CA Platense,Estudiantes,2026-10-02T00:15:00Z,2026-09-29T19:48:21Z,1,0,1,2026-09-29T19:48:21Z
+3243452,1207,Arjantin Kupası,AR,CA Platense,Estudiantes,2026-10-02T00:15:00Z,2026-09-29T19:48:21Z,1,0,1,2026-09-29T21:18:30Z
 3232969,81453,Şampiyonlar Ligi FB ve GS Özel,INT,Lig Etabı İkili Maç,Alınan Toplam Puan,2026-10-13T16:45:00Z,2026-09-29T19:48:21Z,1,0,0,2026-09-29T19:48:21Z
