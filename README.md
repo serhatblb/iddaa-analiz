@@ -12,6 +12,7 @@ Her şey GitHub Actions'ta çalışır, bilgisayarın açık olması gerekmez.
 |---|---|---|
 | Saatlik toplama | Her saat :07 | Bülten, oranlar, en çok oynananlar; biten maçların sonuçları |
 | Günlük kupon ve rapor | Her gün 09:43 | Dünkü kuponu değerlendirir, bugünün 3'lü İY/MS kuponunu seçer, rapor yazar ve mail atar |
+| Geçmiş veri ve analiz | Her pazartesi 06:23 | football-data.co.uk'tan 22 lig, 2012'den bugüne maçlar; MS oran aralığı ve İY/MS adil oran tabloları |
 | Testler | Kod değişince | `pytest` |
 
 Toplama kuralları:
@@ -41,6 +42,18 @@ data/
 
 Market anahtarı `t_st` formatındadır; İY/MS `2_90`, Maç Sonucu `1_1`. İY/MS seçeneklerinde `0` beraberliktir.
 Tüm zamanlar UTC tutulur, raporlarda Türkiye saatine çevrilir.
+
+## Panel
+
+Her çalışmada `docs/index.html` yeniden üretilir: kasa ve kuponlar, önümüzdeki 24 saatin değerli görünen seçimleri,
+geçmiş veride MS 1-0-2 oran aralıkları, ev sahibinin gücüne göre İY/MS adil oranları ve toplanan iddaa verisinin
+istatistikleri. Statik tek dosya; GitHub Pages (kaynak: `main` / `docs`) veya Vercel (kök dizin: `docs`) ile yayınlanabilir.
+
+## Değer hesabı
+
+Geçmiş maçlar ev sahibinin kazanma olasılığına (oranlardan, kâr payı ayıklanarak) göre %5'lik dilimlere ayrılır.
+Her dilimde 9 İY/MS sonucunun ve 1-0-2'nin gerçek sıklığı ölçülür. Bugünkü bir iddaa maçı, iddaa'nın MS oranlarından
+aynı şekilde dilimine yerleştirilir; beklenen dönüş = iddaa oranı × o dilimdeki gerçek sıklık.
 
 ## SQL ile analiz
 
@@ -96,6 +109,6 @@ python -m pytest -q
 ## Yol haritası
 
 - [x] Toplayıcı, sonuçlar, kağıt kupon, günlük rapor
-- [ ] football-data.co.uk geçmiş verisiyle keşif analizi
+- [x] football-data.co.uk geçmiş verisiyle MS ve İY/MS analizi, değer adayları, statik panel
 - [ ] Haftalık analiz raporu: market × oran aralığı × lig
 - [ ] Keşif/doğrulama ayrımıyla onaylı grupların günlük önerisi
