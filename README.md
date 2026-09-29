@@ -1,0 +1,101 @@
+# iddaa-analiz
+
+iddaa.com futbol bülteninden oranları ve sonuçları düzenli toplayan, İY/MS başta olmak üzere
+"hangi seçim oranının vaat ettiğinden sık tutuyor" sorusunu veriyle cevaplamaya çalışan kişisel analiz projesi.
+Bahis oynamaz, siteye giriş yapmaz; sadece herkese açık bülten verisini okur. Kuponlar kağıt üstündedir.
+
+## Nasıl çalışır
+
+Her şey GitHub Actions'ta çalışır, bilgisayarın açık olması gerekmez.
+
+| Workflow | Zaman | İş |
+|---|---|---|
+| Saatlik toplama | Her saat :07 | Bülten, oranlar, en çok oynananlar; biten maçların sonuçları |
+| Günlük kupon ve rapor | Her gün 09:43 | Dünkü kuponu değerlendirir, bugünün 3'lü İY/MS kuponunu seçer, rapor yazar ve mail atar |
+| Testler | Kod değişince | `pytest` |
+
+Toplama kuralları:
+- Maç ilk görüldüğünde tüm maç önü marketler **açılış** olarak kaydedilir.
+- İY/MS'si olan maçların İY/MS oranları **her saat** kaydedilir.
+- Başlamaya 75 dakika kala tüm marketler bir kez **kapanış** olarak kaydedilir.
+- İY/MS'si olmayan yakın maçlar 6 saatte bir tekrar kontrol edilir.
+
+Kupon kuralı: önümüzdeki 24 saatte başlayacak maçlarda, oranı 20–30 arası İY/MS seçeneklerinden
+her maç için en yüksek oranlı olan aday olur; en yüksek oranlı 3 aday 20 TL'lik kağıt kupona girer.
+Ayarlar `iddaa/config.py` içinde (ortam değişkenleriyle de değiştirilebilir).
+
+## Veri düzeni
+
+```
+data/
+  maclar/YYYY-MM.csv                    maç kayıtları (lig, takımlar, başlama, bayraklar)
+  sonuclar/YYYY-MM.csv                  İY ve MS skorları
+  oranlar/YYYY/MM/DD/HHMM.csv.gz         çalışma başına oran anlıkları (tip: acilis/saatlik/kapanis)
+  oynanma/secenek/YYYY/MM/DD/HHMM.csv.gz seçenek bazında oynanma yüzdeleri
+  oynanma/mac/YYYY/MM/DD/HHMM.csv.gz     maç bazında oynanma payı
+  kuponlar.csv                          kağıt üstü kuponlar
+  adaylar/YYYY-MM-DD.json               o günün tüm kupon adayları
+  raporlar/YYYY-MM-DD.md                günlük raporlar
+  ligler.csv, market_ayarlari.json      lig ve market isimleri
+```
+
+Market anahtarı `t_st` formatındadır; İY/MS `2_90`, Maç Sonucu `1_1`. İY/MS seçeneklerinde `0` beraberliktir.
+Tüm zamanlar UTC tutulur, raporlarda Türkiye saatine çevrilir.
+
+## SQL ile analiz
+
+Dosyalar doğrudan DuckDB ile sorgulanabilir (`pip install duckdb`):
+
+```sql
+-- Kapanış İY/MS oranları ve sonuçlar: oran aralığına göre tutma oranı ve getiri
+WITH kapanis AS (
+  SELECT o.mac_id, o.secenek, o.oran,
+         row_number() OVER (PARTITION BY o.mac_id, o.secenek ORDER BY o.zaman_utc DESC) AS sira
+  FROM read_csv('data/oranlar/*/*/*/*.csv.gz') o
+  JOIN read_csv('data/maclar/*.csv') m USING (mac_id)
+  WHERE o.market = '2_90' AND o.zaman_utc < m.baslama_utc
+), sonuc AS (
+  SELECT mac_id,
+         CASE WHEN iy_ev > iy_dep THEN '1' WHEN iy_ev < iy_dep THEN '2' ELSE '0' END || '/' ||
+         CASE WHEN ms_ev > ms_dep THEN '1' WHEN ms_ev < ms_dep THEN '2' ELSE '0' END AS gercek
+  FROM read_csv('data/sonuclar/*.csv') WHERE durum = 'tamam'
+)
+SELECT floor(oran / 5) * 5 AS oran_araligi,
+       count(*) AS ornek,
+       avg((k.secenek = s.gercek)::int) AS tutma_orani,
+       avg(1 / oran) AS vaat_edilen,
+       sum(CASE WHEN k.secenek = s.gercek THEN oran ELSE 0 END) / count(*) AS getiri
+FROM kapanis k JOIN sonuc s USING (mac_id)
+WHERE sira = 1
+GROUP BY 1 ORDER BY 1;
+```
+
+Getiri 1'in üstündeyse o grup uzun vadede kazandırıyor demektir. Çok sayıda gruba bakıldığında bazıları
+şans eseri iyi görünür; bir örüntüyü ancak sonradan toplanan veride de tutuyorsa ciddiye al.
+
+## Mail kurulumu
+
+Rapor maili için repo → Settings → Secrets and variables → Actions altına:
+- `GMAIL_ADRES`: gönderen Gmail adresi
+- `GMAIL_UYGULAMA_SIFRESI`: Google hesabı → Güvenlik → 2 Adımlı Doğrulama → Uygulama şifreleri
+- `MAIL_ALICI` (isteğe bağlı): farklı bir alıcı
+
+Secret'lar yoksa rapor sadece `data/raporlar/` altına yazılır.
+
+## Yerelde çalıştırma
+
+```bash
+pip install -r requirements.txt
+python -m iddaa.topla     # tek seferlik toplama
+python -m iddaa.sonuc     # sonuçlar
+python -m iddaa.kupon     # bugünün kuponu
+python -m iddaa.rapor     # rapor
+python -m pytest -q
+```
+
+## Yol haritası
+
+- [x] Toplayıcı, sonuçlar, kağıt kupon, günlük rapor
+- [ ] football-data.co.uk geçmiş verisiyle keşif analizi
+- [ ] Haftalık analiz raporu: market × oran aralığı × lig
+- [ ] Keşif/doğrulama ayrımıyla onaylı grupların günlük önerisi

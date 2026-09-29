@@ -1,0 +1,38 @@
+name: Günlük kupon ve rapor
+
+on:
+  schedule:
+    - cron: "43 6 * * *"  # 09:43 Türkiye saati, 09:07 toplamasından sonra
+  workflow_dispatch:
+
+concurrency:
+  group: veri
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  gunluk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Sonuçları güncelle
+        run: python -m iddaa.sonuc
+      - name: Kuponu değerlendir ve bugünün kuponunu oluştur
+        run: python -m iddaa.kupon
+      - name: Rapor ve mail
+        env:
+          GMAIL_ADRES: ${{ secrets.GMAIL_ADRES }}
+          GMAIL_UYGULAMA_SIFRESI: ${{ secrets.GMAIL_UYGULAMA_SIFRESI }}
+          MAIL_ALICI: ${{ secrets.MAIL_ALICI }}
+        run: python -m iddaa.rapor
+      - name: Veriyi repoya kaydet
+        if: always()
+        run: bash scripts/kaydet.sh "veri: günlük"
