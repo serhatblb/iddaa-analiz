@@ -35,9 +35,10 @@ def test_sezon_kodlari():
     assert gecmis.sezon_kodlari(datetime(2026, 3, 1))[-1] == "2526"
 
 
-def test_aralik_ve_dilim():
-    assert analiz.aralik(1.85) == "1.80–2.00"
-    assert analiz.aralik(55) == "40.00+"
+def test_oran_etiketi_ve_dilim():
+    assert analiz.oran_etiketi(1.55) == "1.55"
+    assert analiz.oran_etiketi(1.549999) == "1.55"
+    assert analiz.oran_etiketi(12) == "12.00"
     assert analiz.dilim(0.62) == "%60–65"
     assert analiz.dilim(1.0) == "%95–100"
     p = analiz.normal_olasiliklar(2.0, 3.5, 4.0)
@@ -58,8 +59,8 @@ def _gecmis_uret(n=1200):
 
 def test_ms_oran_tablosu_ve_kosullu():
     maclar = _gecmis_uret()
-    tablo = {(s["secim"], s["aralik"]): s for s in analiz.ms_oran_tablosu(maclar)}
-    ev = tablo[("1", "1.40–1.60")]
+    tablo = {(s["secim"], s["oran"]): s for s in analiz.ms_oran_tablosu(maclar)}
+    ev = tablo[("1", "1.50")]
     assert ev["ornek"] == 1200 and ev["tutma"] == 0.6  # 5'te 3 ev kazandı
     assert abs(ev["getiri"] - 0.9) < 1e-9 and abs(ev["getiri_maks"] - 0.96) < 1e-9
     kosullu = analiz.iyms_kosullu_tablo(maclar)
@@ -86,4 +87,5 @@ def test_deger_adaylari_ve_panel(veri_dizini):
     assert "değerli görünen seçimler" in metin and "2/1" in metin
     assert "Geçmiş veri: MS 1-0-2" in metin
     sayfa = panel.olustur(simdi)
-    assert "<html" in sayfa and "Geçmiş veri: MS 1-0-2 oranları" in sayfa and "Ev sahibi (1)" in sayfa
+    assert "<html" in sayfa and "MS 1-0-2 oranları tek tek" in sayfa and "Ev sahibi (1)" in sayfa
+    assert 'data-oran="1.50"' in sayfa and "f-oran" in sayfa

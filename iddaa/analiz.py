@@ -1,12 +1,13 @@
 """Oran analizleri.
 
-1. MS (1-0-2) oran aralıkları: her aralıkta seçim kaç kez tuttu, oranın vaat ettiği olasılık neydi,
-   1 TL'ye ne kadar döndü (getiri). Getiri > 1 ise o aralık uzun vadede kazandırıyor demektir.
+1. MS (1-0-2) oranları tek tek: her oranda (1.55 gibi) seçim kaç kez tuttu, oranın vaat ettiği olasılık neydi,
+   1 TL'ye ne kadar döndü (getiri). Getiri > 1 ise o oran uzun vadede kazandırıyor demektir.
 2. Koşullu İY/MS sıklıkları: ev sahibinin kazanma olasılığına (oranlardan, kâr payı ayıklanmış) göre
    9 İY/MS sonucunun gerçek sıklığı. Bu, iddaa'nın İY/MS oranlarının adil olup olmadığını ölçmeye yarar.
 3. Değer adayları: bugünkü iddaa oranı × geçmişteki gerçek sıklık = beklenen dönüş.
 """
 import logging
+import math
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
@@ -16,22 +17,15 @@ from .bulten import iso_oku, iyms_sonucu, sonuc_isareti
 log = logging.getLogger("analiz")
 
 MS = "1_1"
-ARALIK_SINIRLARI = [1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.3, 2.6, 3.0, 3.5, 4.0, 5.0, 7.0, 10.0, 15.0, 25.0, 40.0]
 IYMS_SECENEKLERI = ["1/1", "1/0", "1/2", "0/1", "0/0", "0/2", "2/1", "2/0", "2/2"]
 MS_SECENEKLERI = ["1", "0", "2"]
 DILIM_GENISLIGI = 0.05
 MIN_DILIM_ORNEGI = 500
 
 
-def aralik(oran: float) -> str:
-    for alt, ust in zip(ARALIK_SINIRLARI, ARALIK_SINIRLARI[1:]):
-        if alt <= oran < ust:
-            return f"{alt:.2f}–{ust:.2f}"
-    return f"{ARALIK_SINIRLARI[-1]:.2f}+"
-
-
-def aralik_sirasi(etiket: str) -> float:
-    return float(etiket.split("–")[0].rstrip("+"))
+def oran_etiketi(oran: float) -> str:
+    """Oranlar tek tek, iki basamakla gruplanır: 1.55 -> "1.55"."""
+    return f"{round(oran + 1e-9, 2):.2f}"
 
 
 def normal_olasiliklar(o1: float, o0: float, o2: float) -> tuple[float, float, float]:
@@ -59,7 +53,16 @@ def _satira_cevir(anahtar: dict, s: dict) -> dict:
             "getiri_maks": round(s["donus_maks"] / n, 4) if n else 0}
 
 
-# --- 1. MS oran aralıkları (geçmiş) ---
+def _sirala(satirlar: list[dict]) -> list[dict]:
+    """Sıralar ve getirinin %95 hata payını ekler: tek bir oranın örneği azsa sonuç şansa bağlıdır."""
+    for r in satirlar:
+        n, p = r["ornek"], r["tutma"]
+        r["hata"] = round(1.96 * float(r["oran"]) * math.sqrt(p * (1 - p) / n), 4) if n else 0
+    sira = {"hepsi": 0, "1": 1, "0": 2, "2": 3}
+    return sorted(satirlar, key=lambda r: (sira[r["secim"]], float(r["oran"])))
+
+
+# --- 1. MS oranları tek tek (geçmiş) ---
 
 def ms_oran_tablosu(maclar: list[dict]) -> list[dict]:
     sayac = defaultdict(_bos_sayac)
@@ -70,7 +73,7 @@ def ms_oran_tablosu(maclar: list[dict]) -> list[dict]:
         gercek = sonuc_isareti(m["ms_ev"], m["ms_dep"])
         for secim, oran in zip(MS_SECENEKLERI, oranlar):
             maks = m.get(f"maks_{secim}") or oran
-            for anahtar in ((secim, aralik(oran)), ("hepsi", aralik(oran))):
+            for anahtar in ((secim, oran_etiketi(oran)), ("hepsi", oran_etiketi(oran))):
                 s = sayac[anahtar]
                 s["ornek"] += 1
                 s["vaat"] += 1 / oran
@@ -78,9 +81,7 @@ def ms_oran_tablosu(maclar: list[dict]) -> list[dict]:
                     s["tuttu"] += 1
                     s["donus"] += oran
                     s["donus_maks"] += maks
-    satirlar = [_satira_cevir({"secim": k[0], "aralik": k[1]}, s) for k, s in sayac.items()]
-    return sorted(satirlar, key=lambda r: ("hepsi102".index(r["secim"]) if r["secim"] != "hepsi" else -1,
-                                            aralik_sirasi(r["aralik"])))
+    return _sirala([_satira_cevir({"secim": k[0], "oran": k[1]}, s) for k, s in sayac.items()])
 
 
 # --- 2. Koşullu İY/MS sıklıkları (geçmiş) ---
@@ -161,7 +162,7 @@ def iddaa_ms_tablosu(kapanis: dict, sonuclar: dict) -> list[dict]:
         for secim, oran in oranlar.items():
             if secim not in MS_SECENEKLERI:
                 continue
-            for anahtar in ((secim, aralik(oran)), ("hepsi", aralik(oran))):
+            for anahtar in ((secim, oran_etiketi(oran)), ("hepsi", oran_etiketi(oran))):
                 s = sayac[anahtar]
                 s["ornek"] += 1
                 s["vaat"] += 1 / oran
@@ -169,8 +170,7 @@ def iddaa_ms_tablosu(kapanis: dict, sonuclar: dict) -> list[dict]:
                     s["tuttu"] += 1
                     s["donus"] += oran
                     s["donus_maks"] += oran
-    satirlar = [_satira_cevir({"secim": k[0], "aralik": k[1]}, s) for k, s in sayac.items()]
-    return sorted(satirlar, key=lambda r: (r["secim"] != "hepsi", r["secim"], aralik_sirasi(r["aralik"])))
+    return _sirala([_satira_cevir({"secim": k[0], "oran": k[1]}, s) for k, s in sayac.items()])
 
 
 # --- 3. Değer adayları ---
@@ -214,7 +214,7 @@ def analiz_yolu(ad: str):
 def gecmis_analizi_yaz(maclar: list[dict]) -> dict:
     ms_tablo = ms_oran_tablosu(maclar)
     kosullu = iyms_kosullu_tablo(maclar)
-    ms_alan = ["secim", "aralik", "ornek", "tuttu", "tutma", "vaat", "getiri", "getiri_maks"]
+    ms_alan = ["secim", "oran", "ornek", "tuttu", "tutma", "vaat", "getiri", "hata", "getiri_maks"]
     depo.csv_yaz(analiz_yolu("gecmis_ms_oran.csv"), ms_tablo, ms_alan)
     depo.csv_yaz(analiz_yolu("gecmis_iyms_kosullu.csv"), kosullu_satirlar(kosullu),
                  ["ev_olasiligi", "ornek"] + IYMS_SECENEKLERI + MS_SECENEKLERI)
@@ -235,8 +235,8 @@ def ms_tablosu_oku() -> list[dict]:
     for s in satirlar:
         for k in ("ornek", "tuttu"):
             s[k] = int(s[k])
-        for k in ("tutma", "vaat", "getiri", "getiri_maks"):
-            s[k] = float(s[k])
+        for k in ("tutma", "vaat", "getiri", "getiri_maks", "hata"):
+            s[k] = float(s.get(k) or 0)
     return satirlar
 
 

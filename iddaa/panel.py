@@ -36,10 +36,16 @@ h2{font-size:17px;margin:0 0 4px}p.not{color:var(--soluk);margin:0 0 12px;font-s
 .tablo{overflow-x:auto}table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
 th,td{padding:6px 10px;border-bottom:1px solid var(--cizgi);text-align:right;white-space:nowrap}
 th{color:var(--soluk);font-weight:600;font-size:12px}th:first-child,td:first-child{text-align:left}
-td.sol{text-align:left}.iyi{color:var(--iyi);font-weight:600}.kotu{color:var(--kotu)}
+td.sol{text-align:left}td.soluk{color:var(--soluk)}.iyi{color:var(--iyi);font-weight:600}.kotu{color:var(--kotu)}
 td.cubuk{min-width:140px}td.cubuk i{display:inline-block;height:8px;border-radius:4px;background:var(--vurgu);
 vertical-align:middle;margin-right:6px}
 tr.iyi-satir{background:var(--iyi-bg)}.bos{color:var(--soluk);font-style:italic}
+.filtre{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 10px}.filtre label{font-size:12px;color:var(--soluk);
+display:flex;flex-direction:column;gap:3px}.filtre select,.filtre input{font:inherit;color:var(--yazi);
+background:var(--bg);border:1px solid var(--cizgi);border-radius:6px;padding:5px 8px;min-width:110px}
+.kaydir{max-height:520px;overflow:auto}.kaydir thead th{position:sticky;top:0;background:var(--kart)}
+table.siralanir th{cursor:pointer;user-select:none}table.siralanir th[data-yon=azalan]::after{content:" ▼"}
+table.siralanir th[data-yon=artan]::after{content:" ▲"}
 """
 
 
@@ -74,8 +80,71 @@ def _saat(iso_metin: str) -> str:
 
 def _ms_satirlari(satirlar: list[dict], maks: bool) -> list[list]:
     azami = max((s["tutma"] for s in satirlar), default=1)
-    return [[s["aralik"], f"{s['ornek']:,}", _cubuk(s["tutma"], azami), f"%{100 * s['vaat']:.1f}",
+    return [[s["oran"], f"{s['ornek']:,}", _cubuk(s["tutma"], azami), f"%{100 * s['vaat']:.1f}",
              _getiri(s["getiri"])] + ([_getiri(s["getiri_maks"])] if maks else []) for s in satirlar]
+
+
+SECIM_ADLARI = {"hepsi": "Tümü", "1": "Ev sahibi (1)", "0": "Beraberlik (0)", "2": "Deplasman (2)"}
+
+
+def _oran_tablosu(kimlik: str, satirlar: list[dict], maks: bool) -> str:
+    """Seçim filtresi, oran arama ve örnek eşiği olan, sütuna tıklayınca sıralanan tablo."""
+    if not satirlar:
+        return '<p class="bos">Henüz veri yok.</p>'
+    secenekler = "".join(f'<option value="{k}">{_e(v)}</option>' for k, v in SECIM_ADLARI.items()
+                         if any(r["secim"] == k for r in satirlar))
+    kontroller = (f'<div class="filtre" data-tablo="{kimlik}">'
+                  f'<label>Seçim <select class="f-secim">{secenekler}</select></label>'
+                  '<label>Oran <input class="f-oran" type="search" inputmode="decimal" placeholder="ör. 1.55"></label>'
+                  '<label>En az örnek <select class="f-ornek"><option value="30">30</option>'
+                  '<option value="100">100</option><option value="300" selected>300</option>'
+                  '<option value="1000">1000</option></select></label></div>')
+    basliklar = ["Oran", "Örnek", "Tutma", "Oranın vaadi", "Getiri", "Hata payı"] + (["Getiri (en iyi oran)"] if maks else [])
+    bas = "".join(f'<th data-sutun="{i}">{_e(b)}</th>' for i, b in enumerate(basliklar))
+    govde = []
+    for r in satirlar:
+        hucreler = [
+            f'<td data-d="{r["oran"]}">{_e(r["oran"])}</td>',
+            f'<td data-d="{r["ornek"]}">{r["ornek"]:,}</td>',
+            f'<td data-d="{r["tutma"]}">%{100 * r["tutma"]:.1f}</td>',
+            f'<td data-d="{r["vaat"]}">%{100 * r["vaat"]:.1f}</td>',
+            _getiri(r["getiri"]).replace("<td ", f'<td data-d="{r["getiri"]}" ', 1),
+            f'<td data-d="{r.get("hata", 0)}" class="soluk">±{r.get("hata", 0):.2f}</td>',
+        ]
+        if maks:
+            hucreler.append(_getiri(r["getiri_maks"]).replace("<td ", f'<td data-d="{r["getiri_maks"]}" ', 1))
+        govde.append(f'<tr data-secim="{r["secim"]}" data-oran="{r["oran"]}" data-ornek="{r["ornek"]}">'
+                     + "".join(hucreler) + "</tr>")
+    return (kontroller + f'<div class="tablo kaydir"><table id="{kimlik}" class="siralanir"><thead><tr>{bas}</tr></thead>'
+            f'<tbody>{"".join(govde)}</tbody></table></div><p class="not sayac" id="{kimlik}-sayac"></p>')
+
+
+JS = """
+document.querySelectorAll('.filtre').forEach(function(f){
+  var t=document.getElementById(f.dataset.tablo), say=document.getElementById(f.dataset.tablo+'-sayac');
+  function uygula(){
+    var secim=f.querySelector('.f-secim').value, oran=f.querySelector('.f-oran').value.trim().replace(',', '.'),
+        esik=+f.querySelector('.f-ornek').value, n=0;
+    t.querySelectorAll('tbody tr').forEach(function(tr){
+      var g=tr.dataset.secim===secim && +tr.dataset.ornek>=esik && (!oran || tr.dataset.oran.indexOf(oran)===0);
+      tr.style.display=g?'':'none'; if(g) n++;
+    });
+    say.textContent=n+' oran gösteriliyor'+(esik<300?' · az örnekli oranlarda sonuç şansa çok bağlıdır':'');
+  }
+  f.querySelectorAll('select,input').forEach(function(e){e.addEventListener('input',uygula)});
+  uygula();
+});
+document.querySelectorAll('table.siralanir th').forEach(function(th){
+  th.addEventListener('click',function(){
+    var t=th.closest('table'), i=+th.dataset.sutun, azalan=th.dataset.yon!=='azalan';
+    t.querySelectorAll('th').forEach(function(x){delete x.dataset.yon});
+    th.dataset.yon=azalan?'azalan':'artan';
+    var satirlar=[].slice.call(t.tBodies[0].rows);
+    satirlar.sort(function(a,b){var x=+a.cells[i].dataset.d, y=+b.cells[i].dataset.d; return azalan?y-x:x-y});
+    satirlar.forEach(function(r){t.tBodies[0].appendChild(r)});
+  });
+});
+"""
 
 
 def olustur(simdi: datetime | None = None) -> str:
@@ -122,18 +191,15 @@ def olustur(simdi: datetime | None = None) -> str:
                             [[f"{a['ev']} - {a['dep']}", a["lig"], _saat(a["baslama_utc"]), a["market"], a["secim"],
                               a["oran"], a["adil_oran"], _getiri(a["beklenen"])] for a in adaylar[:40]])))
 
-    # Geçmiş MS
+    # Geçmiş MS: her oran tek tek
     if ms_gecmis:
-        icerik = ""
-        for secim, baslik in (("hepsi", "Tüm seçimler"), ("1", "Ev sahibi (1)"), ("0", "Beraberlik (0)"), ("2", "Deplasman (2)")):
-            satirlar = [s for s in ms_gecmis if s["secim"] == secim and s["ornek"] >= 100]
-            icerik += f"<h3>{_e(baslik)}</h3>" + _tablo(
-                ["Oran aralığı", "Örnek", "Tutma", "Oranın vaadi", "Getiri (ortalama oran)", "Getiri (en iyi oran)"],
-                _ms_satirlari(satirlar, maks=True), lambda s: "")
-        bolumler.append(("gecmis-ms", "Geçmiş veri: MS 1-0-2 oranları",
+        bolumler.append(("gecmis-ms", "Geçmiş veri: MS 1-0-2 oranları tek tek",
                          f"{ozet_gecmis.get('mac', 0):,} maç, {ozet_gecmis.get('lig', 0)} lig, "
-                         f"{ozet_gecmis.get('ilk', '')} – {ozet_gecmis.get('son', '')}. Getiri 1 TL'ye dönen para; "
-                         "1'in üstü kârlı. Oranlar yabancı şirketlerin ortalaması, iddaa genelde daha düşük verir.", icerik))
+                         f"{ozet_gecmis.get('ilk', '')} – {ozet_gecmis.get('son', '')}. Getiri 1 TL'ye dönen para, "
+                         "1'in üstü kârlı. Oranlar yabancı şirketlerin ortalaması, iddaa genelde daha düşük verir. "
+                         "Hata payı: getiri şans eseri bu kadar oynayabilir, payın içindeki farklar tesadüf olabilir. "
+                         "Sütun başlığına tıklayarak sıralayabilirsin.",
+                         _oran_tablosu("t-gecmis-ms", [r for r in ms_gecmis if r["ornek"] >= 30], maks=True)))
 
     # Koşullu İY/MS
     if kosullu:
@@ -147,14 +213,13 @@ def olustur(simdi: datetime | None = None) -> str:
                          _tablo(["Ev kazanma olasılığı", "Örnek"] + IYMS_SIRASI, satirlar)))
 
     # iddaa verisi
-    ms_iddaa = [s for s in analiz.iddaa_ms_tablosu(kapanis_tum, sonuclar) if s["secim"] == "hepsi"]
     iyms_tablo = iyms_istatistik(kapanis_iyms, sonuclar)
     iyms_satirlari = [[s, t["n"], f"%{100 * t['tuttu'] / t['n']:.1f}", f"%{100 * t['vaat'] / t['n']:.1f}",
                        _getiri(t["donus"] / t["n"])] for s, t in iyms_tablo.items() if t["n"]]
     bolumler.append(("iddaa", "iddaa verisi (toplanan)",
                      "Sistemin kendi topladığı kapanış oranları ve sonuçlar. Sonuçlar geldikçe büyür.",
-                     "<h3>MS oran aralıkları</h3>"
-                     + _tablo(["Oran aralığı", "Örnek", "Tutma", "Oranın vaadi", "Getiri"], _ms_satirlari(ms_iddaa, maks=False))
+                     "<h3>MS oranları</h3>"
+                     + _oran_tablosu("t-iddaa-ms", analiz.iddaa_ms_tablosu(kapanis_tum, sonuclar), maks=False)
                      + "<h3>İY/MS seçimleri</h3>"
                      + _tablo(["Seçim", "Örnek", "Tutma", "Oranın vaadi", "Getiri"], iyms_satirlari)))
 
@@ -172,7 +237,7 @@ def olustur(simdi: datetime | None = None) -> str:
 <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
 <title>iddaa analiz</title><style>{CSS}</style></head><body>
 <header><h1>iddaa analiz</h1><div class="alt">Son güncelleme {simdi.astimezone(config.TR).strftime('%d.%m.%Y %H:%M')} · kağıt üstü, para yatırılmaz</div></header>
-<nav><div>{nav}</div></nav><main>{govde}</main></body></html>"""
+<nav><div>{nav}</div></nav><main>{govde}</main><script>{JS}</script></body></html>"""
 
 
 def main():

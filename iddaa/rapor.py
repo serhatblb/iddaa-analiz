@@ -15,6 +15,8 @@ from .bulten import iso_oku, iyms_sonucu
 from .kupon import gunlere_ayir, kupon_yolu
 
 log = logging.getLogger("rapor")
+MAIL_ORANLARI = ["1.20", "1.30", "1.40", "1.50", "1.60", "1.70", "1.80", "1.90", "2.00", "2.20", "2.50",
+                 "2.80", "3.00", "3.30", "3.60", "4.00", "4.50", "5.00"]
 IYMS_SIRASI = ["1/1", "1/0", "1/2", "0/1", "0/0", "0/2", "2/1", "2/0", "2/2"]
 
 
@@ -59,11 +61,11 @@ def _yuzde(x: float) -> str:
 
 
 def _ms_tablosu(rapor: Rapor, satirlar: list[dict], maks: bool = True):
-    basliklar = ["Oran aralığı", "Örnek", "Tutma %", "Oranın vaadi %", "Getiri (1 TL'ye)"]
+    basliklar = ["Oran", "Örnek", "Tutma %", "Oranın vaadi %", "Getiri (1 TL'ye)", "Hata payı"]
     if maks:
         basliklar.append("Getiri (en iyi oranla)")
     rapor.tablo(basliklar, [
-        [s["aralik"], s["ornek"], _yuzde(s["tutma"]), _yuzde(s["vaat"]), f"{s['getiri']:.3f}"]
+        [s["oran"], s["ornek"], _yuzde(s["tutma"]), _yuzde(s["vaat"]), f"{s['getiri']:.3f}", f"±{s['hata']:.2f}"]
         + ([f"{s['getiri_maks']:.3f}"] if maks else [])
         for s in satirlar
     ])
@@ -78,7 +80,10 @@ def _gecmis_bolumu(rapor: Rapor):
     rapor.bolum("Geçmiş veri: MS 1-0-2 oranları ne sıklıkla tutuyor")
     rapor.yazi(f"{ozet['mac']:,} maç, {ozet['lig']} lig, {ozet['ilk']} – {ozet['son']}. "
                "Oranlar yabancı bahis şirketlerinin ortalaması; iddaa oranları genelde biraz daha düşüktür.")
-    _ms_tablosu(rapor, [s for s in ms if s["secim"] == "hepsi" and s["ornek"] >= 200])
+    secili = {s["oran"]: s for s in ms if s["secim"] == "hepsi"}
+    rapor.yazi("Sık görülen oranlar. Hata payı: getiri bu kadar şansla oynayabilir; payın içinde kalan fark "
+               "tesadüf olabilir. Tüm oranlar panelde, arama kutusuna oranı (ör. 1.55) yazarak bakabilirsin.")
+    _ms_tablosu(rapor, [secili[o] for o in MAIL_ORANLARI if o in secili])
     rapor.bolum("Geçmiş veri: ev sahibinin gücüne göre İY/MS adil oranları")
     rapor.yazi("Adil oran = 1 / gerçekleşme sıklığı. iddaa bu orandan yüksek veriyorsa seçim değerlidir.")
     satirlar = []
@@ -197,10 +202,10 @@ def olustur(simdi: datetime | None = None) -> Rapor:
     _deger_bolumu(rapor, simdi, kayitlar)
     _gecmis_bolumu(rapor)
 
-    rapor.bolum("iddaa verisi: MS oran aralıkları")
+    rapor.bolum("iddaa verisi: MS oranları (en çok örneği olan 10 oran)")
     ms_satirlari = [s for s in analiz.iddaa_ms_tablosu(kapanis_tum, sonuclar) if s["secim"] == "hepsi"]
     if ms_satirlari:
-        _ms_tablosu(rapor, ms_satirlari, maks=False)
+        _ms_tablosu(rapor, sorted(ms_satirlari, key=lambda r: -r["ornek"])[:10], maks=False)
     else:
         rapor.yazi("Henüz sonucu belli olan veri yok.")
 
