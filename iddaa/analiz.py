@@ -1,0 +1,252 @@
+"""Oran analizleri.
+
+1. MS (1-0-2) oran aralıkları: her aralıkta seçim kaç kez tuttu, oranın vaat ettiği olasılık neydi,
+   1 TL'ye ne kadar döndü (getiri). Getiri > 1 ise o aralık uzun vadede kazandırıyor demektir.
+2. Koşullu İY/MS sıklıkları: ev sahibinin kazanma olasılığına (oranlardan, kâr payı ayıklanmış) göre
+   9 İY/MS sonucunun gerçek sıklığı. Bu, iddaa'nın İY/MS oranlarının adil olup olmadığını ölçmeye yarar.
+3. Değer adayları: bugünkü iddaa oranı × geçmişteki gerçek sıklık = beklenen dönüş.
+"""
+import logging
+from collections import defaultdict
+from datetime import datetime, timedelta, timezone
+
+from . import config, depo, gecmis
+from .bulten import iso_oku, iyms_sonucu, sonuc_isareti
+
+log = logging.getLogger("analiz")
+
+MS = "1_1"
+ARALIK_SINIRLARI = [1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.3, 2.6, 3.0, 3.5, 4.0, 5.0, 7.0, 10.0, 15.0, 25.0, 40.0]
+IYMS_SECENEKLERI = ["1/1", "1/0", "1/2", "0/1", "0/0", "0/2", "2/1", "2/0", "2/2"]
+MS_SECENEKLERI = ["1", "0", "2"]
+DILIM_GENISLIGI = 0.05
+MIN_DILIM_ORNEGI = 500
+
+
+def aralik(oran: float) -> str:
+    for alt, ust in zip(ARALIK_SINIRLARI, ARALIK_SINIRLARI[1:]):
+        if alt <= oran < ust:
+            return f"{alt:.2f}–{ust:.2f}"
+    return f"{ARALIK_SINIRLARI[-1]:.2f}+"
+
+
+def aralik_sirasi(etiket: str) -> float:
+    return float(etiket.split("–")[0].rstrip("+"))
+
+
+def normal_olasiliklar(o1: float, o0: float, o2: float) -> tuple[float, float, float]:
+    """Oranlardan kâr payı ayıklanmış olasılıklar."""
+    ters = (1 / o1, 1 / o0, 1 / o2)
+    toplam = sum(ters)
+    return tuple(t / toplam for t in ters)
+
+
+def dilim(olasilik: float) -> str:
+    alt = min(int(olasilik / DILIM_GENISLIGI), int(1 / DILIM_GENISLIGI) - 1) * DILIM_GENISLIGI
+    return f"%{alt * 100:.0f}–{(alt + DILIM_GENISLIGI) * 100:.0f}"
+
+
+def _bos_sayac():
+    return {"ornek": 0, "tuttu": 0, "vaat": 0.0, "donus": 0.0, "donus_maks": 0.0}
+
+
+def _satira_cevir(anahtar: dict, s: dict) -> dict:
+    n = s["ornek"]
+    return {**anahtar, "ornek": n, "tuttu": s["tuttu"],
+            "tutma": round(s["tuttu"] / n, 4) if n else 0,
+            "vaat": round(s["vaat"] / n, 4) if n else 0,
+            "getiri": round(s["donus"] / n, 4) if n else 0,
+            "getiri_maks": round(s["donus_maks"] / n, 4) if n else 0}
+
+
+# --- 1. MS oran aralıkları (geçmiş) ---
+
+def ms_oran_tablosu(maclar: list[dict]) -> list[dict]:
+    sayac = defaultdict(_bos_sayac)
+    for m in maclar:
+        oranlar = [m.get(f"ort_{s}") for s in MS_SECENEKLERI]
+        if any(o is None for o in oranlar):
+            continue
+        gercek = sonuc_isareti(m["ms_ev"], m["ms_dep"])
+        for secim, oran in zip(MS_SECENEKLERI, oranlar):
+            maks = m.get(f"maks_{secim}") or oran
+            for anahtar in ((secim, aralik(oran)), ("hepsi", aralik(oran))):
+                s = sayac[anahtar]
+                s["ornek"] += 1
+                s["vaat"] += 1 / oran
+                if secim == gercek:
+                    s["tuttu"] += 1
+                    s["donus"] += oran
+                    s["donus_maks"] += maks
+    satirlar = [_satira_cevir({"secim": k[0], "aralik": k[1]}, s) for k, s in sayac.items()]
+    return sorted(satirlar, key=lambda r: ("hepsi102".index(r["secim"]) if r["secim"] != "hepsi" else -1,
+                                            aralik_sirasi(r["aralik"])))
+
+
+# --- 2. Koşullu İY/MS sıklıkları (geçmiş) ---
+
+def iyms_kosullu_tablo(maclar: list[dict]) -> dict[str, dict]:
+    tablo: dict[str, dict] = defaultdict(lambda: {"ornek": 0, **{s: 0 for s in IYMS_SECENEKLERI + MS_SECENEKLERI}})
+    for m in maclar:
+        oranlar = [m.get(f"ort_{s}") for s in MS_SECENEKLERI]
+        if any(o is None for o in oranlar):
+            continue
+        p1 = normal_olasiliklar(*oranlar)[0]
+        t = tablo[dilim(p1)]
+        t["ornek"] += 1
+        t[iyms_sonucu(m["iy_ev"], m["iy_dep"], m["ms_ev"], m["ms_dep"])] += 1
+        t[sonuc_isareti(m["ms_ev"], m["ms_dep"])] += 1
+    return dict(sorted(tablo.items(), key=lambda kv: float(kv[0].split("–")[0].lstrip("%"))))
+
+
+def kosullu_satirlar(tablo: dict[str, dict]) -> list[dict]:
+    satirlar = []
+    for d, t in tablo.items():
+        n = t["ornek"]
+        satir = {"ev_olasiligi": d, "ornek": n}
+        for s in IYMS_SECENEKLERI + MS_SECENEKLERI:
+            satir[s] = round(t[s] / n, 4) if n else 0
+        satirlar.append(satir)
+    return satirlar
+
+
+# --- iddaa verisi yardımcıları ---
+
+def son_oranlar(simdi: datetime, marketler: set[str], geriye_gun: int = 2) -> dict[str, dict[str, dict]]:
+    """{mac_id: {market: {"zaman": .., "oranlar": {secenek: oran}}}} - her maç/market için son anlık."""
+    son: dict[str, dict[str, dict]] = defaultdict(dict)
+    for dosya in depo.oran_dosyalari(simdi - timedelta(days=geriye_gun)):
+        for satir in depo.gz_csv_oku(dosya):
+            if satir["market"] not in marketler:
+                continue
+            kayit = son[satir["mac_id"]].get(satir["market"])
+            if kayit is None or satir["zaman_utc"] > kayit["zaman"]:
+                kayit = son[satir["mac_id"]][satir["market"]] = {"zaman": satir["zaman_utc"], "oranlar": {}}
+            if satir["zaman_utc"] == kayit["zaman"]:
+                kayit["oranlar"][satir["secenek"]] = float(satir["oran"])
+    return dict(son)
+
+
+def kapanis_oranlari(kayitlar: dict, marketler: set[str]) -> dict[str, dict[str, dict[str, float]]]:
+    """Her maç ve market için başlamadan önceki son oranlar: {mac_id: {market: {secenek: oran}}}."""
+    son: dict[tuple[str, str], tuple[str, dict]] = {}
+    for dosya in depo.oran_dosyalari():
+        for satir in depo.gz_csv_oku(dosya):
+            if satir["market"] not in marketler:
+                continue
+            kayit = kayitlar.get(satir["mac_id"])
+            if not kayit or satir["zaman_utc"] >= kayit["baslama_utc"]:
+                continue
+            anahtar = (satir["mac_id"], satir["market"])
+            mevcut = son.get(anahtar)
+            if mevcut is None or satir["zaman_utc"] > mevcut[0]:
+                mevcut = son[anahtar] = (satir["zaman_utc"], {})
+            if satir["zaman_utc"] == mevcut[0]:
+                mevcut[1][satir["secenek"]] = float(satir["oran"])
+    sonuc: dict[str, dict[str, dict[str, float]]] = defaultdict(dict)
+    for (mac_id, market), (_, oranlar) in son.items():
+        sonuc[mac_id][market] = oranlar
+    return dict(sonuc)
+
+
+def iddaa_ms_tablosu(kapanis: dict, sonuclar: dict) -> list[dict]:
+    """Toplanan iddaa verisinden MS oran aralığı tablosu (sonuçlar geldikçe büyür)."""
+    sayac = defaultdict(_bos_sayac)
+    for mac_id, marketler in kapanis.items():
+        oranlar = marketler.get(MS)
+        sonuc = sonuclar.get(mac_id)
+        if not oranlar or not sonuc or sonuc.get("durum") != "tamam":
+            continue
+        gercek = sonuc_isareti(int(sonuc["ms_ev"]), int(sonuc["ms_dep"]))
+        for secim, oran in oranlar.items():
+            if secim not in MS_SECENEKLERI:
+                continue
+            for anahtar in ((secim, aralik(oran)), ("hepsi", aralik(oran))):
+                s = sayac[anahtar]
+                s["ornek"] += 1
+                s["vaat"] += 1 / oran
+                if secim == gercek:
+                    s["tuttu"] += 1
+                    s["donus"] += oran
+                    s["donus_maks"] += oran
+    satirlar = [_satira_cevir({"secim": k[0], "aralik": k[1]}, s) for k, s in sayac.items()]
+    return sorted(satirlar, key=lambda r: (r["secim"] != "hepsi", r["secim"], aralik_sirasi(r["aralik"])))
+
+
+# --- 3. Değer adayları ---
+
+def deger_adaylari(oranlar: dict, kayitlar: dict, kosullu: dict[str, dict], simdi: datetime,
+                   ufuk: timedelta = timedelta(hours=24), min_ornek: int = MIN_DILIM_ORNEGI) -> list[dict]:
+    """Bugünkü iddaa oranları × geçmiş sıklık. Beklenen dönüş > 1 olanlar değerli görünür."""
+    adaylar = []
+    for mac_id, marketler in oranlar.items():
+        kayit = kayitlar.get(mac_id)
+        ms = (marketler.get(MS) or {}).get("oranlar", {})
+        if not kayit or not all(s in ms for s in MS_SECENEKLERI):
+            continue
+        bas = iso_oku(kayit["baslama_utc"])
+        if not (simdi < bas <= simdi + ufuk):
+            continue
+        p1 = normal_olasiliklar(ms["1"], ms["0"], ms["2"])[0]
+        d = dilim(p1)
+        satir = kosullu.get(d)
+        if not satir or satir["ornek"] < min_ornek:
+            continue
+        adaylar_mac = [("MS", s, ms[s]) for s in MS_SECENEKLERI]
+        iyms = (marketler.get(config.IYMS) or {}).get("oranlar", {})
+        adaylar_mac += [("İY/MS", s, o) for s, o in iyms.items() if s in IYMS_SECENEKLERI]
+        for market, secim, oran in adaylar_mac:
+            siklik = satir[secim] / satir["ornek"]
+            adaylar.append({"mac_id": mac_id, "lig": kayit.get("lig", ""), "ev": kayit["ev"],
+                            "dep": kayit["dep"], "baslama_utc": kayit["baslama_utc"], "market": market,
+                            "secim": secim, "oran": oran, "gecmis_siklik": round(siklik, 4),
+                            "adil_oran": round(1 / siklik, 2) if siklik else None,
+                            "beklenen": round(oran * siklik, 3), "ev_olasiligi": d, "ornek": satir["ornek"]})
+    return sorted(adaylar, key=lambda a: -a["beklenen"])
+
+
+# --- Kaydetme / okuma ---
+
+def analiz_yolu(ad: str):
+    return depo.kok() / "analiz" / ad
+
+
+def gecmis_analizi_yaz(maclar: list[dict]) -> dict:
+    ms_tablo = ms_oran_tablosu(maclar)
+    kosullu = iyms_kosullu_tablo(maclar)
+    ms_alan = ["secim", "aralik", "ornek", "tuttu", "tutma", "vaat", "getiri", "getiri_maks"]
+    depo.csv_yaz(analiz_yolu("gecmis_ms_oran.csv"), ms_tablo, ms_alan)
+    depo.csv_yaz(analiz_yolu("gecmis_iyms_kosullu.csv"), kosullu_satirlar(kosullu),
+                 ["ev_olasiligi", "ornek"] + IYMS_SECENEKLERI + MS_SECENEKLERI)
+    depo.json_yaz(analiz_yolu("gecmis_iyms_kosullu.json"), kosullu)
+    ozet = {"mac": len(maclar), "lig": len({m["lig"] for m in maclar}),
+            "ilk": min((m["tarih"] for m in maclar), default=""),
+            "son": max((m["tarih"] for m in maclar), default="")}
+    depo.json_yaz(analiz_yolu("gecmis_ozet.json"), ozet)
+    return ozet
+
+
+def kosullu_oku() -> dict[str, dict]:
+    return depo.json_oku(analiz_yolu("gecmis_iyms_kosullu.json")) or {}
+
+
+def ms_tablosu_oku() -> list[dict]:
+    satirlar = depo.csv_oku(analiz_yolu("gecmis_ms_oran.csv"))
+    for s in satirlar:
+        for k in ("ornek", "tuttu"):
+            s[k] = int(s[k])
+        for k in ("tutma", "vaat", "getiri", "getiri_maks"):
+            s[k] = float(s[k])
+    return satirlar
+
+
+def main():
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
+    maclar = gecmis.oku()
+    if not maclar:
+        raise SystemExit("Önce geçmiş veriyi indir: python -m iddaa.gecmis")
+    log.info("geçmiş analiz: %s", gecmis_analizi_yaz(maclar))
+
+
+if __name__ == "__main__":
+    main()

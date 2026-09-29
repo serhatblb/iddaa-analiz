@@ -33,6 +33,9 @@ jobs:
           GMAIL_UYGULAMA_SIFRESI: ${{ secrets.GMAIL_UYGULAMA_SIFRESI }}
           MAIL_ALICI: ${{ secrets.MAIL_ALICI }}
         run: python -m iddaa.rapor
+      - name: Paneli güncelle
+        if: always()
+        run: python -m iddaa.panel
       - name: Veriyi repoya kaydet
         if: always()
         run: bash scripts/kaydet.sh "Veri (günlük)"

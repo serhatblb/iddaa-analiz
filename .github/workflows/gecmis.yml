@@ -1,8 +1,8 @@
-name: Saatlik toplama
+name: Geçmiş veri ve analiz
 
 on:
   schedule:
-    - cron: "7 * * * *"   # her saat :07 (UTC)
+    - cron: "23 3 * * 1"  # her pazartesi 06:23 Türkiye saati
   workflow_dispatch:
 
 concurrency:
@@ -13,9 +13,9 @@ permissions:
   contents: write
 
 jobs:
-  topla:
+  gecmis:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -23,14 +23,12 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
-      - name: Bülten, oranlar, en çok oynananlar
-        run: python -m iddaa.topla
-      - name: Biten maçların sonuçları
-        if: always()
-        run: python -m iddaa.sonuc
+      - name: football-data geçmiş maçlarını indir
+        run: python -m iddaa.gecmis
+      - name: Geçmiş analiz tabloları
+        run: python -m iddaa.analiz
       - name: Paneli güncelle
-        if: always()
         run: python -m iddaa.panel
       - name: Veriyi repoya kaydet
         if: always()
-        run: bash scripts/kaydet.sh "Veri (saatlik)"
+        run: bash scripts/kaydet.sh "Geçmiş veri ve analiz"

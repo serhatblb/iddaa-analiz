@@ -10,7 +10,7 @@ import smtplib
 from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
 
-from . import config, depo
+from . import analiz, config, depo
 from .bulten import iso_oku, iyms_sonucu
 from .kupon import gunlere_ayir, kupon_yolu
 
@@ -54,22 +54,57 @@ def _tl(tutar: float) -> str:
     return f"{tutar:,.2f} TL".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
-def kapanis_iyms(kayitlar: dict) -> dict[str, dict[str, float]]:
-    """Her maç için başlamadan önceki son İY/MS oranları."""
-    son: dict[str, tuple[str, dict]] = {}
-    for dosya in depo.oran_dosyalari():
-        for satir in depo.gz_csv_oku(dosya):
-            if satir["market"] != config.IYMS:
-                continue
-            kayit = kayitlar.get(satir["mac_id"])
-            if not kayit or satir["zaman_utc"] >= kayit["baslama_utc"]:
-                continue
-            mevcut = son.get(satir["mac_id"])
-            if mevcut is None or satir["zaman_utc"] > mevcut[0]:
-                mevcut = son[satir["mac_id"]] = (satir["zaman_utc"], {})
-            if satir["zaman_utc"] == mevcut[0]:
-                mevcut[1][satir["secenek"]] = float(satir["oran"])
-    return {m: v[1] for m, v in son.items()}
+def _yuzde(x: float) -> str:
+    return f"%{100 * x:.1f}"
+
+
+def _ms_tablosu(rapor: Rapor, satirlar: list[dict], maks: bool = True):
+    basliklar = ["Oran aralığı", "Örnek", "Tutma %", "Oranın vaadi %", "Getiri (1 TL'ye)"]
+    if maks:
+        basliklar.append("Getiri (en iyi oranla)")
+    rapor.tablo(basliklar, [
+        [s["aralik"], s["ornek"], _yuzde(s["tutma"]), _yuzde(s["vaat"]), f"{s['getiri']:.3f}"]
+        + ([f"{s['getiri_maks']:.3f}"] if maks else [])
+        for s in satirlar
+    ])
+
+
+def _gecmis_bolumu(rapor: Rapor):
+    ozet = depo.json_oku(analiz.analiz_yolu("gecmis_ozet.json"))
+    ms = analiz.ms_tablosu_oku()
+    kosullu = analiz.kosullu_oku()
+    if not ozet or not ms:
+        return
+    rapor.bolum("Geçmiş veri: MS 1-0-2 oranları ne sıklıkla tutuyor")
+    rapor.yazi(f"{ozet['mac']:,} maç, {ozet['lig']} lig, {ozet['ilk']} – {ozet['son']}. "
+               "Oranlar yabancı bahis şirketlerinin ortalaması; iddaa oranları genelde biraz daha düşüktür.")
+    _ms_tablosu(rapor, [s for s in ms if s["secim"] == "hepsi" and s["ornek"] >= 200])
+    rapor.bolum("Geçmiş veri: ev sahibinin gücüne göre İY/MS adil oranları")
+    rapor.yazi("Adil oran = 1 / gerçekleşme sıklığı. iddaa bu orandan yüksek veriyorsa seçim değerlidir.")
+    satirlar = []
+    for d, t in kosullu.items():
+        if t["ornek"] < analiz.MIN_DILIM_ORNEGI:
+            continue
+        satirlar.append([d, t["ornek"]] + [f"{t['ornek'] / t[s]:.1f}" if t[s] else "-" for s in IYMS_SIRASI])
+    satirlar.sort(key=lambda s: float(s[0].split("–")[0].lstrip("%")))
+    rapor.tablo(["Ev kazanma olasılığı", "Örnek"] + IYMS_SIRASI, satirlar)
+
+
+def _deger_bolumu(rapor: Rapor, simdi: datetime, kayitlar: dict):
+    kosullu = analiz.kosullu_oku()
+    if not kosullu:
+        return
+    oranlar = analiz.son_oranlar(simdi, {config.IYMS, analiz.MS})
+    adaylar = [a for a in analiz.deger_adaylari(oranlar, kayitlar, kosullu, simdi) if a["beklenen"] > 1]
+    rapor.bolum("Önümüzdeki 24 saat: geçmiş veriye göre değerli görünen seçimler")
+    if not adaylar:
+        rapor.yazi("iddaa oranı geçmiş sıklığın üstünde kalan seçim yok.")
+        return
+    rapor.yazi("Beklenen = iddaa oranı × geçmişteki gerçek sıklık. 1'in üstü teoride kârlı; lig farkları "
+               "hesaba katılmadığı için kesin değil, doğrulama verisi biriktikçe netleşecek.")
+    rapor.tablo(["Maç", "Lig", "Başlama", "Market", "Seçim", "iddaa oranı", "Adil oran", "Beklenen"],
+                [[f"{a['ev']} - {a['dep']}", a["lig"], _saat(a["baslama_utc"]), a["market"], a["secim"],
+                  a["oran"], a["adil_oran"], f"{a['beklenen']:.2f}"] for a in adaylar[:15]])
 
 
 def iyms_istatistik(kapanis: dict, sonuclar: dict, min_oran: float | None = None,
@@ -156,11 +191,23 @@ def olustur(simdi: datetime | None = None) -> Rapor:
                 [[len(oynanan), kazanan, _tl(yatirilan), _tl(donen), _tl(donen - yatirilan),
                   _tl(config.KUPON_BUTCE - yatirilan + donen)]])
 
-    kapanis = kapanis_iyms(kayitlar)
-    rapor.bolum(f"İY/MS tek seçim istatistiği (oran {config.KUPON_MIN_ORAN:g}–{config.KUPON_MAX_ORAN:g})")
+    kapanis_tum = analiz.kapanis_oranlari(kayitlar, {config.IYMS, analiz.MS})
+    kapanis = {m: v[config.IYMS] for m, v in kapanis_tum.items() if config.IYMS in v}
+
+    _deger_bolumu(rapor, simdi, kayitlar)
+    _gecmis_bolumu(rapor)
+
+    rapor.bolum("iddaa verisi: MS oran aralıkları")
+    ms_satirlari = [s for s in analiz.iddaa_ms_tablosu(kapanis_tum, sonuclar) if s["secim"] == "hepsi"]
+    if ms_satirlari:
+        _ms_tablosu(rapor, ms_satirlari, maks=False)
+    else:
+        rapor.yazi("Henüz sonucu belli olan veri yok.")
+
+    rapor.bolum(f"iddaa verisi: İY/MS tek seçim (oran {config.KUPON_MIN_ORAN:g}–{config.KUPON_MAX_ORAN:g})")
     rapor.yazi("Getiri 1'in üstündeyse o seçim uzun vadede kazandırıyor demektir.")
     _istatistik_tablosu(rapor, iyms_istatistik(kapanis, sonuclar, config.KUPON_MIN_ORAN, config.KUPON_MAX_ORAN))
-    rapor.bolum("İY/MS tüm oranlar")
+    rapor.bolum("iddaa verisi: İY/MS tüm oranlar")
     _istatistik_tablosu(rapor, iyms_istatistik(kapanis, sonuclar))
 
     rapor.bolum("Veri durumu")
