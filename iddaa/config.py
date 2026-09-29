@@ -13,7 +13,7 @@ MAC_ONCESI_TIPLER = (1, 2)         # t=4 canlı marketler, toplanmıyor
 
 # Toplama kuralları
 KAPANIS_ONCESI = timedelta(minutes=75)   # başlamaya bu kadar kala tüm marketlerin kapanış anlığı
-IYMS_TEKRAR_KONTROL = timedelta(hours=6) # İY/MS'si olmayan maçlar bu aralıkla tekrar kontrol edilir
+IYMS_TEKRAR_KONTROL = timedelta(hours=2) # İY/MS'si olmayan maçlar bu aralıkla tekrar kontrol edilir
 IYMS_KONTROL_UFKU = timedelta(hours=36)  # sadece bu süre içinde başlayacak maçlar tekrar kontrol edilir
 ISTEK_ARALIGI = float(os.environ.get("IDDAA_ISTEK_ARALIGI", "0.4"))  # saniye
 

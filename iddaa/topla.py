@@ -4,7 +4,7 @@ Kurallar:
 - Maç ilk kez görülünce tüm maç önü marketler 'acilis' olarak kaydedilir.
 - İY/MS'si olan maçların İY/MS oranları her çalışmada 'saatlik' olarak kaydedilir.
 - Başlamaya 75 dakika kala tüm marketler bir kez 'kapanis' olarak kaydedilir.
-- İY/MS'si olmayan yakın maçlar 6 saatte bir tekrar kontrol edilir (market sonradan açılabilir).
+- İY/MS'si olmayan yakın maçlar 2 saatte bir tekrar kontrol edilir.(market sonradan açılabilir).
 """
 import logging
 import sys

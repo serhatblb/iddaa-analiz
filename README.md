@@ -10,8 +10,8 @@ Her şey GitHub Actions'ta çalışır, bilgisayarın açık olması gerekmez.
 
 | Workflow | Zaman | İş |
 |---|---|---|
-| Saatlik toplama | Her saat :07 | Bülten, oranlar, en çok oynananlar; biten maçların sonuçları |
-| Günlük kupon ve rapor | Her gün 09:43 | Dünkü kuponu değerlendirir, bugünün 3'lü İY/MS kuponunu seçer, rapor yazar ve mail atar |
+| Saatlik toplama | Her saat :07 | Bülten, oranlar, en çok oynananlar; biten maçların sonuçları (Mackolik); panel |
+| Günlük kupon ve rapor | Her gün 09:43 | Dünkü kuponları değerlendirir, bugünün İY/MS ve değer kuponlarını seçer, rapor yazar ve mail atar |
 | Geçmiş veri ve analiz | Her pazartesi 06:23 | football-data.co.uk'tan 22 lig, 2012'den bugüne maçlar; MS oran aralığı ve İY/MS adil oran tabloları |
 | Testler | Kod değişince | `pytest` |
 
@@ -19,10 +19,15 @@ Toplama kuralları:
 - Maç ilk görüldüğünde tüm maç önü marketler **açılış** olarak kaydedilir.
 - İY/MS'si olan maçların İY/MS oranları **her saat** kaydedilir.
 - Başlamaya 75 dakika kala tüm marketler bir kez **kapanış** olarak kaydedilir.
-- İY/MS'si olmayan yakın maçlar 6 saatte bir tekrar kontrol edilir.
+- İY/MS'si olmayan yakın maçlar 2 saatte bir tekrar kontrol edilir.
 
-Kupon kuralı: önümüzdeki 24 saatte başlayacak maçlarda, oranı 20–30 arası İY/MS seçeneklerinden
-her maç için en yüksek oranlı olan aday olur; en yüksek oranlı 3 aday 20 TL'lik kağıt kupona girer.
+Kuponlar (20 TL, kağıt üstü), önümüzdeki 24 saatte başlayacak maçlardan:
+- **İY/MS kuponu:** oranı 20–30 arası İY/MS seçenekleri; her maçtan en yüksek oranlı olan aday olur, en yüksek 3 aday seçilir.
+- **Değer kuponu:** MS 1-0-2 ve İY/MS seçeneklerinden geçmiş veriye göre beklenen dönüşü 1'in üstünde olanlar; en yüksek 3 aday.
+
+Sonuçlar Mackolik'in günlük canlı sonuç verisinden (`vd.mackolik.com/livedata?date=GG/AA/YYYY`) iddaa maç
+numarasıyla eşleştirilerek alınır. MS için 90 dakika skoru kullanılır; ertelenen, hükmen ve yarıda kalan maçlar iptal
+(oran 1) sayılır. 3 gün içinde sonucu bulunamayan maç "belirsiz" olur ve o kupon kasaya katılmaz.
 Ayarlar `iddaa/config.py` içinde (ortam değişkenleriyle de değiştirilebilir).
 
 ## Veri düzeni

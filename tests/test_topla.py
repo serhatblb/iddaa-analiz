@@ -69,8 +69,8 @@ def test_iyms_sonradan_acilirsa_yakalanir(veri_dizini):
     topla.calistir(istemci, SIMDI)
     istemci.maclar[5] = mac(5, m["d"], iyms=IYMS_ORANLARI)
     topla.calistir(istemci, SIMDI + timedelta(hours=1))
-    assert depo.maclari_oku()["5"]["iyms_var"] == "0"  # 6 saat dolmadan kontrol edilmez
-    sonra = SIMDI + timedelta(hours=6)
+    assert depo.maclari_oku()["5"]["iyms_var"] == "0"  # 2 saat dolmadan kontrol edilmez
+    sonra = SIMDI + timedelta(hours=2)
     topla.calistir(istemci, sonra)
     assert depo.maclari_oku()["5"]["iyms_var"] == "1"
     assert any(s["market"] == "2_90" for s in depo.gz_csv_oku(depo.anlik_yolu("oranlar", sonra)))
