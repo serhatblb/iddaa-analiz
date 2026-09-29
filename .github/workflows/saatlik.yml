@@ -30,4 +30,4 @@ jobs:
         run: python -m iddaa.sonuc
       - name: Veriyi repoya kaydet
         if: always()
-        run: bash scripts/kaydet.sh "veri: saatlik"
+        run: bash scripts/kaydet.sh "Veri (saatlik)"
