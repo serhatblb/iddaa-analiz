@@ -1,4 +1,4 @@
-name: Günlük kupon ve rapor
+name: Günlük kupon ve rapor (yedek)
 
 on:
   schedule:
@@ -26,14 +26,12 @@ jobs:
       - name: Sonuçları güncelle (Mackolik)
         continue-on-error: true
         run: python -m iddaa.sonuc
-      - name: Kuponu değerlendir ve bugünün kuponunu oluştur
-        run: python -m iddaa.kupon
-      - name: Rapor ve mail
+      - name: Kuponlar, rapor ve mail
         env:
           GMAIL_ADRES: ${{ secrets.GMAIL_ADRES }}
           GMAIL_UYGULAMA_SIFRESI: ${{ secrets.GMAIL_UYGULAMA_SIFRESI }}
           MAIL_ALICI: ${{ secrets.MAIL_ALICI }}
-        run: python -m iddaa.rapor
+        run: python -m iddaa.gunluk --zorla
       - name: Paneli güncelle
         if: always()
         run: python -m iddaa.panel

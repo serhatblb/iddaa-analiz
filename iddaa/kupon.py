@@ -166,7 +166,9 @@ def kasa(kuponlar: dict, tur: str) -> dict:
             "kalan": config.KUPON_BUTCE - yatirilan + donen}
 
 
-def calistir(simdi: datetime | None = None) -> dict:
+def calistir(simdi: datetime | None = None, olustur: bool = True) -> dict:
+    """Tüm kuponları değerlendirir; olustur=True ise bugünün eksik kuponlarını oluşturur.
+    Dönen özette 'yeni' anahtarı bu çalışmada kupon oluşturulup oluşturulmadığını söyler."""
     simdi = (simdi or datetime.now(timezone.utc)).replace(microsecond=0)
     tarih = simdi.astimezone(config.TR).date().isoformat()
     satirlar = kuponlari_oku()
@@ -174,10 +176,11 @@ def calistir(simdi: datetime | None = None) -> dict:
     for grup in kuponlara_ayir(satirlar).values():
         kupon_degerlendir(grup, sonuclar)
 
-    ozet = {"tarih": tarih}
+    ozet = {"tarih": tarih, "yeni": False}
     mevcut = {(s["tarih"], s["tur"]) for s in satirlar}
-    eksik = [t for t in TURLER if (tarih, t) not in mevcut]
+    eksik = [t for t in TURLER if (tarih, t) not in mevcut] if olustur else []
     if eksik:
+        ozet["yeni"] = True
         adaylar = oneriler(simdi)
         for tur in eksik:
             yeni = kupon_olustur(tarih, tur, adaylar[tur])

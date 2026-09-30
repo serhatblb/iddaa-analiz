@@ -11,7 +11,7 @@ Her şey GitHub Actions'ta çalışır, bilgisayarın açık olması gerekmez.
 | Workflow | Zaman | İş |
 |---|---|---|
 | Saatlik toplama | Her saat :17 | Bülten, oranlar, en çok oynananlar; biten maçların sonuçları (Mackolik); panel |
-| Günlük kupon ve rapor | Her gün 09:43 | Dünkü kuponları değerlendirir, bugünün İY/MS ve 1-0-2 kuponlarını seçer, rapor yazar ve mail atar |
+| Günlük kupon ve rapor (yedek) | Her gün 09:43 | Saatlik çalışma zaten 09:40'tan sonraki ilk çalışmada bugünün İY/MS ve 1-0-2 kuponlarını seçer, rapor yazar ve mail atar; bu workflow sadece yedek |
 | Geçmiş veri ve analiz | Her pazartesi 06:23 | football-data.co.uk'tan 22 lig, 2012'den bugüne maçlar; MS oran aralığı ve İY/MS adil oran tabloları |
 | Testler | Kod değişince | `pytest` |
 
@@ -48,6 +48,12 @@ data/
 
 Market anahtarı `t_st` formatındadır; İY/MS `2_90`, Maç Sonucu `1_1`. İY/MS seçeneklerinde `0` beraberliktir.
 Tüm zamanlar UTC tutulur, raporlarda Türkiye saatine çevrilir.
+
+## Zamanlama notu
+
+GitHub'ın zamanlanmış (cron) tetikleyicileri Ağustos 2026'dan beri bazı repolarda saatlerce gecikiyor ya da hiç
+çalışmıyor. Bu yüzden günlük kupon ayrı bir zamanlamaya bağlı değil; saatlik çalışmanın içinde yapılıyor.
+Saatlik çalışma elle de tetiklenebilir: Actions → Saatlik toplama → Run workflow.
 
 ## Panel
 
