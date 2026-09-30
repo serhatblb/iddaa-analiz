@@ -1,2 +1,2 @@
-tarih,sira,mac_id,lig,ev,dep,baslama_utc,secim,oran,gercek,tuttu,toplam_oran,tutar,durum,kazanc
-2026-09-29,0,,,,,,0 aday,,,,,0,aday_yok,0
+tarih,tur,sira,mac_id,lig,ev,dep,baslama_utc,market,secim,oran,tutma,beklenen,gercek,tuttu,toplam_oran,tutar,durum,kazanc
+2026-09-29,iyms,0,,,,,,,0 aday,,,,,,,0,aday_yok,0
