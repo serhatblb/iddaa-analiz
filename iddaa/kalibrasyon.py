@@ -291,7 +291,7 @@ def _say(sonuc, anahtar, oran: float, tuttu: bool) -> None:
         s["donus"] += oran
 
 
-def geriye_test(model: dict, baslangic: str, bitis: str) -> dict:
+def geriye_test(model: dict, baslangic: str, bitis: str, sadece: set[str] | None = None) -> dict:
     """Test döneminde (model bu dönemi görmeden kuruldu) 1 TL'lik bahisler; oranlar o dönemin oranları.
 
     Stratejiler (market başına):
@@ -303,6 +303,8 @@ def geriye_test(model: dict, baslangic: str, bitis: str) -> dict:
     sonuc = _test_sayaci()
     for _, lig, skor, marketler in mac_akisi(baslangic, bitis):
         for market, oranlar in marketler.items():
+            if sadece is not None and market not in sadece:
+                continue
             p = olasiliklar(model, market, oranlar, lig)
             if not p:
                 continue
@@ -402,39 +404,78 @@ def model_oku() -> dict:
     return depo.json_oku(model_yolu()) or {}
 
 
+MIN_EGITIM_MAC = 3000   # bir market için standart eğitim döneminde bundan az maç varsa eldeki veri ikiye bölünür
+
+
+def bolme_plani(sayim: dict[str, dict[str, int]], bu_ay: str) -> dict[str, tuple[str, str, str, str]]:
+    """Market başına (eğitim başı, eğitim sonu, test başı, test sonu). Standart: son 12 ay test, öncesindeki
+    36 ay eğitim. O markette eğitim dönemi verisi azsa (ör. maç sayfası oranları henüz inmemişse) marketin veri
+    olan ayları ortadan ikiye bölünür: ilk yarı eğitim, ikinci yarı test."""
+    test_bas = ay_ekle(bu_ay, -(TEST_AY - 1))
+    egitim_bas, egitim_bit = ay_ekle(test_bas, -EGITIM_AY), ay_ekle(test_bas, -1)
+    plan = {}
+    for market, aylar in sayim.items():
+        if sum(n for a, n in aylar.items() if egitim_bas <= a <= egitim_bit) >= MIN_EGITIM_MAC:
+            plan[market] = (egitim_bas, egitim_bit, test_bas, bu_ay)
+            continue
+        dolu = sorted(a for a, n in aylar.items() if n)
+        if len(dolu) >= 4:
+            orta = dolu[len(dolu) // 2]
+            plan[market] = (dolu[0], ay_ekle(orta, -1), orta, dolu[-1])
+    return plan
+
+
 def calistir(bugun: date | None = None) -> dict:
     bugun = bugun or datetime.now(timezone.utc).astimezone(config.TR).date()
     bu_ay = bugun.strftime("%Y-%m")
-    test_bas = ay_ekle(bu_ay, -(TEST_AY - 1))   # son 12 ay (bu ay dahil)
-    egitim_bas = ay_ekle(test_bas, -EGITIM_AY)
     canli_bas = ay_ekle(bu_ay, -EGITIM_AY)
 
-    # 1) Geriye test modeli: test döneminden önceki veri
-    egitim = Sayaclar()
-    for _, lig, skor, marketler in mac_akisi(egitim_bas, ay_ekle(test_bas, -1)):
-        egitim.ekle(lig, skor, marketler)
-    test = geriye_test(model_kur(egitim), test_bas, bu_ay) if egitim.mac else {}
-
-    # 2) Canlı model ve tablolar: son EGITIM_AY ay (tablolar tüm veri)
+    # 1) Canlı model ve tablolar: son EGITIM_AY ay (tablolar tüm veri); market/ay sayımı
     canli, tum = Sayaclar(), Sayaclar()
+    sayim: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
     tum_ilk, tum_son = "", ""
     for tarih, lig, skor, marketler in mac_akisi():
         tum.ekle(lig, skor, marketler)
         tum_ilk, tum_son = tum_ilk or tarih, tarih
+        for market in marketler:
+            sayim[market][tarih[:7]] += 1
         if tarih[:7] >= canli_bas:
             canli.ekle(lig, skor, marketler)
     model = model_kur(canli)
     model.update({"olusturma": bugun.isoformat(), "egitim_baslangic": canli_bas, "mac": canli.mac,
                   "kral_katsayi": KRAL_KATSAYI})
+
+    # 2) Geriye dönük test: her plan için model sadece eğitim dönemiyle kurulur, test dönemini hiç görmez
+    planlar = bolme_plani(sayim, bu_ay)
+    gruplar: dict[tuple, set[str]] = defaultdict(set)
+    for market, plan in planlar.items():
+        gruplar[plan].add(market)
+    test_satirlari, plan_ozeti = [], {}
+    for (e_bas, e_bit, t_bas, t_bit), marketler_ in sorted(gruplar.items()):
+        egitim = Sayaclar()
+        for _, lig, skor, marketler in mac_akisi(e_bas, e_bit):
+            secili = {m: o for m, o in marketler.items() if m in marketler_}
+            if secili:
+                egitim.ekle(lig, skor, secili)
+        sonuc = geriye_test(model_kur(egitim), t_bas, t_bit, marketler_)
+        for satir in sonuc["satirlar"]:
+            satir.update({"egitim": f"{e_bas} → {e_bit}", "test": f"{t_bas} → {t_bit}"})
+        test_satirlari += sonuc["satirlar"]
+        for market in marketler_:
+            plan_ozeti[market] = {"egitim": f"{e_bas} → {e_bit}", "test": f"{t_bas} → {t_bit}",
+                                  "egitim_mac": sum(n for a, n in sayim[market].items() if e_bas <= a <= e_bit)}
+    standart = (ay_ekle(ay_ekle(bu_ay, -(TEST_AY - 1)), -EGITIM_AY), ay_ekle(bu_ay, -(TEST_AY - 1)))
+
     depo.json_yaz(model_yolu(), model)
     depo.json_yaz(depo.kok() / "analiz" / "iddaa_oran_tablosu.json", oran_tablosu(tum))
     depo.json_yaz(depo.kok() / "analiz" / "iddaa_senaryolar.json",
                   {**senaryolar(tum), "ilk": tum_ilk, "son": tum_son, "olusturma": bugun.isoformat()})
     depo.json_yaz(depo.kok() / "analiz" / "iddaa_kalibrasyon_tablosu.json", kalibrasyon_tablosu(canli, model))
-    depo.json_yaz(depo.kok() / "analiz" / "geriye_test.json", {**test, "egitim_baslangic": egitim_bas,
-                                                              "egitim_mac": egitim.mac})
-    ozet = {"tum_mac": tum.mac, "canli_mac": canli.mac, "egitim_mac": egitim.mac,
-            "test": [s for s in test.get("satirlar", []) if s["esik"] in (0.0, 1.0) and s["strateji"] != "hepsi"]}
+    depo.json_yaz(depo.kok() / "analiz" / "geriye_test.json",
+                  {"satirlar": test_satirlari, "planlar": plan_ozeti, "egitim_baslangic": standart[0],
+                   "baslangic": standart[1], "bitis": bu_ay})
+    ozet = {"tum_mac": tum.mac, "canli_mac": canli.mac, "planlar": plan_ozeti,
+            "test": [s for s in test_satirlari if s["esik"] in (0.0, 1.0) and s["strateji"] != "hepsi"]}
     log.info("özet: %s", ozet)
     return ozet
 

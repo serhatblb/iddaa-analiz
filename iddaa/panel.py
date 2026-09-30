@@ -407,15 +407,16 @@ def iddaa_gecmisi_sekmesi(senaryo: dict, test: dict, tekli: dict) -> str:
     if test_satirlari:
         satir = [[STRATEJILER.get(r["strateji"], r["strateji"]), r["market"],
                   "hepsi" if not r["esik"] else f"≥ {r['esik']:.2f}", f"{r['bahis']:,}",
-                  _yuzde(r["tutan"] / r["bahis"]) if r["bahis"] else "-", _getiri_td(r["getiri_kral"])]
+                  _yuzde(r["tutan"] / r["bahis"]) if r["bahis"] else "-", _getiri_td(r["getiri_kral"]),
+                  r.get("test", "")]
                  for r in sorted(test_satirlari, key=lambda r: (r["market"], r["strateji"], r["esik"]))]
         parcalar.append(
             '<div class="kart"><h2>Model geçmişte işe yarar mıydı? (geriye dönük test)</h2>'
-            f'<p class="aciklama">Model {_e(test.get("egitim_baslangic", ""))} → {_e(test.get("baslangic", ""))} '
-            f'arası maçlarla kuruldu, {_e(test.get("baslangic", ""))} → {_e(test.get("bitis", ""))} maçlarını '
-            "hiç görmeden bu dönemde denendi. Eşik: modelin hesapladığı 1 TL → beklenen dönüş. "
+            "<p class=\"aciklama\">Model her bahis için test döneminden önceki maçlarla kuruldu, test dönemindeki "
+            "maçları hiç görmeden denendi. Eşik: modelin hesapladığı 1 TL → beklenen dönüş. "
             "Burada 1'in üstünde kalan bir satır, gerçek bir avantaj adayıdır.</p>"
-            + _tablo(["Strateji", "Bahis", "Beklenen", "Bahis sayısı", "Tuttu", "1 TL →"], satir, sol=2) + "</div>")
+            + _tablo(["Strateji", "Bahis", "Beklenen", "Bahis sayısı", "Tuttu", "1 TL →", "Test dönemi"], satir, sol=2)
+            + "</div>")
     tekli_satirlar = tekli.get("satirlar", [])
     parcalar.append(
         '<div class="kart"><h2>Sanal tekliler (canlı takip)</h2><p class="aciklama">Başlamasına 20 dk – 4 saat '

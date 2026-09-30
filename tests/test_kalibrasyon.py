@@ -90,7 +90,8 @@ def test_mac_akisi_ve_calistir(veri_dizini):
     tarih, lig, skor, marketler = akis[0]
     assert lig == "İngiltere|İNG" and set(marketler) == {"MS", "İY/MS", "Toplam gol", "2.5 A/Ü"}
     ozet = k.calistir(date(2026, 9, 30))
-    assert ozet["tum_mac"] == 400 * 21 and ozet["egitim_mac"] == 400 * 9  # test: son 12 ay, eğitim öncesi
+    assert ozet["tum_mac"] == 400 * 21
+    assert ozet["planlar"]["MS"] == {"egitim": "2022-10 → 2025-09", "test": "2025-10 → 2026-09", "egitim_mac": 3600}
     model = k.model_oku()
     assert model["mac"] == 400 * 21 and "İY/MS" in model["marketler"]
     test = depo.json_oku(depo.kok() / "analiz" / "geriye_test.json")
@@ -196,3 +197,13 @@ def test_senaryolar_cift_saymaz():
     assert satirlar[("2.5 A/Ü", "hepsi", "")]["bahis"] == 2 and satirlar[("2.5 A/Ü", "Üst", "")]["bahis"] == 1
     assert satirlar[("MS", "hepsi", "")]["bahis"] == 3 and satirlar[("MS", "1", "2–3")]["tutan"] == 1
     assert abs(satirlar[("MS", "1", "")]["getiri_kral"] - 2.0 * 1.04) < 1e-9
+
+
+def test_bolme_plani():
+    sayim = {"MS": {f"2024-{a:02d}": 500 for a in range(1, 13)} | {f"2025-{a:02d}": 500 for a in range(1, 13)},
+             "İY/MS": {"2026-01": 100, "2026-02": 100, "2026-03": 100, "2026-04": 100, "2026-05": 100},
+             "KG": {"2026-09": 50}}
+    plan = k.bolme_plani(sayim, "2026-09")
+    assert plan["MS"] == ("2022-10", "2025-09", "2025-10", "2026-09")
+    assert plan["İY/MS"] == ("2026-01", "2026-02", "2026-03", "2026-05")  # az veri: ortadan ikiye
+    assert "KG" not in plan

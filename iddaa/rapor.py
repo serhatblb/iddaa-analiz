@@ -115,11 +115,12 @@ def _iddaa_gecmisi_bolumu(rapor: Rapor) -> bool:
     secili = [r for r in test.get("satirlar", [])
               if (r["strateji"] == "mac_basi" and r["esik"] in (0.0, 0.9, 1.0)) or r["strateji"].startswith("hayal")]
     if secili:
-        rapor.bolum("Model geriye dönük test (son 12 ay, model bu maçları görmeden)")
-        rapor.tablo(["Strateji", "Bahis", "Beklenen eşiği", "Bahis sayısı", "Tuttu", "1 TL →"],
+        rapor.bolum("Model geriye dönük test (model test dönemini görmeden kuruldu)")
+        rapor.tablo(["Strateji", "Bahis", "Beklenen eşiği", "Bahis sayısı", "Tuttu", "1 TL →", "Test dönemi"],
                     [[STRATEJI_ADI.get(r["strateji"], r["strateji"]), r["market"],
                       "hepsi" if not r["esik"] else f"≥ {r['esik']:.2f}", f"{r['bahis']:,}",
-                      _yuzde(r["tutan"] / r["bahis"]) if r["bahis"] else "-", f"{r['getiri_kral']:.3f}"]
+                      _yuzde(r["tutan"] / r["bahis"]) if r["bahis"] else "-", f"{r['getiri_kral']:.3f}",
+                      r.get("test", "")]
                      for r in sorted(secili, key=lambda r: (r["market"], r["strateji"], r["esik"]))])
     tekli = tekler.degerlendir()
     if tekli["satirlar"]:
