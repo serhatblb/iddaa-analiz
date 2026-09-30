@@ -129,13 +129,19 @@ def mac_akisi(baslangic: str = "", bitis: str = "9999-12"):
 
 # --- model ---
 
-def _irls(dilimler: list[tuple[float, float, float]], derece: int = 2, tur: int = 25) -> list[float]:
-    """Gruplanmış veride lojistik regresyon: [(x, n, tutan)] -> katsayılar (a, b, c)."""
+ONCUL = [0.0, 1.0, 0.0]          # öncül: iddaa'nın olasılığı doğru (p = q)
+CEZA = [1.0, 10.0, 200.0]         # öncüle çekme gücü; eğrilik (c) en çok: az veride eğri bükülmesin
+
+
+def _irls(dilimler: list[tuple[float, float, float]], derece: int = 2, tur: int = 25,
+          ceza: list[float] = CEZA) -> list[float]:
+    """Gruplanmış veride lojistik regresyon: [(x, n, tutan)] -> katsayılar (a, b, c).
+    Katsayılar öncüle (p = q) doğru cezalandırılır (ridge); çok veride etkisi yok, az veride eğriyi düzleştirir."""
     k = derece + 1
-    beta = [0.0, 1.0, 0.0][:k]
+    beta = ONCUL[:k]
     for _ in range(tur):
-        H = [[1e-6 * (i == j) for j in range(k)] for i in range(k)]
-        g = [0.0] * k
+        H = [[(ceza[i] if i < len(ceza) else 0.0) * (i == j) + 1e-9 * (i == j) for j in range(k)] for i in range(k)]
+        g = [-(ceza[i] if i < len(ceza) else 0.0) * (beta[i] - ONCUL[i]) for i in range(k)]
         for x, n, y in dilimler:
             ozellik = [x ** i for i in range(k)]
             p = sigmoid(sum(b * f for b, f in zip(beta, ozellik)))
@@ -167,9 +173,24 @@ def _coz(A: list[list[float]], b: list[float]) -> list[float]:
     return [M[i][n] / M[i][i] for i in range(n)]
 
 
-def egrisel_olasilik(katsayi: list[float], q: float, u: float = 0.0) -> float:
+def egrisel_olasilik(katsayi: list[float], q: float, u: float = 0.0, aralik: list[float] | None = None) -> float:
+    """Kalibrasyon eğrisi. Verinin görüldüğü aralığın (logit q) dışında eğri uzatılmaz: kenardaki
+    düzeltme (logit p − logit q) sabit tutulur, yani iddaa'nın olasılığıyla aynı eğimle devam edilir."""
     x = logit(q)
-    return sigmoid(sum(b * x ** i for i, b in enumerate(katsayi)) + u)
+    xk = min(max(x, aralik[0]), aralik[1]) if aralik else x
+    return sigmoid(sum(b * xk ** i for i, b in enumerate(katsayi)) + (x - xk) + u)
+
+
+def _agirlikli_yuzdelik(degerler: list[tuple[float, float]], oran: float) -> float:
+    """[(değer, ağırlık)] içinde ağırlıklı yüzdelik."""
+    degerler = sorted(degerler)
+    toplam = sum(w for _, w in degerler)
+    birikim = 0.0
+    for d, w in degerler:
+        birikim += w
+        if birikim >= oran * toplam:
+            return d
+    return degerler[-1][0]
 
 
 class Sayaclar:
@@ -215,14 +236,17 @@ def model_kur(sayac: Sayaclar, min_lig_ornek: int = 200, min_mac: int = MIN_MODE
         if sum(n for _, n, _ in dilimler) < min_mac:
             continue
         katsayi = _irls(dilimler) if sum(n for _, n, _ in dilimler) >= 300 else [0.0, 1.0, 0.0]
-        model["marketler"].setdefault(market, {})[secenek] = {"katsayi": [round(k, 6) for k in katsayi], "lig": {}}
+        aralik = [round(_agirlikli_yuzdelik([(x, n) for x, n, _ in dilimler], 0.01), 4),
+                  round(_agirlikli_yuzdelik([(x, n) for x, n, _ in dilimler], 0.99), 4)]
+        model["marketler"].setdefault(market, {})[secenek] = {"katsayi": [round(k, 6) for k in katsayi],
+                                                              "aralik": aralik, "lig": {}}
     # Lig düzeltmesi: u_ham = (O - E) / V, örnekleme varyansı 1/V; τ² momentlerden
     lig_toplam = defaultdict(lambda: [0.0, 0.0, 0.0, 0])   # (market, seçenek, lig) -> [O, E, V, n]
     for (market, secenek, lig, _), (n, y, sq) in sayac.lig_dilim.items():
         if secenek not in model["marketler"].get(market, {}):
             continue
-        katsayi = model["marketler"][market][secenek]["katsayi"]
-        p = egrisel_olasilik(katsayi, sq / n)
+        egri = model["marketler"][market][secenek]
+        p = egrisel_olasilik(egri["katsayi"], sq / n, aralik=egri.get("aralik"))
         t = lig_toplam[(market, secenek, lig)]
         t[0] += y
         t[1] += n * p
@@ -255,7 +279,7 @@ def olasiliklar(model: dict, market: str, oranlar: dict[str, float], lig: str | 
         s = tanim.get(secenek)
         if not s:
             return {}
-        ham[secenek] = egrisel_olasilik(s["katsayi"], q, s["lig"].get(lig, 0.0) if lig else 0.0)
+        ham[secenek] = egrisel_olasilik(s["katsayi"], q, s["lig"].get(lig, 0.0) if lig else 0.0, s.get("aralik"))
     toplam = sum(ham.values())
     return {s: p / toplam for s, p in ham.items()} if toplam else {}
 
@@ -447,9 +471,10 @@ def kalibrasyon_tablosu(sayac: Sayaclar, model: dict) -> list[dict]:
     for (market, secenek, d), (n, y, sq) in sorted(sayac.dilim.items()):
         if n < 200 or secenek not in model["marketler"].get(market, {}):
             continue
-        katsayi = model["marketler"][market][secenek]["katsayi"]
+        egri = model["marketler"][market][secenek]
         satirlar.append({"market": market, "secenek": secenek, "q": round(sq / n, 4), "ornek": n,
-                         "siklik": round(y / n, 4), "model": round(egrisel_olasilik(katsayi, sq / n), 4)})
+                         "siklik": round(y / n, 4),
+                         "model": round(egrisel_olasilik(egri["katsayi"], sq / n, aralik=egri.get("aralik")), 4)})
     return satirlar
 
 

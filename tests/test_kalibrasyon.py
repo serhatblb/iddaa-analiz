@@ -218,3 +218,21 @@ def test_hayal_kuponu(veri_dizini):
     # Sentetik veride her gün 400 maç, 20-30 arası 1/2 (26) ve 2/1 (27.04); sonuç 1/1 ya da 0/0: hiç tutmaz
     assert h["gun"] == 2 and h["harcanan"] == 40 and h["kazanan"] == 0 and h["tek_bahis"] == 6
     assert h["tek_tutan"] == 0 and h["tek_getiri"] == 0
+
+
+def test_dar_aralikta_egri_uzatilmaz():
+    """İY/MS 1/0 gibi seçeneklerde q hep %4-7 arası; aralık dışında eğri bükülüp saçmalamamalı."""
+    rnd = random.Random(11)
+    sayac = k.Sayaclar()
+    for _ in range(6000):
+        q1 = rnd.uniform(0.04, 0.07)
+        oranlar = {"Var": round(1 / (q1 * 1.2), 2), "Yok": round(1 / ((1 - q1) * 1.2), 2)}
+        tuttu = rnd.random() < q1
+        sayac.ekle("L", (0, 0, 1, 1) if tuttu else (0, 0, 1, 0), {"KG": oranlar})
+    model = k.model_kur(sayac, min_mac=1000)
+    egri = model["marketler"]["KG"]["Var"]
+    lo, hi = egri["aralik"]
+    assert k.logit(0.035) < lo < k.logit(0.045) and k.logit(0.065) < hi < k.logit(0.075)
+    for q in (0.005, 0.01, 0.2, 0.5):
+        p = k.egrisel_olasilik(egri["katsayi"], q, aralik=egri["aralik"])
+        assert 0.6 * q < p < 1.6 * q, (q, p)   # aralık dışında iddaa'nın olasılığına paralel
