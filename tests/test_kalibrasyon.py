@@ -187,3 +187,12 @@ def test_sanal_tekler(veri_dizini):
     assert hepsi["tutan"] == len(kazanan)
     assert hepsi["clv"] == 1.0  # oranlar değişmedi: kapanış = aldığımız oran
     assert sonuc  # modül içe aktarılabiliyor
+
+
+def test_senaryolar_cift_saymaz():
+    sayac = k.Sayaclar()
+    sayac.ekle("L", (0, 0, 2, 1), {"2.5 A/Ü": {"Alt": 1.8, "Üst": 1.9}, "MS": {"1": 2.0, "0": 3.2, "2": 3.6}})
+    satirlar = {(r["market"], r["secenek"], r["bant"]): r for r in k.senaryolar(sayac)["satirlar"]}
+    assert satirlar[("2.5 A/Ü", "hepsi", "")]["bahis"] == 2 and satirlar[("2.5 A/Ü", "Üst", "")]["bahis"] == 1
+    assert satirlar[("MS", "hepsi", "")]["bahis"] == 3 and satirlar[("MS", "1", "2–3")]["tutan"] == 1
+    assert abs(satirlar[("MS", "1", "")]["getiri_kral"] - 2.0 * 1.04) < 1e-9

@@ -348,17 +348,17 @@ def senaryolar(sayac: "Sayaclar") -> dict:
         kral = float(etiket) * KRAL_KATSAYI
         bant = next((f"{a:g}–{b:g}" if b < 1000 else f"{a:g}+" for a, b in BANTLAR.get(market, [])
                      if a <= kral < b or (b == 30.0 and kral == 30.0)), "")
-        for anahtar in ((market, secenek, ""), (market, "hepsi", ""), (market, "hepsi", bant),
-                        (market, secenek, bant)):
-            if anahtar[2] == "" and anahtar != (market, secenek, "") and anahtar != (market, "hepsi", ""):
-                continue
+        anahtarlar = {(market, secenek, ""), (market, "hepsi", "")}
+        if bant:
+            anahtarlar |= {(market, "hepsi", bant), (market, secenek, bant)}
+        for anahtar in anahtarlar:
             t = toplam[anahtar]
             t[0] += n
             t[1] += y
             t[2] += y * kral
     satirlar = []
     for (market, secenek, bant), (n, y, donus) in toplam.items():
-        if n and (bant or not bant):
+        if n:
             satirlar.append({"market": market, "secenek": secenek, "bant": bant, "bahis": n, "tutan": y,
                              "tutma": round(y / n, 4), "getiri_kral": round(donus / n, 4)})
     sira = {m: i for i, m in enumerate(MARKETLER)}
