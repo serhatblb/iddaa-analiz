@@ -224,9 +224,11 @@ def test_hayal_kuponu(veri_dizini):
 
 def test_hayal_secimi_ve_kosullu_olasilik():
     tablo = {"genel": {"n": 1000, "1/2": 20}, "hucre": {"3|1": {"n": 950, "1/2": 57}, "0|1": {"n": 10, "1/2": 0}}}
-    assert abs(k.kosullu_olasilik(tablo, "3|1", "1/2") - (57 + 50 * 0.02) / 1000) < 1e-12
-    assert abs(k.kosullu_olasilik(tablo, "yok", "1/2") - 0.02) < 1e-12
-    assert k.kosullu_olasilik(tablo, "0|1", "1/2") < 0.02  # az maçlı hücre genele çekilir ama sıfıra inmez
+    assert abs(k.kosullu_olasilik(tablo, "3|1", "1/2", 0.02) - (57 + 50 * 0.02) / 1000) < 1e-12
+    assert k.kosullu_olasilik(tablo, "yok", "1/2", 0.03) == 0.03   # hücre yoksa iddaa'nın olasılığı
+    assert k.kosullu_olasilik(tablo, None, "1/2", 0.03) == 0.03
+    assert 0 < k.kosullu_olasilik(tablo, "0|1", "1/2", 0.02) < 0.02  # az maçlı hücre öncüle çekilir
+    assert k.kosul_anahtari({"1": 1.0, "0": 9.0, "2": 17.5}, None) == "16|9"  # 1.00 favori de geçerli
     # tavan kademesi önce, kademe içinde olasılığa göre
     adaylar = [("a", 36.4, 0.02, 0), ("b", 36.4, 0.03, 0), ("c", 25.0, 0.09, 0), ("d", 31.0, 0.01, 0)]
     assert [x[0] for x in k.hayal_secimi(adaylar, 30, 20)] == ["b", "a", "d"]

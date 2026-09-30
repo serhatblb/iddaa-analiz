@@ -308,7 +308,7 @@ def mac_secenekleri(model: dict, marketler: dict[str, dict], lig: str | None = N
 
 ESIKLER = [0.0, 0.9, 1.0, 1.05, 1.1]
 IYMS_SECENEKLERI = ["1/1", "1/0", "1/2", "0/1", "0/0", "0/2", "2/1", "2/0", "2/2"]
-KOSUL_ONCUL = 50               # koşullu İY/MS sıklığında az maçlı hücreyi genel sıklığa çeken sanal maç sayısı
+KOSUL_ONCUL = 50               # koşullu İY/MS sıklığında az maçlı hücreyi iddaa'nın olasılığına çeken sanal maç
 
 
 # --- İY/MS koşullu sıklıklar (hayal kuponu için) ---
@@ -319,7 +319,8 @@ KOSUL_ONCUL = 50               # koşullu İY/MS sıklığında az maçlı hücr
 # (2.5 üst olasılığı: <%45, %45–58, >%58; A/Ü yoksa ayrı).
 
 def kosul_anahtari(ms: dict[str, float], au: dict[str, float] | None) -> str | None:
-    if not ms or not all(ms.get(s) and ms[s] > 1.0 for s in ("1", "0", "2")):
+    # iddaa çok açık favoriye 1.00 yazabiliyor; o da geçerli (olasılık hesabında sorun çıkarmaz)
+    if not ms or not all(ms.get(s) and ms[s] >= 1.0 for s in ("1", "0", "2")):
         return None
     q = normallestir({s: ms[s] for s in ("1", "0", "2")})
     fark = round((q["1"] - q["2"]) / 0.05)
@@ -331,14 +332,10 @@ def kosul_anahtari(ms: dict[str, float], au: dict[str, float] | None) -> str | N
     return f"{fark}|{gol}"
 
 
-def kosullu_olasilik(tablo: dict, anahtar: str | None, secim: str, cikar: dict | None = None) -> float:
-    """Hücredeki gerçek sıklık, az maçlı hücre genel sıklığa çekilerek. cikar: aynı yapıda, hariç tutulacak
-    sayımlar (simülasyonda o ayın kendi maçları)."""
-    genel = tablo["genel"]
-    g_n = genel["n"] - ((cikar or {}).get("genel", {}).get("n", 0))
-    g_s = genel.get(secim, 0) - ((cikar or {}).get("genel", {}).get(secim, 0))
-    oncul = g_s / g_n if g_n else 0.0
-    hucre = tablo["hucre"].get(anahtar) if anahtar else None
+def kosullu_olasilik(tablo: dict, anahtar: str | None, secim: str, oncul: float, cikar: dict | None = None) -> float:
+    """Hücredeki gerçek sıklık; az maçlı hücre öncüle (iddaa'nın kendi İY/MS oranından çıkan olasılık) çekilir,
+    hücre yoksa öncül döner. cikar: aynı yapıda, hariç tutulacak sayımlar (simülasyonda o ayın kendi maçları)."""
+    hucre = tablo.get("hucre", {}).get(anahtar) if anahtar else None
     if not hucre:
         return oncul
     c = ((cikar or {}).get("hucre", {}) or {}).get(anahtar, {})
@@ -486,7 +483,8 @@ def hayal_kuponu(tablo: dict, ay_tablolari: dict[str, dict], baslangic: str = ""
         kral = {s: o * KRAL_KATSAYI for s, o in oranlar.items()}
         anahtar = kosul_anahtari(marketler.get("MS"), marketler.get("2.5 A/Ü"))
         cikar = ay_tablolari.get(tarih[:7])
-        p = {s: kosullu_olasilik(tablo, anahtar, s, cikar) for s in kral}
+        q = normallestir(oranlar)
+        p = {s: kosullu_olasilik(tablo, anahtar, s, q[s], cikar) for s in kral}
         aday = mac_hayal_adayi(kral, p, config.HAYAL_MIN_ORAN, config.KUPON_MIN_ORAN)
         if aday:
             gercek = kazanan("İY/MS", *skor)

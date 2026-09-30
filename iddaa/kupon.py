@@ -135,7 +135,8 @@ def hayal_adaylari(oranlar: dict, kayitlar: dict, simdi: datetime, tablo: dict) 
         ms = (marketler.get(analiz.MS) or {}).get("oranlar", {})
         au = (marketler.get(analiz.ALT_UST_25) or {}).get("oranlar", {})
         anahtar = kalibrasyon.kosul_anahtari(ms, au)
-        p = {s: kalibrasyon.kosullu_olasilik(tablo, anahtar, s) for s in iyms}
+        q = kalibrasyon.normallestir(iyms)
+        p = {s: kalibrasyon.kosullu_olasilik(tablo, anahtar, s, q[s]) for s in iyms}
         aday = kalibrasyon.mac_hayal_adayi(iyms, p, config.HAYAL_MIN_ORAN, config.KUPON_MIN_ORAN)
         if not aday:
             continue
