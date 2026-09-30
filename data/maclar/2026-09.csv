@@ -33,8 +33,8 @@ mac_id,lig_id,lig,ulke,ev,dep,baslama_utc,ilk_gorulme_utc,acilis,kapanis,iyms_va
 3272244,46244,"Arjantin Primera Division A, Women, Cla",AR,CA River Plate (K),Boca Juniors (K),2026-09-30T18:00:00Z,2026-09-29T19:48:21Z,1,0,0,2026-09-30T05:22:21Z
 3168735,273100,U21 Avrupa Şampiyonası,INT,İskoçya U21,Azerbaycan U21,2026-09-30T18:30:00Z,2026-09-29T19:48:21Z,1,0,0,2026-09-30T05:22:21Z
 3168626,2665,"İngiltere Amatör İngiltere Güney Ligi, Güney",ENG,Gosport,Bracknell Town FC,2026-09-30T18:45:00Z,2026-09-29T19:48:21Z,1,0,0,2026-09-30T05:22:21Z
-3168649,401,İngiltere Ulusal Lig,GB,Eastleigh,Southend,2026-09-30T18:45:00Z,2026-09-30T05:32:45Z,1,0,1,2026-09-30T05:32:45Z
-3168754,401,İngiltere Ulusal Lig,GB,Tamworth,Sutton United,2026-09-30T18:45:00Z,2026-09-30T05:32:45Z,1,0,1,2026-09-30T05:32:45Z
+3168649,401,İngiltere Ulusal Lig,GB,Eastleigh,Southend,2026-09-30T18:45:00Z,2026-09-30T05:32:45Z,1,0,1,2026-09-30T07:00:52Z
+3168754,401,İngiltere Ulusal Lig,GB,Tamworth,Sutton United,2026-09-30T18:45:00Z,2026-09-30T05:32:45Z,1,0,1,2026-09-30T07:00:52Z
 3168764,2665,"İngiltere Amatör İngiltere Güney Ligi, Güney",ENG,Frome,Taunton Town,2026-09-30T18:45:00Z,2026-09-29T19:48:21Z,1,0,0,2026-09-30T05:22:21Z
 3250296,2666,İngiltere Amatör Isthmian Ligi,ENG,AFC Whyteleafe,Brentwood Town,2026-09-30T18:45:00Z,2026-09-29T19:48:21Z,1,0,0,2026-09-30T05:22:21Z
 3168819,273100,U21 Avrupa Şampiyonası,INT,Portekiz U21,Cebelitarık U21,2026-09-30T19:00:00Z,2026-09-29T23:27:24Z,1,0,0,2026-09-30T05:22:21Z
@@ -54,4 +54,4 @@ mac_id,lig_id,lig,ulke,ev,dep,baslama_utc,ilk_gorulme_utc,acilis,kapanis,iyms_va
 3247637,2008,"Uruguay Primera Ligi, Kapanış",UY,Torque,Penarol Uru,2026-09-30T23:00:00Z,2026-09-30T05:32:45Z,1,0,0,2026-09-30T05:32:45Z
 3273427,48386,Şili Kupası,CL,Deportes Concepcion,O'Higgins,2026-09-30T23:00:00Z,2026-09-29T19:48:21Z,1,0,0,2026-09-30T05:22:21Z
 3168618,970,ABD Championship,US,Rhode Island FC,Indy Eleven,2026-09-30T23:30:00Z,2026-09-29T19:48:21Z,1,0,0,2026-09-30T05:22:21Z
-3267539,15,ABD Major Lig,US,New York Red Bulls,Saint Louis City SC,2026-09-30T23:30:00Z,2026-09-30T05:32:45Z,1,0,1,2026-09-30T05:32:45Z
+3267539,15,ABD Major Lig,US,New York Red Bulls,Saint Louis City SC,2026-09-30T23:30:00Z,2026-09-30T05:32:45Z,1,0,1,2026-09-30T07:00:52Z
