@@ -14,6 +14,10 @@ on:
       sure:
         description: "Her parça en fazla kaç dakika indirsin"
         default: "300"
+      hepsi:
+        description: "İY/MS'siz ligleri de indir"
+        type: boolean
+        default: false
 
 concurrency:
   group: arsiv-oran
@@ -60,6 +64,7 @@ jobs:
         env:
           DONEM: ${{ matrix.donem }}
           SURE: ${{ inputs.sure || '300' }}
+          HEPSI: ${{ inputs.hepsi && '--hepsi' || '' }}
         run: |
           bas="${DONEM%%:*}"; bit="${DONEM##*:}"
           son=$(( $(date +%s) + SURE * 60 ))
@@ -69,7 +74,7 @@ jobs:
             dilim=$(( kalan < 30 ? kalan : 30 ))
             git pull -q --rebase || true
             kod=0
-            python -m iddaa.arsiv_oran --baslangic "$bas" --bitis "$bit" --sure "$dilim" || kod=$?
+            python -m iddaa.arsiv_oran --baslangic "$bas" --bitis "$bit" --sure "$dilim" $HEPSI || kod=$?
             bash scripts/kaydet.sh "Geçmiş maç oranları $bas..$bit"
             case $kod in
               0) ;;

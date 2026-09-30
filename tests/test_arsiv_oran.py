@@ -50,3 +50,28 @@ def test_calistir_yeniden_eskiye_ve_atlama(veri_dizini):
     assert kayitlar["10"]["iyms_21"] == 25.0 and kayitlar["21"]["market_sayisi"] == "0"
     istenen.clear()
     assert arsiv_oran.calistir(bekleme=0, getir=getir)["aday"] == 0 and istenen == []
+
+
+def test_iyms_olmayan_lig_atlanir(veri_dizini):
+    satirlar = []
+    for lig_kodu, adet, taban in (("BUYUK", 5, 100), ("KUCUK", 6, 200)):
+        for i in range(adet):
+            mk_id = str(taban + i)
+            satirlar.append({"tarih": f"2026-08-{10 + i:02d}", "saat": "20:00", "mk_id": mk_id, "iddaa_id": 1,
+                             "ulke_id": 1, "ulke": "X", "lig_id": 1, "lig": lig_kodu, "lig_kodu": lig_kodu,
+                             "sezon": "", "ev_id": 1, "ev": "A", "dep_id": 2, "dep": "B", "durum": 4,
+                             "iy_ev": 1, "iy_dep": 0, "ms_ev": 2, "ms_dep": 1, "o1": "2.00", "o0": "3.00",
+                             "o2": "3.50", "alt25": "", "ust25": ""})
+    arsiv._yaz(depo.kok() / "arsiv" / "2026-08.csv.gz", satirlar)
+    istenen = []
+
+    def getir(mk_id, oturum):
+        istenen.append(mk_id)
+        return SAYFA if mk_id.startswith("1") else _market("Maç Sonucu", 3, ["1", "X", "2"], ["2", "3", "4"], "9")
+
+    ozet = arsiv_oran.calistir(bekleme=0, is_parcacigi=1, getir=getir)
+    # BÜYÜK (1xx): İY/MS'li -> hepsi; KÜÇÜK (2xx): 3 örnekte İY/MS yok -> kalanı atlanır
+    assert sorted(i for i in istenen if i.startswith("1")) == [str(100 + i) for i in range(5)]
+    assert len([i for i in istenen if i.startswith("2")]) == 3 and ozet["indirilen"] == 8
+    assert arsiv_oran.calistir(bekleme=0, getir=getir)["aday"] == 0      # öncelikli iş kalmadı
+    assert arsiv_oran.calistir(bekleme=0, getir=getir, hepsi=True)["indirilen"] == 3

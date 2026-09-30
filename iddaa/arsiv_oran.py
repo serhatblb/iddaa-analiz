@@ -7,6 +7,11 @@ Mackolik'in arşiv maç sayfası (arsiv.mackolik.com/Match/Default.aspx?id=<mk_i
 Oranlar Mackolik'in gösterdiği standart iddaa oranlarıdır (iddaa.com'daki Kral Oran bunların ~1.04 katı).
 Dosyalar: data/arsiv_oran/YYYY-MM.csv.gz, maç başına bir satır. Sayfada iddaa bölümü yoksa satır boş oranlarla
 yazılır ki tekrar istenmesin.
+
+İY/MS sadece büyük liglerde açılıyor ve sayfalar yavaş. Bu yüzden öncelik sırası (lig = Mackolik lig anahtarı):
+  0) İY/MS'si olduğu bilinen ligler (indirilen sayfaların en az %30'unda İY/MS var),
+  1) henüz tanınmayan ligler: her birinden en yeni 3 maç (lig sınıflandırılsın diye),
+  2) İY/MS'siz ligler (en az 3 sayfada hiç yok): sadece `hepsi=True` ile.
 """
 import argparse
 import html
@@ -20,6 +25,7 @@ from datetime import date, datetime, timedelta, timezone
 import requests
 
 from . import arsiv, config, depo
+from .sonuc import lig_anahtari
 
 log = logging.getLogger("arsiv_oran")
 
@@ -122,15 +128,62 @@ def _ay_yaz(ay: str, yeni: list[dict]) -> None:
     depo.gz_csv_yaz(yol, sorted(satirlar.values(), key=lambda s: int(s["mk_id"])), ALANLAR)
 
 
+ORNEK_SAYISI = 3        # tanınmayan ligden sınıflandırma için indirilen maç
+IYMS_ORANI_ESIGI = 0.3
+
+
+def _lig(m: dict) -> str:
+    return lig_anahtari(m["ulke"], m.get("lig_kodu") or m["lig"])
+
+
+def lig_istatistikleri(maclar: list[dict]) -> dict[str, list[int]]:
+    """{lig: [indirilen sayfa, İY/MS'li sayfa]} (bütün aylar)."""
+    lig_of = {m["mk_id"]: _lig(m) for m in maclar}
+    istat: dict[str, list[int]] = {}
+    for yol in dizin().glob("*.csv.gz"):
+        for s in depo.gz_csv_oku(yol):
+            lig = lig_of.get(s["mk_id"])
+            if lig is None:
+                continue
+            t = istat.setdefault(lig, [0, 0])
+            t[0] += 1
+            t[1] += bool(s.get("iyms_11"))
+    return istat
+
+
+def oncelikli_adaylar(adaylar: list[dict], istat: dict[str, list[int]], hepsi: bool = False) -> list[dict]:
+    """Adayları öncelik sırasına dizer (bkz. modül açıklaması); her öncelikte en yeniden eskiye."""
+    adaylar = sorted(adaylar, key=lambda m: (m["tarih"], m["saat"]), reverse=True)
+    sirali: list[list[dict]] = [[], [], []]
+    ornek: dict[str, int] = {}
+    for m in adaylar:
+        lig = _lig(m)
+        n, iyms = istat.get(lig, (0, 0))
+        if n >= ORNEK_SAYISI:
+            sirali[0 if iyms / n >= IYMS_ORANI_ESIGI else 2].append(m)
+        elif ornek.get(lig, n) < ORNEK_SAYISI:
+            ornek[lig] = ornek.get(lig, n) + 1
+            sirali[1].append(m)
+        else:
+            sirali[2].append(m)  # örneği tamamlanınca bir sonraki çalışmada sınıflanır
+    return sirali[0] + sirali[1] + (sirali[2] if hepsi else [])
+
+
+PARTI = 200
+
+
 def calistir(baslangic: str = "2019-01-01", bitis: str = "9999-12-31", sure_dk: float = 300, is_parcacigi: int = 2,
-             bekleme: float = 0.4, getir=sayfa_getir) -> dict:
-    """Arşivdeki iddaa maçlarının sayfalarını en yeniden eskiye indirir; süre dolunca durur."""
+             bekleme: float = 0.4, getir=sayfa_getir, hepsi: bool = False) -> dict:
+    """Arşivdeki iddaa maçlarının sayfalarını öncelik sırasıyla indirir; süre dolunca durur.
+    Öncelikler her partiden sonra yeniden hesaplanır: örneklenen lig hemen sınıflanır."""
     son_zaman = time.monotonic() + sure_dk * 60
     mevcut = mevcut_idler()
-    adaylar = [m for m in arsiv.oku(baslangic, bitis)
-               if baslangic <= m["tarih"] <= bitis and m["mk_id"] not in mevcut and m["iddaa_id"] and m["o1"]]
-    adaylar.sort(key=lambda m: (m["tarih"], m["saat"]), reverse=True)
-    ozet = {"aday": len(adaylar), "indirilen": 0, "iddaasiz": 0, "hata": 0, "durdu": ""}
+    tum = arsiv.oku()
+    kalan = {m["mk_id"]: m for m in tum
+             if baslangic <= m["tarih"] <= bitis and m["mk_id"] not in mevcut and m["iddaa_id"] and m["o1"]}
+    istat = lig_istatistikleri(tum)
+    ozet = {"aday": len(oncelikli_adaylar(list(kalan.values()), istat, hepsi)), "indirilen": 0, "iddaasiz": 0,
+            "hata": 0, "durdu": ""}
     kilit = threading.Lock()
     biriken: dict[str, list[dict]] = {}
     dur = threading.Event()
@@ -149,24 +202,29 @@ def calistir(baslangic: str = "2019-01-01", bitis: str = "9999-12-31", sure_dk: 
             dur.set()
             return
         with kilit:
+            kalan.pop(mac["mk_id"], None)  # hatalı sayfa bir sonraki çalışmada yeniden denenir
             if sayfa is None:
                 ozet["hata"] += 1
                 return
             kayit = sayfayi_coz(sayfa, mac["mk_id"])
             kayit["iddaa_id"] = kayit["iddaa_id"] or mac["iddaa_id"]
             biriken.setdefault(mac["tarih"][:7], []).append(kayit)
+            t = istat.setdefault(_lig(mac), [0, 0])
+            t[0] += 1
+            t[1] += bool(kayit.get("iyms_11"))
             ozet["indirilen"] += 1
             ozet["iddaasiz"] += kayit["market_sayisi"] == 0
             if ozet["indirilen"] % 500 == 0:
-                log.info("%d / %d (%s)", ozet["indirilen"], len(adaylar), mac["tarih"])
+                log.info("%d indirildi (%s)", ozet["indirilen"], mac["tarih"])
         if bekleme:
             time.sleep(bekleme)
 
     with ThreadPoolExecutor(max_workers=is_parcacigi) as havuz:
-        for i in range(0, len(adaylar), 200):
-            if dur.is_set():
+        while not dur.is_set():
+            parti = oncelikli_adaylar(list(kalan.values()), istat, hepsi)[:PARTI]
+            if not parti:
                 break
-            list(havuz.map(is_, adaylar[i:i + 200]))
+            list(havuz.map(is_, parti))
             with kilit:
                 for ay, yeni in biriken.items():
                     _ay_yaz(ay, yeni)
@@ -196,8 +254,9 @@ def main():
     ap.add_argument("--bitis", default="9999-12-31")
     ap.add_argument("--sure", type=float, default=300, help="dakika")
     ap.add_argument("--is-parcacigi", type=int, default=2)
+    ap.add_argument("--hepsi", action="store_true", help="İY/MS'siz ligleri de indir")
     args = ap.parse_args()
-    ozet = calistir(args.baslangic, args.bitis, args.sure, args.is_parcacigi)
+    ozet = calistir(args.baslangic, args.bitis, args.sure, args.is_parcacigi, hepsi=args.hepsi)
     log.info("özet: %s", ozet)
     # Çıkış kodları workflow döngüsü için: 3 = aralıkta indirilecek maç kalmadı, 4 = site istekleri reddetti
     if ozet["durdu"].startswith("HTTP"):
