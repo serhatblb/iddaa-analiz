@@ -129,9 +129,11 @@ def son_oranlar(simdi: datetime, marketler: set[str], geriye_gun: int = 2) -> di
             anahtar = market_cizgi(satir["market"], satir.get("cizgi", ""))
             kayit = son[satir["mac_id"]].get(anahtar)
             if kayit is None or satir["zaman_utc"] > kayit["zaman"]:
-                kayit = son[satir["mac_id"]][anahtar] = {"zaman": satir["zaman_utc"], "oranlar": {}}
+                kayit = son[satir["mac_id"]][anahtar] = {"zaman": satir["zaman_utc"], "oranlar": {},
+                                                         "mbs": (kayit or {}).get("mbs", "")}
             if satir["zaman_utc"] == kayit["zaman"]:
                 kayit["oranlar"][satir["secenek"]] = float(satir["oran"])
+                kayit["mbs"] = satir.get("mbs") or kayit["mbs"]
     return dict(son)
 
 

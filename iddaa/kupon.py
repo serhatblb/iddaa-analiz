@@ -1,24 +1,32 @@
 """Günlük kağıt üstü kuponlar. Para yatırılmaz; seçimler kaydedilir, sonuçlar gelince değerlendirilir.
 
-Dört ayrı kupon, önümüzdeki 24 saatte başlayacak maçlardan:
-- iyms: Oranı 20–30 arası İY/MS seçenekleri. Her maçtan aralıktaki en yüksek oranlı seçenek aday olur;
-        en yüksek oranlı 3 aday kupona girer.
-- ms:   MS 1-0-2 seçenekleri (oran 1.40–5.00). Her seçimin geçmişte ne sıklıkla tuttuğu, kâr payı ayıklanmış
-        olasılığı benzer maçlardan bulunur; 1 TL'ye beklenen dönüşü en yüksek 3 seçim (farklı maçlar) kupona girer.
-- iyms_deger: Her maçta, ev sahibinin gücüne göre geçmişte 1 TL'ye en çok para döndüren İY/MS seçimi; en iyi 3.
-- gol:  Toplam gol (0-1 / 2-3 / 4-5 / 6+). 2.5 Alt/Üst oranına göre benzer geçmiş maçların gol dağılımından,
-        1 TL'ye en çok para döndüren seçim; en iyi 3.
+Olasılıklar iddaa'nın kendi geçmiş oranlarıyla kurulan modelden gelir (`kalibrasyon.py`: iddaa bu seçeneğe
+kâr payı ayıklanınca %q şans veriyordu, gerçekte ne sıklıkla tuttu + lig düzeltmesi). Model o market için henüz
+yoksa yabancı şirket verisiyle (football-data) kurulan eski tablolar kullanılır. Beklenen = iddaa.com oranı × olasılık.
+
+Dört ayrı kupon, önümüzdeki 24 saatte başlayacak maçlardan (her maçtan en fazla bir seçim):
+- iyms: Oranı 20–30 arası İY/MS seçenekleri; beklenen dönüşü en yüksek 3 seçim (hayal kuponu, hep 3 maç).
+- ms:   MS 1-0-2 seçimleri (oran 1.40–5.00); beklenen dönüşü en yüksek seçimler.
+- iyms_deger: Her maçın beklenen dönüşü en yüksek İY/MS seçimi.
+- gol:  Toplam gol (0-1 / 2-3 / 4-5 / 6+); beklenen dönüşü en yüksek seçimler.
+ms, iyms_deger ve gol kuponlarında maç sayısı MBS'ye göre seçilir: 1, 2 ya da 3 maçlık kuponlardan (her seçimin
+MBS'si kupondaki maç sayısını geçmemeli) 1 TL'ye beklenen dönüşü en yüksek olan; eşitlikte az maçlı olan.
+Çünkü her eklenen maç iddaa'nın kâr payını bir kez daha çarpar.
 """
 import logging
 from datetime import datetime, timedelta, timezone
 
-from . import analiz, config, depo
+import math
+
+from . import analiz, config, depo, kalibrasyon
 from .bulten import iso_oku, iyms_sonucu, sonuc_isareti
 
 log = logging.getLogger("kupon")
 
 KUPON_ALANLARI = ["tarih", "tur", "sira", "mac_id", "lig", "ev", "dep", "baslama_utc", "market", "secim",
-                  "oran", "tutma", "beklenen", "gercek", "tuttu", "toplam_oran", "tutar", "durum", "kazanc"]
+                  "oran", "tutma", "beklenen", "gercek", "tuttu", "toplam_oran", "tutar", "durum", "kazanc", "mbs",
+                  "kaynak"]
+SABIT_MAC_SAYILI = {"iyms"}   # hayal kuponu hep 3 maç; diğerleri MBS'ye göre en iyi maç sayısı
 TURLER = {"iyms": "İY/MS kuponu", "ms": "1-0-2 kuponu", "iyms_deger": "İY/MS değer kuponu", "gol": "Gol kuponu"}
 MS_MIN_ORAN = config.MS_KUPON_MIN_ORAN
 MS_MAX_ORAN = config.MS_KUPON_MAX_ORAN
@@ -84,9 +92,39 @@ def mac_basina_en_iyi(adaylar: list[dict], kayitlar: dict, simdi: datetime) -> l
             continue
         if a["mac_id"] not in en_iyi or a["beklenen"] > en_iyi[a["mac_id"]]["beklenen"]:
             en_iyi[a["mac_id"]] = a
-    alanlar = ("mac_id", "lig", "ev", "dep", "baslama_utc", "market", "secim", "oran", "tutma", "beklenen")
+    alanlar = ("mac_id", "lig", "ev", "dep", "baslama_utc", "market", "secim", "oran", "tutma", "beklenen",
+               "mbs", "kaynak")
     return sorted(({k: a.get(k, "") for k in alanlar} for a in en_iyi.values()),
                   key=lambda a: (-a["beklenen"], a["baslama_utc"], a["mac_id"]))
+
+
+# --- iddaa'nın kendi geçmişiyle kurulan model ---
+
+MODEL_MARKET_ANAHTARLARI = {config.IYMS, analiz.MS, analiz.TOPLAM_GOL, analiz.ALT_UST, "2_88", "2_89"}
+
+
+def model_adaylari(model: dict, oranlar: dict, kayitlar: dict, simdi: datetime) -> list[dict]:
+    """Penceredeki bütün maçların model kapsamındaki bütün seçimleri."""
+    adaylar = []
+    if not model.get("marketler"):
+        return adaylar
+    for mac_id, marketler in oranlar.items():
+        kayit = kayitlar.get(mac_id)
+        if not kayit or not _pencerede(kayit, simdi):
+            continue
+        for s in kalibrasyon.mac_secenekleri(model, marketler, kayit.get("mk_lig") or None):
+            adaylar.append({"mac_id": mac_id, "lig": kayit.get("lig", ""), "ev": kayit["ev"], "dep": kayit["dep"],
+                            "baslama_utc": kayit["baslama_utc"], "market": s["market"], "secim": s["secim"],
+                            "oran": s["oran"], "tutma": s["olasilik"], "beklenen": s["beklenen"],
+                            "mbs": s["mbs"] or kayit.get("mbs", ""),
+                            "kaynak": "iddaa geçmişi" + (" + lig" if s["lig_etkisi"] else "")})
+    return adaylar
+
+
+def _model_turu(model_adaylar: list[dict], market: str, kayitlar: dict, simdi: datetime,
+                min_oran: float = 1.0, max_oran: float = 1e9) -> list[dict]:
+    return mac_basina_en_iyi([a for a in model_adaylar if a["market"] == market
+                              and min_oran <= a["oran"] <= max_oran], kayitlar, simdi)
 
 
 def iyms_deger_adaylari(oranlar: dict, kayitlar: dict, kosullu: dict, simdi: datetime) -> list[dict]:
@@ -102,26 +140,61 @@ def gol_adaylari(oranlar: dict, kayitlar: dict, tablo: dict, simdi: datetime) ->
     return mac_basina_en_iyi(analiz.gol_adaylari(oranlar, kayitlar, tablo, simdi, ufuk=PENCERE), kayitlar, simdi)
 
 
-def oneriler(simdi: datetime | None = None) -> dict[str, list[dict]]:
-    """Şu anki oranlarla her kupon türünün aday listesi."""
+def oneriler(simdi: datetime | None = None, model: dict | None = None) -> dict[str, list[dict]]:
+    """Şu anki oranlarla her kupon türünün aday listesi. Model o marketi kapsıyorsa model, yoksa eski tablolar."""
     simdi = (simdi or datetime.now(timezone.utc)).replace(microsecond=0)
     kayitlar = depo.maclari_oku()
-    oranlar = analiz.son_oranlar(simdi, {config.IYMS, analiz.MS, analiz.TOPLAM_GOL, analiz.ALT_UST})
+    oranlar = analiz.son_oranlar(simdi, MODEL_MARKET_ANAHTARLARI)
+    model = kalibrasyon.model_oku() if model is None else model
+    kapsam = set((model.get("marketler") or {}).keys())
+    modelden = model_adaylari(model, oranlar, kayitlar, simdi) if kapsam else []
     kosullu = analiz.kosullu_oku()
-    return {"iyms": iyms_adaylari(oranlar, kayitlar, simdi, kosullu),
-            "ms": ms_adaylari(oranlar, kayitlar, analiz.ms_olasilik_oku(), simdi),
-            "iyms_deger": iyms_deger_adaylari(oranlar, kayitlar, kosullu, simdi),
-            "gol": gol_adaylari(oranlar, kayitlar, analiz.gol_tablosu_oku(), simdi)}
+
+    def eski(adaylar):
+        return [{**a, "kaynak": "yabancı şirket verisi"} for a in adaylar]
+
+    return {
+        "iyms": (_model_turu(modelden, "İY/MS", kayitlar, simdi, config.KUPON_MIN_ORAN, config.KUPON_MAX_ORAN)
+                 if "İY/MS" in kapsam else eski(iyms_adaylari(oranlar, kayitlar, simdi, kosullu))),
+        "ms": (_model_turu(modelden, "MS", kayitlar, simdi, MS_MIN_ORAN, MS_MAX_ORAN)
+               if "MS" in kapsam else eski(ms_adaylari(oranlar, kayitlar, analiz.ms_olasilik_oku(), simdi))),
+        "iyms_deger": (_model_turu(modelden, "İY/MS", kayitlar, simdi)
+                       if "İY/MS" in kapsam else eski(iyms_deger_adaylari(oranlar, kayitlar, kosullu, simdi))),
+        "gol": (_model_turu(modelden, "Toplam gol", kayitlar, simdi)
+                if "Toplam gol" in kapsam else eski(gol_adaylari(oranlar, kayitlar, analiz.gol_tablosu_oku(), simdi))),
+    }
 
 
 # --- kupon oluşturma ve değerlendirme ---
 
+def _mbs(aday: dict) -> int:
+    """Seçimin MBS'si; bilinmiyorsa en kısıtlayıcı varsayım (kupon maç sayısı)."""
+    try:
+        return max(1, int(float(aday.get("mbs") or "")))
+    except ValueError:
+        return config.KUPON_MAC_SAYISI
+
+
+def mbs_ile_sec(adaylar: list[dict], en_fazla: int = config.KUPON_MAC_SAYISI) -> list[dict]:
+    """Beklenene göre sıralı adaylardan MBS'ye uyan, 1 TL'ye beklenen dönüşü en yüksek kupon (eşitlikte az maç).
+    MBS'si bilinmeyen seçim en fazla maç sayısında oynanabilir sayılır."""
+    en_iyi, en_iyi_deger = [], -1.0
+    for k in range(1, en_fazla + 1):
+        uygun = [a for a in adaylar if _mbs(a) <= k][:k]
+        if len(uygun) < k:
+            continue
+        deger = math.prod(float(a["beklenen"] or 0) for a in uygun)
+        if deger > en_iyi_deger + 1e-9:
+            en_iyi, en_iyi_deger = uygun, deger
+    return en_iyi
+
+
 def kupon_olustur(tarih: str, tur: str, adaylar: list[dict], mac_sayisi: int = config.KUPON_MAC_SAYISI,
                   tutar: float = config.KUPON_TUTARI) -> list[dict]:
-    if len(adaylar) < mac_sayisi:
+    secilen = adaylar[:mac_sayisi] if tur in SABIT_MAC_SAYILI else mbs_ile_sec(adaylar, mac_sayisi)
+    if not secilen or (tur in SABIT_MAC_SAYILI and len(secilen) < mac_sayisi):
         return [{"tarih": tarih, "tur": tur, "sira": 0, "durum": "aday_yok", "tutar": 0, "kazanc": 0,
                  "secim": f"{len(adaylar)} aday"}]
-    secilen = adaylar[:mac_sayisi]
     toplam = 1.0
     for a in secilen:
         toplam *= a["oran"]
@@ -136,6 +209,8 @@ def gercek_sonuc(market: str, sonuc: dict) -> str:
         return sonuc_isareti(ms_ev, ms_dep)
     if market == "Toplam gol":
         return f"{ms_ev + ms_dep} gol"
+    if market in kalibrasyon.MARKETLER:
+        return kalibrasyon.kazanan(market, iy_ev, iy_dep, ms_ev, ms_dep)
     return iyms_sonucu(iy_ev, iy_dep, ms_ev, ms_dep)
 
 

@@ -9,7 +9,8 @@ Mackolik satır alanları (futbol):
   [5] durum kodu: 0 başlamadı, 1 ilk yarı, 2 devre arası, 3 ikinci yarı, 4 maç sonu,
       6 uzatmalar sonrası, 8 penaltılar sonrası, 9 ertelendi, 10 hükmen, 11 yarıda kaldı
   [2]/[4] ev/deplasman adı, [14] iddaa maç kimliği, [16] başlama saati (TR),
-  [29]/[30] normal süre (90 dk) skoru, [31]/[32] ilk yarı skoru, [35] tarih, [36][11] spor (1 = futbol)
+  [29]/[30] normal süre (90 dk) skoru, [31]/[32] ilk yarı skoru, [35] tarih,
+  [36] lig: [0] ülke/organizasyon no, [1] ülke/organizasyon adı, [3] lig/aşama adı, [9] lig kodu, [11] spor (1 = futbol)
 """
 import logging
 import sys
@@ -27,6 +28,7 @@ KAYNAK = "https://vd.mackolik.com/livedata"
 BITTI = {4, 6, 8}                 # 90 dakika tamamlandı (uzatma/penaltı dahil)
 IPTAL = {9: "ertelendi", 10: "hükmen", 11: "yarıda kaldı"}
 ISIM_ESLESME_PENCERESI = timedelta(minutes=20)
+LIG_ESLESTIRME_UFKU = timedelta(hours=36)
 
 
 class SonucHatasi(Exception):
@@ -59,15 +61,23 @@ def _normal(ad: str) -> str:
     return "".join(c for c in ad if c.isalnum())
 
 
+def lig_anahtari(ulke: str, lig_kodu: str) -> str:
+    """Mackolik lig anahtarı ("İngiltere|İBSL"). Lig kodu bir organizasyonun aşamalarını ve sezonlarını birleştirir;
+    geçmiş veri (arşiv) ile bugünkü maçlar bu anahtarla eşleşir."""
+    return f"{ulke}|{lig_kodu}"
+
+
 def satiri_coz(satir: list) -> dict | None:
     """Futbol satırını sözlüğe çevirir; futbol değilse None."""
     try:
-        if len(satir) < 37 or not isinstance(satir[36], list) or satir[36][11] != 1:
+        lig = satir[36]
+        if len(satir) < 37 or not isinstance(lig, list) or lig[11] != 1:
             return None
         return {"iddaa_id": str(satir[14] or ""), "durum": _tam(satir[5]), "durum_metni": str(satir[6] or ""),
                 "ev": satir[2], "dep": satir[4], "saat": str(satir[16] or ""), "tarih": str(satir[35] or ""),
                 "ms_ev": _tam(satir[29]), "ms_dep": _tam(satir[30]),
-                "iy_ev": _tam(satir[31]), "iy_dep": _tam(satir[32])}
+                "iy_ev": _tam(satir[31]), "iy_dep": _tam(satir[32]),
+                "mk_id": str(satir[0]), "mk_lig": lig_anahtari(str(lig[1]), str(lig[9] or lig[3]))}
     except (IndexError, TypeError):
         return None
 
@@ -176,6 +186,40 @@ def calistir(simdi: datetime | None = None, veri_getir=gunluk_veri) -> dict:
     return ozet
 
 
+def lig_eslestir(simdi: datetime | None = None, veri_getir=gunluk_veri) -> dict:
+    """Önümüzdeki maçlara Mackolik maç numarası ve lig anahtarı yazar (geçmiş veriden lig düzeltmesi için)."""
+    simdi = (simdi or datetime.now(timezone.utc)).replace(microsecond=0)
+    kayitlar = depo.maclari_oku()
+    eksik = {m: k for m, k in kayitlar.items()
+             if k.get("ev") and not k.get("mk_lig")
+             and simdi - timedelta(hours=3) < iso_oku(k["baslama_utc"]) <= simdi + LIG_ESLESTIRME_UFKU}
+    ozet = {"eksik": len(eksik), "bulunan": 0, "gun": 0}
+    if not eksik:
+        return ozet
+    idye_gore: dict[str, dict] = {}
+    for tarih in sorted({tr_tarih(iso_oku(k["baslama_utc"])) for k in eksik.values()},
+                        key=lambda t: t[6:] + t[3:5] + t[:2]):
+        try:
+            satirlar = veri_getir(tarih)
+        except SonucHatasi as hata:
+            log.warning("lig eşleştirme verisi alınamadı: %s", hata)
+            continue
+        ozet["gun"] += 1
+        for m in (satiri_coz(s) for s in satirlar):
+            if m and m["iddaa_id"] not in ("", "0"):
+                idye_gore[m["iddaa_id"]] = m
+    degisenler = set()
+    for mac_id, kayit in eksik.items():
+        mac = idye_gore.get(mac_id)
+        if mac:
+            kayit["mk_id"], kayit["mk_lig"] = mac["mk_id"], mac["mk_lig"]
+            degisenler.add(mac_id)
+    if degisenler:
+        depo.maclari_yaz(kayitlar, degisenler)
+    ozet["bulunan"] = len(degisenler)
+    return ozet
+
+
 def kontrol() -> int:
     """Kaynağa erişimi dener: bugünün verisinde kaç futbol maçı ve kaç iddaa eşleşmesi var."""
     tarih = tr_tarih(datetime.now(timezone.utc))
@@ -195,6 +239,7 @@ def main():
         sys.exit(kontrol())
     ozet = calistir()
     log.info("özet: %s", ozet)
+    log.info("lig eşleştirme: %s", lig_eslestir())
     if ozet["bekleyen"] and not ozet["gun"]:
         log.error("Sonuç kaynağına hiç ulaşılamadı.")
         sys.exit(2)
