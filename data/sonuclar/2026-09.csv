@@ -5,8 +5,11 @@ mac_id,iy_ev,iy_dep,ms_ev,ms_dep,durum,kaynak,guncelleme_utc
 3168650,0,1,0,2,tamam,mackolik,2026-09-30T18:22:56Z
 3168655,0,0,0,1,tamam,mackolik,2026-09-30T18:22:56Z
 3168687,0,0,2,1,tamam,mackolik,2026-09-30T19:12:47Z
+3168736,1,4,2,5,tamam,mackolik,2026-09-30T20:11:43Z
 3168770,0,0,1,0,tamam,mackolik,2026-09-30T18:22:56Z
 3168776,1,2,1,4,tamam,mackolik,2026-09-30T18:22:56Z
+3168793,1,1,1,1,tamam,mackolik,2026-09-30T20:11:43Z
+3168825,1,0,3,0,tamam,mackolik,2026-09-30T20:11:43Z
 3201893,0,1,0,2,tamam,mackolik,2026-09-30T18:22:56Z
 3201896,0,1,0,2,tamam,mackolik,2026-09-30T18:22:56Z
 3204034,0,0,0,0,tamam,mackolik,2026-09-30T18:22:56Z
@@ -17,6 +20,7 @@ mac_id,iy_ev,iy_dep,ms_ev,ms_dep,durum,kaynak,guncelleme_utc
 3228195,1,0,3,1,tamam,mackolik,2026-09-30T18:22:56Z
 3228203,2,0,7,1,tamam,mackolik,2026-09-30T18:22:56Z
 3228206,1,0,3,1,tamam,mackolik,2026-09-30T19:12:47Z
+3228211,2,0,4,0,tamam,mackolik,2026-09-30T20:11:43Z
 3228216,0,1,0,4,tamam,mackolik,2026-09-30T18:22:56Z
 3229816,2,0,3,0,tamam,mackolik,2026-09-30T18:22:56Z
 3234452,3,0,4,2,tamam,mackolik,2026-09-30T18:22:56Z
@@ -27,3 +31,5 @@ mac_id,iy_ev,iy_dep,ms_ev,ms_dep,durum,kaynak,guncelleme_utc
 3260483,1,2,2,2,tamam,mackolik,2026-09-30T12:34:22Z
 3268226,1,0,1,1,tamam,mackolik-Pen,2026-09-30T18:22:56Z
 3268619,1,1,2,1,tamam,mackolik,2026-09-30T09:27:37Z
+3268723,1,1,4,1,tamam,mackolik,2026-09-30T20:11:43Z
+3268758,0,0,3,1,tamam,mackolik,2026-09-30T20:11:43Z

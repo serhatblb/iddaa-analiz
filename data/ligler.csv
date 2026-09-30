@@ -5,6 +5,7 @@ lig_id,ulke,ad,kisa_ad
 24,GB,İngiltere 1. Lig,1. Lig
 43,GB,İngiltere Premier Lig,PremierLig
 45,DE,Almanya Bundesliga,Bundesliga
+49,CL,Şili Premier Lig,Premier Li
 51,SE,İsveç Allsvenskan,Allsvenska
 52,GB,İngiltere Championship,Championsh
 62,RU,Rusya Premier Lig,Premier Li
@@ -31,6 +32,7 @@ lig_id,ulke,ad,kisa_ad
 614,FR,Fransa Ligue 2,Lig 2
 642,JP,Japonya J.Lig,J.Lig
 681,NL,Hollanda 1. Lig,1. Lig
+958,INT,Kulüplerarası Hazırlık Maçları,Hazırlık
 970,US,ABD Championship,ABD Champi
 987,CZ,Çekya Kupası,Çek Kupa
 997,PL,Polonya 1. Lig,1. Lig
@@ -52,6 +54,8 @@ lig_id,ulke,ad,kisa_ad
 1439,INT,"Afrika Uluslar Kup.,Eleme,Gr.K",AfrUlus El
 1466,INT,"Gulf Kupası, B Grubu",Körfez Kup
 1484,INT,Uluslararası Hazırlık Maçları,Hazırlık
+1758,INT,U20 Hazırlık Maçları,U20 Hazırl
+1759,INT,U19 Hazırlık Maçları,U19 Hazırl
 1774,IT,İtalya Serie B,Serie B
 1858,MA,Fas Botola,Botola
 1873,NO,"Norveç Eliteserien, Düşme/Yükselme",Eliteserie
@@ -65,6 +69,7 @@ lig_id,ulke,ad,kisa_ad
 1961,ES,İspanya Federasyon Kupası,Federasyon
 1980,TR,Türkiye 1. Lig,1. Lig
 1995,UA,Ukrayna Premier Lig,Premier Li
+2004,AE,Birleşik Arap Emirlikleri Pro Lig Kupası,ProLig Kup
 2008,UY,"Uruguay Primera Ligi, Kapanış",Primera
 2646,ENG,İngiltere Amatör İngiltere Kuzey Ligi,Kuzey Ligi
 2665,ENG,"İngiltere Amatör İngiltere Güney Ligi, Güney",Güney Ligi
@@ -93,19 +98,26 @@ lig_id,ulke,ad,kisa_ad
 33492,NRE,Kuzey İrlanda NIFL Development League,Geliştirme
 35401,ES,"İspanya Cup, Women",İspanya Ku
 37159,EG,Mısır 2nd Division,2. Lig
+39439,JO,Ürdün 1. Ligi,1. Lig
 45241,CH,"İsviçre Süper Lig, Şampiyonluk Turu",Süper Lig
 46194,INT,UEFA Şampiyonlar Ligi,UEFA Şamp
 46195,INT,UEFA Avrupa Ligi,UEFA Avrup
 46244,AR,"Arjantin Primera Division A, Women, Cla",Primera Kd
 48386,CL,Şili Kupası,Kupa
+49038,AR,"Arjantin Primera LPF, Kapanış",Primera LP
 51879,ENG,England İngiltere Konferans Ligi Kuzey,Konferans
+52050,EC,"Ekvador Serie B, Relegation Round",Serie B
+52318,QA,Katar QSL Cup,QSL Kupası
 52579,INT,"U21 EURO, Qualification, Group",U21 Avr
 52676,INT,"U21 EURO, Qualification, Group",U21 Avr
 52712,INT,Premier League International C,PL Uluslar
+52778,INT,"UEFA Europa Cup, Women",UEFA Avr.K
 54573,CL,Chile Şili Kupası,Şili Kupas
 54684,INT,UEFA Şamp. Ligi Kadınlar,UEFA ŞL Ka
 54774,ENG,"England İngiltere Lig Kupası, Kadınlar",Lig Kupası
 56014,CZ,Czech Republic Cup,Çek Kupa
+76371,PE,Peru League Cup,Lig Kupası
+76636,PE,"Peru Copa de la Liga, Knockout Stag",Copa de la
 77379,CO,"Kolombiya Liga DIMAYOR, Finalizacion",Primera A
 78382,PT,Portekiz U23 Liga Next Gen,U23NextGen
 80674,TR,Türkiye Süper Lig Galatasaray Özel,SL GS
