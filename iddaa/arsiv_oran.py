@@ -101,6 +101,8 @@ def sayfa_getir(mk_id, oturum: requests.Session) -> str | None:
             raise Engellendi(f"HTTP {yanit.status_code}")
         if yanit.status_code == 200:
             return yanit.text
+        if yanit.status_code == 404:
+            return ""  # sayfa yok: oransız kayıt olarak yazılır, bir daha istenmez
         time.sleep(3 * (deneme + 1))
     return None
 
@@ -197,6 +199,11 @@ def main():
     args = ap.parse_args()
     ozet = calistir(args.baslangic, args.bitis, args.sure, args.is_parcacigi)
     log.info("özet: %s", ozet)
+    # Çıkış kodları workflow döngüsü için: 3 = aralıkta indirilecek maç kalmadı, 4 = site istekleri reddetti
+    if ozet["durdu"].startswith("HTTP"):
+        raise SystemExit(4)
+    if ozet["aday"] == 0:
+        raise SystemExit(3)
 
 
 if __name__ == "__main__":

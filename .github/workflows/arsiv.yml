@@ -1,10 +1,15 @@
 name: Mackolik arşivi
 
-# İlk çalışma 2019'dan bugüne her günü indirir (yaklaşık 1 saat); sonrakiler sadece son ayı yeniler.
+# İlk çalışma 2019'dan bugüne her günü indirir; sonrakiler sadece son ayı yeniler (biten aylar atlanır).
+# Elle çalıştırırken yıllar seçilebilir; farklı yıllar için aynı anda birkaç çalışma başlatılabilir.
 on:
   schedule:
     - cron: "11 5 * * 1"  # pazartesi 08:11 TR
   workflow_dispatch:
+    inputs:
+      yillar:
+        description: "İndirilecek yıllar (boşlukla ayrılmış)"
+        default: "2019 2020 2021 2022 2023 2024 2025 2026"
 
 permissions:
   contents: write
@@ -21,8 +26,12 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
       - name: Yıl yıl indir ve kaydet
+        env:
+          YILLAR: ${{ inputs.yillar || '2019 2020 2021 2022 2023 2024 2025 2026' }}
         run: |
-          for yil in 2019 2020 2021 2022 2023 2024 2025 2026; do
+          for yil in $YILLAR; do
+            # Başka bir çalışmanın indirdiği aylar atlanır
+            git pull -q --rebase || true
             python -m iddaa.arsiv --baslangic "$yil-01-01" --bitis "$yil-12-31"
             bash scripts/kaydet.sh "Mackolik arşivi $yil"
           done

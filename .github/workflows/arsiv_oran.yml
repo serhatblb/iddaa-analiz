@@ -1,18 +1,19 @@
 name: Geçmiş maç oranları
 
 # Arşivdeki iddaa maçlarının sayfalarından bütün önemli oranlar (İY/MS, toplam gol, KG...), en yeniden eskiye.
-# Her çalışma en fazla `sure` dakika indirir, kaldığı yerden devam eder.
+# İş, tarih aralıklarına bölünüp paralel parçalarda yapılabilir (her parça ayrı aylara yazar).
+# Her parça 30 dakikada bir kaydeder; süre dolunca ya da aralık bitince durur. Sonraki çalışma kaldığı yerden devam eder.
 on:
   schedule:
     - cron: "23 1 * * *"  # her gece 04:23 TR
   workflow_dispatch:
     inputs:
+      donemler:
+        description: 'Paralel parçalar (JSON liste, her biri "YYYY-AA-GG:YYYY-AA-GG")'
+        default: '["2019-01-01:9999-12-31"]'
       sure:
-        description: "En fazla kaç dakika indirilsin"
+        description: "Her parça en fazla kaç dakika indirsin"
         default: "300"
-      baslangic:
-        description: "En eski tarih (YYYY-AA-GG)"
-        default: "2019-01-01"
 
 concurrency:
   group: arsiv-oran
@@ -22,9 +23,9 @@ permissions:
   contents: write
 
 jobs:
-  oranlar:
+  tazele:
     runs-on: ubuntu-latest
-    timeout-minutes: 330
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -34,11 +35,46 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Arşivin son ayını tazele
         run: python -m iddaa.arsiv --baslangic "$(date -u -d '-3 days' +%Y-%m-01)"
+      - name: Kaydet
+        run: bash scripts/kaydet.sh "Mackolik arşivi (tazeleme)" || true
+
+  oranlar:
+    needs: tazele
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      matrix:
+        donem: ${{ fromJSON(inputs.donemler || '["2019-01-01:9999-12-31"]') }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
       - name: Maç sayfalarından oranlar
         env:
+          DONEM: ${{ matrix.donem }}
           SURE: ${{ inputs.sure || '300' }}
-          BASLANGIC: ${{ inputs.baslangic || '2019-01-01' }}
-        run: python -m iddaa.arsiv_oran --sure "$SURE" --baslangic "$BASLANGIC"
-      - name: Kaydet
-        if: always()
-        run: bash scripts/kaydet.sh "Geçmiş maç oranları"
+        run: |
+          bas="${DONEM%%:*}"; bit="${DONEM##*:}"
+          son=$(( $(date +%s) + SURE * 60 ))
+          while :; do
+            kalan=$(( (son - $(date +%s)) / 60 ))
+            [ "$kalan" -lt 2 ] && break
+            dilim=$(( kalan < 30 ? kalan : 30 ))
+            git pull -q --rebase || true
+            kod=0
+            python -m iddaa.arsiv_oran --baslangic "$bas" --bitis "$bit" --sure "$dilim" || kod=$?
+            bash scripts/kaydet.sh "Geçmiş maç oranları $bas..$bit"
+            case $kod in
+              0) ;;
+              3) echo "Aralık tamamlandı."; break ;;
+              4) echo "::warning::Mackolik istekleri reddetti, parça durdu."; break ;;
+              *) exit "$kod" ;;
+            esac
+          done

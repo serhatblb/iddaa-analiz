@@ -1,21 +1,34 @@
 name: Saatlik toplama
 
+# GitHub'ın zamanlayıcısı (cron) saatlerce gecikebiliyor ya da hiç çalışmıyor. Bu yüzden her çalışma
+# bitince `bekleme` ortamının bekleme süresi (55 dk) dolunca bir sonrakini kendisi başlatır (zincir).
+# Cron sadece yedek: zincir koparsa yeniden başlatır. Aynı anda tek zincir olur (concurrency: zincir).
+
 on:
   schedule:
-    - cron: "17 * * * *"  # her saat :17 (UTC)
+    - cron: "17 * * * *"
   workflow_dispatch:
+    inputs:
+      zincir:
+        description: "Bitince bir saat sonra kendini yeniden başlatsın"
+        type: boolean
+        default: true
 
 concurrency:
-  group: veri
+  group: ${{ (github.event_name == 'schedule' || inputs.zincir) && 'zincir' || format('elle-{0}', github.run_id) }}
   cancel-in-progress: false
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   topla:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    concurrency:
+      group: veri
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -42,3 +55,28 @@ jobs:
       - name: Veriyi repoya kaydet
         if: always()
         run: bash scripts/kaydet.sh "Veri (saatlik)"
+
+  devam:
+    needs: topla
+    if: always() && (github.event_name == 'schedule' || inputs.zincir)
+    runs-on: ubuntu-latest
+    environment: bekleme
+    timeout-minutes: 5
+    steps:
+      - name: Bir sonraki çalışmayı başlat
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Güvenlik: bekleme süresi tanımlı değilse zincir dakikada bir dönmesin
+          basla=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" --jq .run_started_at)
+          gecen=$(( $(date +%s) - $(date -d "$basla" +%s) ))
+          if [ "$gecen" -lt 2700 ]; then
+            echo "::warning::Bekleme olmadı ($gecen sn). 'bekleme' ortamına 55 dk Wait timer eklenmeli; zincir durduruldu."
+            exit 0
+          fi
+          for deneme in 1 2 3; do
+            gh workflow run saatlik.yml --repo "$GITHUB_REPOSITORY" --ref main -f zincir=true && exit 0
+            sleep $((deneme * 20))
+          done
+          echo "::error::Sonraki çalışma başlatılamadı."
+          exit 1
