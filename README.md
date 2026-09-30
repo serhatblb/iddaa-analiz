@@ -25,7 +25,10 @@ Toplama kuralları:
 - İY/MS'si olmayan yakın maçlar 2 saatte bir tekrar kontrol edilir.
 
 Kuponlar (20 TL, kağıt üstü), önümüzdeki 24 saatte başlayacak maçlardan; her maçtan en fazla bir seçim:
-- **İY/MS kuponu (hayal kuponu):** oranı 20–30 arası İY/MS seçeneklerinden 1 TL'ye beklenen dönüşü en yüksek 3 maç.
+- **İY/MS hayal kuponu:** hep 3 maç. iddaa İY/MS oranlarına tavan koyuyor (~36 Kral oran); günün en yüksek oranlı
+  (30 ve üstü, yetmezse 20 ve üstü) İY/MS seçenekleri arasından, maçın MS ve 2.5 A/Ü oranlarına benzer geçmiş maçlarda
+  (2019'dan beri bütün arşiv) en sık tutmuş 3 maç. Tavandaki sürprizler aynı oranı alsa da gerçek şansları farklı:
+  modelin görmediği 12 ayda en olası dilim %2.6, en az olası %0.8 tuttu. Kupon oranı ~30–47 bin.
 - **1-0-2 kuponu:** oranı 1.40–5.00 arası MS seçimlerinden beklenen dönüşü en yüksekler.
 - **İY/MS değer kuponu:** her maçın beklenen dönüşü en yüksek İY/MS seçimi.
 - **Gol kuponu:** toplam gol (0-1 / 2-3 / 4-5 / 6+) seçimlerinden beklenen dönüşü en yüksekler.
