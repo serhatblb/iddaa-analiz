@@ -253,8 +253,10 @@ def olustur(simdi: datetime | None = None) -> Rapor:
     kapanis = {m: v[config.IYMS] for m, v in kapanis_tum.items() if config.IYMS in v}
 
     _aday_bolumu(rapor, simdi)
-    if not _iddaa_gecmisi_bolumu(rapor):
-        _gecmis_bolumu(rapor)
+    if _iddaa_gecmisi_bolumu(rapor):
+        _veri_durumu(rapor, simdi, kayitlar, sonuclar, kapanis)
+        return rapor
+    _gecmis_bolumu(rapor)
 
     rapor.bolum("iddaa verisi: MS oranları (en çok örneği olan 10 oran)")
     ms_satirlari = [s for s in analiz.iddaa_ms_tablosu(kapanis_tum, sonuclar) if s["secim"] == "hepsi"]
@@ -269,6 +271,11 @@ def olustur(simdi: datetime | None = None) -> Rapor:
     rapor.bolum("iddaa verisi: İY/MS tüm oranlar")
     _istatistik_tablosu(rapor, iyms_istatistik(kapanis, sonuclar))
 
+    _veri_durumu(rapor, simdi, kayitlar, sonuclar, kapanis)
+    return rapor
+
+
+def _veri_durumu(rapor: Rapor, simdi: datetime, kayitlar: dict, sonuclar: dict, kapanis: dict):
     rapor.bolum("Veri durumu")
     son24 = simdi - timedelta(hours=24)
     dosyalar = [d for d in depo.oran_dosyalari(son24)]
@@ -278,7 +285,6 @@ def olustur(simdi: datetime | None = None) -> Rapor:
                  "Kapanış İY/MS'si olan"],
                 [[len(dosyalar), len(yeni_mac), sum(1 for k in yeni_mac if k.get("iyms_var") == "1"),
                   len(kayitlar), tamam, len(kapanis)]])
-    return rapor
 
 
 def mail_gonder(rapor: Rapor, konu: str) -> bool:
