@@ -96,23 +96,17 @@ def _gecmis_bolumu(rapor: Rapor):
 
 def _aday_bolumu(rapor: Rapor, simdi: datetime):
     adaylar = kupon.oneriler(simdi)
-    rapor.bolum("Şu anki 1-0-2 adayları (en iyi 10)")
-    if not adaylar["ms"]:
-        rapor.yazi("Aday yok.")
-    else:
-        rapor.yazi("Geçmişte tutma: kâr payı ayıklanmış olasılığı benzer geçmiş seçimlerin tutma oranı. "
-                   "1 TL'ye dönen 1'in altındaysa o seçim uzun vadede kaybettirir.")
+    for tur, ad in kupon.TURLER.items():
+        rapor.bolum(f"Şu anki {ad.replace(' kuponu', '')} adayları (en iyi 5)")
+        if not adaylar[tur]:
+            rapor.yazi("Aday yok.")
+            continue
         rapor.tablo(["Maç", "Lig", "Başlama", "Seçim", "Oran", "Geçmişte tutma", "1 TL'ye dönen"],
                     [[f"{a['ev']} - {a['dep']}", a["lig"], _saat(a["baslama_utc"]), a["secim"], a["oran"],
-                      _yuzde(a["tutma"]), f"{a['beklenen']:.2f}"] for a in adaylar["ms"][:10]])
-    rapor.bolum(f"Şu anki İY/MS adayları (oran {config.KUPON_MIN_ORAN:g}–{config.KUPON_MAX_ORAN:g})")
-    if not adaylar["iyms"]:
-        rapor.yazi("Aday yok.")
-    else:
-        rapor.tablo(["Maç", "Lig", "Başlama", "Seçim", "Oran", "Geçmişte sıklık", "1 TL'ye dönen"],
-                    [[f"{a['ev']} - {a['dep']}", a["lig"], _saat(a["baslama_utc"]), a["secim"], a["oran"],
-                      _yuzde(a["tutma"]) if a["tutma"] != "" else "-",
-                      f"{a['beklenen']:.2f}" if a["beklenen"] != "" else "-"] for a in adaylar["iyms"][:10]])
+                      _yuzde(float(a["tutma"])) if a.get("tutma") not in ("", None) else "-",
+                      f"{float(a['beklenen']):.2f}" if a.get("beklenen") not in ("", None) else "-"]
+                     for a in adaylar[tur][:5]])
+    rapor.yazi("1 TL'ye dönen 1'in altındaysa o seçim uzun vadede kaybettirir.")
 
 
 def iyms_istatistik(kapanis: dict, sonuclar: dict, min_oran: float | None = None,
@@ -170,9 +164,9 @@ def _kupon_bolumu(rapor: Rapor, baslik: str, satirlar: list[dict] | None, tur: s
         return
     ilk = satirlar[0]
     if ilk["durum"] == "aday_yok":
-        neden = (f"Oranı {config.KUPON_MIN_ORAN:g}–{config.KUPON_MAX_ORAN:g} arası İY/MS seçeneği olan"
-                 if tur == "iyms" else
-                 f"Oranı {config.MS_KUPON_MIN_ORAN:.2f}–{config.MS_KUPON_MAX_ORAN:.2f} arası ve geçmiş verisi olan")
+        neden = {"iyms": f"Oranı {config.KUPON_MIN_ORAN:g}–{config.KUPON_MAX_ORAN:g} arası İY/MS seçeneği olan",
+                 "ms": f"Oranı {config.MS_KUPON_MIN_ORAN:.2f}–{config.MS_KUPON_MAX_ORAN:.2f} arası ve geçmiş verisi olan",
+                 }.get(tur, "Geçmiş verisi olan")
         rapor.yazi(f"{neden} yeterli maç yoktu ({ilk['secim']}), kupon oluşturulmadı.")
         return
     rapor.tablo(["Maç", "Lig", "Başlama", "Market", "Seçim", "Oran", "Sonuç"],

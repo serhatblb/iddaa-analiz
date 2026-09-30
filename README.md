@@ -11,7 +11,7 @@ Her şey GitHub Actions'ta çalışır, bilgisayarın açık olması gerekmez.
 | Workflow | Zaman | İş |
 |---|---|---|
 | Saatlik toplama | Her saat :17 | Bülten, oranlar, en çok oynananlar; biten maçların sonuçları (Mackolik); panel |
-| Günlük kupon ve rapor (yedek) | Her gün 09:43 | Saatlik çalışma zaten 09:40'tan sonraki ilk çalışmada bugünün İY/MS ve 1-0-2 kuponlarını seçer, rapor yazar ve mail atar; bu workflow sadece yedek |
+| Günlük kupon ve rapor (yedek) | Her gün 09:43 | Saatlik çalışma zaten 09:40'tan sonraki ilk çalışmada bugünün dört kuponunu seçer, rapor yazar ve mail atar; bu workflow sadece yedek |
 | Geçmiş veri ve analiz | Her pazartesi 06:23 | football-data.co.uk'tan 22 lig, 2012'den bugüne maçlar; MS oran aralığı ve İY/MS adil oran tabloları |
 | Testler | Kod değişince | `pytest` |
 
@@ -25,6 +25,8 @@ Kuponlar (20 TL, kağıt üstü), önümüzdeki 24 saatte başlayacak maçlardan
 - **İY/MS kuponu:** oranı 20–30 arası İY/MS seçenekleri; her maçtan en yüksek oranlı olan aday olur, en yüksek 3 aday seçilir.
 - **1-0-2 kuponu:** oranı 1.40–5.00 arası MS seçimleri; her seçimin geçmişte ne sıklıkla tuttuğu, iddaa'nın kâr payı
   ayıklanmış olasılığı benzer (±2 puan) geçmiş seçimlerden bulunur. 1 TL'ye beklenen dönüşü en yüksek 3 seçim (farklı maçlar).
+- **İY/MS değer kuponu:** her maçta, ev sahibinin gücüne göre geçmişte 1 TL'ye en çok para döndüren İY/MS seçimi; en iyi 3.
+- **Gol kuponu:** toplam gol (0-1 / 2-3 / 4-5 / 6+); 2.5 Alt/Üst oranı benzer geçmiş maçların gol dağılımına göre en iyi 3.
 
 Sonuçlar Mackolik'in günlük canlı sonuç verisinden (`vd.mackolik.com/livedata?date=GG/AA/YYYY`) iddaa maç
 numarasıyla eşleştirilerek alınır. MS için 90 dakika skoru kullanılır; ertelenen, hükmen ve yarıda kalan maçlar iptal

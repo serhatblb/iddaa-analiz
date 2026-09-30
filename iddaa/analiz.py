@@ -113,16 +113,23 @@ def kosullu_satirlar(tablo: dict[str, dict]) -> list[dict]:
 
 # --- iddaa verisi yardımcıları ---
 
+def market_cizgi(market: str, cizgi: str) -> str:
+    """Çizgili marketler (Alt/Üst gibi) çizgiyle ayrılır: '2_101|2.5'."""
+    return f"{market}|{cizgi}" if cizgi else market
+
+
 def son_oranlar(simdi: datetime, marketler: set[str], geriye_gun: int = 2) -> dict[str, dict[str, dict]]:
-    """{mac_id: {market: {"zaman": .., "oranlar": {secenek: oran}}}} - her maç/market için son anlık."""
+    """{mac_id: {market: {"zaman": .., "oranlar": {secenek: oran}}}} - her maç/market için son anlık.
+    Çizgili marketlerin anahtarı market_cizgi() ile oluşur (ör. '2_101|2.5')."""
     son: dict[str, dict[str, dict]] = defaultdict(dict)
     for dosya in depo.oran_dosyalari(simdi - timedelta(days=geriye_gun)):
         for satir in depo.gz_csv_oku(dosya):
             if satir["market"] not in marketler:
                 continue
-            kayit = son[satir["mac_id"]].get(satir["market"])
+            anahtar = market_cizgi(satir["market"], satir.get("cizgi", ""))
+            kayit = son[satir["mac_id"]].get(anahtar)
             if kayit is None or satir["zaman_utc"] > kayit["zaman"]:
-                kayit = son[satir["mac_id"]][satir["market"]] = {"zaman": satir["zaman_utc"], "oranlar": {}}
+                kayit = son[satir["mac_id"]][anahtar] = {"zaman": satir["zaman_utc"], "oranlar": {}}
             if satir["zaman_utc"] == kayit["zaman"]:
                 kayit["oranlar"][satir["secenek"]] = float(satir["oran"])
     return dict(son)
@@ -265,6 +272,82 @@ def ms_adaylari(oranlar: dict, kayitlar: dict, tablo: dict, simdi: datetime,
     return sorted(adaylar, key=lambda a: -a["beklenen"])
 
 
+# --- 5. Toplam gol (0-1 / 2-3 / 4-5 / 6+) ---
+#
+# Geçmiş maçlar, 2.5 Alt/Üst oranlarından (kâr payı ayıklanmış) "Üst" olasılığına göre %5'lik dilimlere ayrılır;
+# her dilimde toplam gol dağılımı sayılır. Bugünkü iddaa maçı, kendi 2.5 Alt/Üst oranıyla dilimine yerleşir.
+
+TOPLAM_GOL = "2_4"
+ALT_UST = "2_101"
+ALT_UST_25 = market_cizgi(ALT_UST, "2.5")
+GOL_UST_SINIR = 10  # 10 ve üstü tek hücrede
+
+
+def gol_tablosu(maclar: list[dict]) -> dict[str, dict]:
+    """{dilim: {"ornek": n, "goller": [0 gol, 1 gol, ..., 10+ gol]}}"""
+    tablo: dict[str, dict] = {}
+    for m in maclar:
+        ust, alt = m.get("ort_ust25"), m.get("ort_alt25")
+        if not ust or not alt:
+            continue
+        p_ust = (1 / ust) / (1 / ust + 1 / alt)
+        d = tablo.setdefault(dilim(p_ust), {"ornek": 0, "goller": [0] * (GOL_UST_SINIR + 1)})
+        d["ornek"] += 1
+        d["goller"][min(m["ms_ev"] + m["ms_dep"], GOL_UST_SINIR)] += 1
+    return dict(sorted(tablo.items(), key=lambda kv: float(kv[0].split("–")[0].lstrip("%"))))
+
+
+def gol_araligi(secenek: str) -> tuple[int, int] | None:
+    """'2-3 gol' -> (2, 3), '6+ gol' -> (6, 99), '1 gol' -> (1, 1)."""
+    metin = secenek.lower().replace("gol", "").strip()
+    try:
+        if metin.endswith("+"):
+            return int(metin[:-1]), 99
+        if "-" in metin:
+            a, b = metin.split("-", 1)
+            return int(a), int(b)
+        return int(metin), int(metin)
+    except ValueError:
+        return None
+
+
+def gol_sikligi(dilim_verisi: dict, aralik: tuple[int, int]) -> float:
+    n = dilim_verisi["ornek"]
+    toplam = sum(c for g, c in enumerate(dilim_verisi["goller"]) if aralik[0] <= g <= aralik[1])
+    return toplam / n if n else 0.0
+
+
+def gol_adaylari(oranlar: dict, kayitlar: dict, tablo: dict, simdi: datetime,
+                 ufuk: timedelta = timedelta(hours=24), min_ornek: int = MIN_DILIM_ORNEGI) -> list[dict]:
+    adaylar = []
+    if not tablo:
+        return adaylar
+    for mac_id, marketler in oranlar.items():
+        kayit = kayitlar.get(mac_id)
+        au = (marketler.get(ALT_UST_25) or {}).get("oranlar", {})
+        tg = (marketler.get(TOPLAM_GOL) or {}).get("oranlar", {})
+        if not kayit or "Alt" not in au or "Üst" not in au or not tg:
+            continue
+        if not (simdi < iso_oku(kayit["baslama_utc"]) <= simdi + ufuk):
+            continue
+        p_ust = (1 / au["Üst"]) / (1 / au["Üst"] + 1 / au["Alt"])
+        d = tablo.get(dilim(p_ust))
+        if not d or d["ornek"] < min_ornek:
+            continue
+        for secenek, oran in tg.items():
+            aralik = gol_araligi(secenek)
+            if not aralik:
+                continue
+            siklik = gol_sikligi(d, aralik)
+            if not siklik:
+                continue
+            adaylar.append({"mac_id": mac_id, "lig": kayit.get("lig", ""), "ev": kayit["ev"], "dep": kayit["dep"],
+                            "baslama_utc": kayit["baslama_utc"], "market": "Toplam gol", "secim": secenek,
+                            "oran": oran, "tutma": round(siklik, 4), "ornek": d["ornek"],
+                            "beklenen": round(oran * siklik, 3)})
+    return sorted(adaylar, key=lambda a: -a["beklenen"])
+
+
 # --- Kaydetme / okuma ---
 
 def analiz_yolu(ad: str):
@@ -280,11 +363,16 @@ def gecmis_analizi_yaz(maclar: list[dict]) -> dict:
                  ["ev_olasiligi", "ornek"] + IYMS_SECENEKLERI + MS_SECENEKLERI)
     depo.json_yaz(analiz_yolu("gecmis_iyms_kosullu.json"), kosullu)
     depo.json_yaz(analiz_yolu("gecmis_ms_olasilik.json"), ms_olasilik_tablosu(maclar))
+    depo.json_yaz(analiz_yolu("gecmis_gol.json"), gol_tablosu(maclar))
     ozet = {"mac": len(maclar), "lig": len({m["lig"] for m in maclar}),
             "ilk": min((m["tarih"] for m in maclar), default=""),
             "son": max((m["tarih"] for m in maclar), default="")}
     depo.json_yaz(analiz_yolu("gecmis_ozet.json"), ozet)
     return ozet
+
+
+def gol_tablosu_oku() -> dict:
+    return depo.json_oku(analiz_yolu("gecmis_gol.json")) or {}
 
 
 def ms_olasilik_oku() -> dict:

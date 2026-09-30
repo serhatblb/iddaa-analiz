@@ -190,7 +190,21 @@ def _getiri_td(x: float) -> str:
 
 
 def _secim_etiketi(s: dict) -> str:
+    if s["market"] == "Toplam gol":
+        return s["secim"]
     return f"{'MS' if s['market'] == 'MS' else 'İY/MS'} {s['secim']}"
+
+
+ACIKLAMALAR = {
+    "iyms": f"Oranı {config.KUPON_MIN_ORAN:g}–{config.KUPON_MAX_ORAN:g} arası İY/MS seçeneklerinden en yüksek oranlı "
+            f"{config.KUPON_MAC_SAYISI} maç. Piyango mantığı.",
+    "ms": f"Oranı {config.MS_KUPON_MIN_ORAN:.2f}–{config.MS_KUPON_MAX_ORAN:.2f} arası 1-0-2 seçimlerinden, geçmişte "
+          f"1 TL'ye en çok para döndüren {config.KUPON_MAC_SAYISI} seçim.",
+    "iyms_deger": "Her maçta, ev sahibinin gücüne göre geçmişte 1 TL'ye en çok para döndüren İY/MS seçimi; en iyi "
+                  f"{config.KUPON_MAC_SAYISI} maç.",
+    "gol": "Toplam gol (0-1 / 2-3 / 4-5 / 6+). 2.5 Alt/Üst oranı benzer geçmiş maçların gol dağılımına göre 1 TL'ye "
+           f"en çok para döndüren seçim; en iyi {config.KUPON_MAC_SAYISI} maç.",
+}
 
 
 def _istatistik_notu(s: dict) -> str:
@@ -228,12 +242,7 @@ DURUM = {"bekliyor": ("Sabitlendi · bekliyor", "sabit"), "kazandi": ("KAZANDI",
 
 
 def _kupon_karti(tur: str, ad: str, sabit: list[dict] | None, adaylar: list[dict], kasa: dict) -> str:
-    if tur == "iyms":
-        aciklama = (f"Oranı {config.KUPON_MIN_ORAN:g}–{config.KUPON_MAX_ORAN:g} arası İY/MS seçeneklerinden "
-                    f"en yüksek oranlı {config.KUPON_MAC_SAYISI} maç.")
-    else:
-        aciklama = (f"Oranı {config.MS_KUPON_MIN_ORAN:.2f}–{config.MS_KUPON_MAX_ORAN:.2f} arası 1-0-2 seçimlerinden, "
-                    f"geçmişte 1 TL'ye en çok para döndüren {config.KUPON_MAC_SAYISI} seçim.")
+    aciklama = ACIKLAMALAR.get(tur, "")
     if sabit and sabit[0]["durum"] != "aday_yok":
         etiket, sinif = DURUM.get(sabit[0]["durum"], (sabit[0]["durum"], ""))
         ilk = sabit[0]
@@ -333,15 +342,16 @@ def olustur(simdi: datetime | None = None) -> tuple[str, dict[str, dict]]:
     kartlar = "".join(_kupon_karti(tur, ad, kuponlar.get((bugun, tur)), adaylar[tur], kupon.kasa(kuponlar, tur))
                       for tur, ad in kupon.TURLER.items())
     sekme_kupon = (
-        '<div class="bilgi">İki ayrı sistem: <b>İY/MS kuponu</b> yüksek oranlı sürpriz, <b>1-0-2 kuponu</b> geçmiş veriye '
-        "göre en çok para döndüren maç sonucu seçimleri. <b>1 TL →</b> değeri 1'in altındaysa o seçim uzun vadede "
-        "kaybettirir. Kağıt üstü; para yatırılmaz.</div>"
+        '<div class="bilgi">Dört ayrı kupon: <b>İY/MS</b> yüksek oranlı sürpriz, <b>1-0-2</b>, <b>İY/MS değer</b> ve '
+        "<b>Gol</b>; son üçü geçmiş veriye göre 1 TL'ye en çok para döndüren seçimler. <b>1 TL →</b> değeri 1'in "
+        "altındaysa o seçim uzun vadede kaybettirir. Kağıt üstü; para yatırılmaz.</div>"
         f'<div class="kartlar">{kartlar}</div>'
         f'<div class="kart"><h2>Şu anki adaylar</h2><p class="aciklama">Önümüzdeki 24 saat, her saat güncellenir. '
-        "Geçmişte tuttu: iddaa'nın kâr payı düşülerek, olasılığı benzer geçmiş seçimlerin tutma oranı.</p>"
-        f"<details open><summary>1-0-2 adayları ({len(adaylar['ms'])})</summary>{_aday_tablosu(adaylar['ms'])}</details>"
-        f"<details><summary>İY/MS adayları ({len(adaylar['iyms'])})</summary>{_aday_tablosu(adaylar['iyms'])}</details>"
-        "</div>")
+        "Geçmişte tuttu: iddaa'nın kâr payı düşülerek, benzer geçmiş maçlarda o seçimin tutma oranı.</p>"
+        + "".join(f"<details{' open' if i == 0 else ''}><summary>{_e(ad.replace(' kuponu', ''))} adayları "
+                  f"({len(adaylar[tur])})</summary>{_aday_tablosu(adaylar[tur])}</details>"
+                  for i, (tur, ad) in enumerate(kupon.TURLER.items()))
+        + "</div>")
 
     # --- Oran sorgula ---
     sekme_oran = (

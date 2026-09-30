@@ -109,3 +109,15 @@ def test_ms_olasilik_ve_adaylar(veri_dizini):
     topla.calistir(SahteIstemci([m]), simdi - timedelta(minutes=30))
     ms = kupon.oneriler(simdi)["ms"]
     assert ms and ms[0]["secim"] == "1" and ms[0]["tutma"] == 0.6 and ms[0]["beklenen"] == round(1.43 * 0.6, 3)
+
+
+def test_gol_tablosu_ve_kupon_degerlendirme():
+    maclar = [{"ms_ev": g // 2, "ms_dep": g - g // 2, "ort_ust25": 1.9, "ort_alt25": 1.9} for g in [0, 1, 2, 2, 3, 3, 4, 5, 6, 2]]
+    t = analiz.gol_tablosu(maclar)
+    d = t[analiz.dilim(0.5)]
+    assert d["ornek"] == 10 and analiz.gol_sikligi(d, analiz.gol_araligi("2-3 gol")) == 0.5
+    assert analiz.gol_araligi("6+ gol") == (6, 99) and analiz.gol_araligi("0-1 gol") == (0, 1)
+    satirlar = [{"tarih": "t", "tur": "gol", "mac_id": "1", "market": "Toplam gol", "secim": "2-3 gol", "oran": "2.1",
+                 "gercek": "", "tuttu": "", "toplam_oran": "", "tutar": "20", "durum": "bekliyor", "kazanc": ""}]
+    kupon.kupon_degerlendir(satirlar, {"1": {"durum": "tamam", "iy_ev": "1", "iy_dep": "0", "ms_ev": "2", "ms_dep": "1"}})
+    assert satirlar[0]["gercek"] == "3 gol" and satirlar[0]["tuttu"] == "1" and satirlar[0]["durum"] == "kazandi"

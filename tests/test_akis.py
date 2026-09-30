@@ -73,7 +73,7 @@ def test_kupon_secimi_ve_degerlendirme(veri_dizini):
 
     # Aynı gün tekrar çalışırsa yeni kupon açmaz
     kupon.calistir(SIMDI + timedelta(hours=1))
-    assert len(kupon.kuponlari_oku()) == 4
+    assert len(kupon.kuponlari_oku()) == 3 + len(kupon.TURLER) - 1  # 3 satır İY/MS + diğer türler aday_yok
 
     # Sonuçlar: ilk iki tuttu, üçüncü yattı; 1. maç kimliksiz, isim ve saatle eşleşir
     bas = {m["i"]: datetime.fromtimestamp(m["d"], timezone.utc) for m in maclar}

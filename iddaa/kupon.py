@@ -1,10 +1,13 @@
 """Günlük kağıt üstü kuponlar. Para yatırılmaz; seçimler kaydedilir, sonuçlar gelince değerlendirilir.
 
-İki ayrı kupon, önümüzdeki 24 saatte başlayacak maçlardan:
+Dört ayrı kupon, önümüzdeki 24 saatte başlayacak maçlardan:
 - iyms: Oranı 20–30 arası İY/MS seçenekleri. Her maçtan aralıktaki en yüksek oranlı seçenek aday olur;
         en yüksek oranlı 3 aday kupona girer.
 - ms:   MS 1-0-2 seçenekleri (oran 1.40–5.00). Her seçimin geçmişte ne sıklıkla tuttuğu, kâr payı ayıklanmış
         olasılığı benzer maçlardan bulunur; 1 TL'ye beklenen dönüşü en yüksek 3 seçim (farklı maçlar) kupona girer.
+- iyms_deger: Her maçta, ev sahibinin gücüne göre geçmişte 1 TL'ye en çok para döndüren İY/MS seçimi; en iyi 3.
+- gol:  Toplam gol (0-1 / 2-3 / 4-5 / 6+). 2.5 Alt/Üst oranına göre benzer geçmiş maçların gol dağılımından,
+        1 TL'ye en çok para döndüren seçim; en iyi 3.
 """
 import logging
 from datetime import datetime, timedelta, timezone
@@ -16,7 +19,7 @@ log = logging.getLogger("kupon")
 
 KUPON_ALANLARI = ["tarih", "tur", "sira", "mac_id", "lig", "ev", "dep", "baslama_utc", "market", "secim",
                   "oran", "tutma", "beklenen", "gercek", "tuttu", "toplam_oran", "tutar", "durum", "kazanc"]
-TURLER = {"iyms": "İY/MS kuponu", "ms": "1-0-2 kuponu"}
+TURLER = {"iyms": "İY/MS kuponu", "ms": "1-0-2 kuponu", "iyms_deger": "İY/MS değer kuponu", "gol": "Gol kuponu"}
 MS_MIN_ORAN = config.MS_KUPON_MIN_ORAN
 MS_MAX_ORAN = config.MS_KUPON_MAX_ORAN
 EN_ERKEN_BASLAMA = timedelta(minutes=15)
@@ -73,13 +76,42 @@ def ms_adaylari(oranlar: dict, kayitlar: dict, tablo: dict, simdi: datetime,
                   key=lambda a: (-a["beklenen"], a["baslama_utc"], a["mac_id"]))
 
 
+def mac_basina_en_iyi(adaylar: list[dict], kayitlar: dict, simdi: datetime) -> list[dict]:
+    """Her maçtan beklenen dönüşü en yüksek tek seçim; beklenene göre sıralı."""
+    en_iyi: dict[str, dict] = {}
+    for a in adaylar:
+        if not _pencerede(kayitlar[a["mac_id"]], simdi):
+            continue
+        if a["mac_id"] not in en_iyi or a["beklenen"] > en_iyi[a["mac_id"]]["beklenen"]:
+            en_iyi[a["mac_id"]] = a
+    alanlar = ("mac_id", "lig", "ev", "dep", "baslama_utc", "market", "secim", "oran", "tutma", "beklenen")
+    return sorted(({k: a.get(k, "") for k in alanlar} for a in en_iyi.values()),
+                  key=lambda a: (-a["beklenen"], a["baslama_utc"], a["mac_id"]))
+
+
+def iyms_deger_adaylari(oranlar: dict, kayitlar: dict, kosullu: dict, simdi: datetime) -> list[dict]:
+    if not kosullu:
+        return []
+    adaylar = [{**a, "tutma": a["gecmis_siklik"]}
+               for a in analiz.deger_adaylari(oranlar, kayitlar, kosullu, simdi, ufuk=PENCERE)
+               if a["market"] == "İY/MS"]
+    return mac_basina_en_iyi(adaylar, kayitlar, simdi)
+
+
+def gol_adaylari(oranlar: dict, kayitlar: dict, tablo: dict, simdi: datetime) -> list[dict]:
+    return mac_basina_en_iyi(analiz.gol_adaylari(oranlar, kayitlar, tablo, simdi, ufuk=PENCERE), kayitlar, simdi)
+
+
 def oneriler(simdi: datetime | None = None) -> dict[str, list[dict]]:
-    """Şu anki oranlarla her iki kupon türünün aday listesi."""
+    """Şu anki oranlarla her kupon türünün aday listesi."""
     simdi = (simdi or datetime.now(timezone.utc)).replace(microsecond=0)
     kayitlar = depo.maclari_oku()
-    oranlar = analiz.son_oranlar(simdi, {config.IYMS, analiz.MS})
-    return {"iyms": iyms_adaylari(oranlar, kayitlar, simdi, analiz.kosullu_oku()),
-            "ms": ms_adaylari(oranlar, kayitlar, analiz.ms_olasilik_oku(), simdi)}
+    oranlar = analiz.son_oranlar(simdi, {config.IYMS, analiz.MS, analiz.TOPLAM_GOL, analiz.ALT_UST})
+    kosullu = analiz.kosullu_oku()
+    return {"iyms": iyms_adaylari(oranlar, kayitlar, simdi, kosullu),
+            "ms": ms_adaylari(oranlar, kayitlar, analiz.ms_olasilik_oku(), simdi),
+            "iyms_deger": iyms_deger_adaylari(oranlar, kayitlar, kosullu, simdi),
+            "gol": gol_adaylari(oranlar, kayitlar, analiz.gol_tablosu_oku(), simdi)}
 
 
 # --- kupon oluşturma ve değerlendirme ---
@@ -102,7 +134,17 @@ def gercek_sonuc(market: str, sonuc: dict) -> str:
     iy_ev, iy_dep, ms_ev, ms_dep = (int(sonuc[k]) for k in ("iy_ev", "iy_dep", "ms_ev", "ms_dep"))
     if market == "MS":
         return sonuc_isareti(ms_ev, ms_dep)
+    if market == "Toplam gol":
+        return f"{ms_ev + ms_dep} gol"
     return iyms_sonucu(iy_ev, iy_dep, ms_ev, ms_dep)
+
+
+def tuttu_mu(market: str, secim: str, gercek: str) -> bool:
+    if market == "Toplam gol":
+        aralik = analiz.gol_araligi(secim)
+        toplam = int(gercek.split()[0])
+        return bool(aralik) and aralik[0] <= toplam <= aralik[1]
+    return gercek == secim
 
 
 def kupon_degerlendir(satirlar: list[dict], sonuclar: dict) -> None:
@@ -120,8 +162,9 @@ def kupon_degerlendir(satirlar: list[dict], sonuclar: dict) -> None:
         elif sonuc["durum"] == "belirsiz":
             s["tuttu"], s["gercek"] = "?", "sonuç yok"
         elif sonuc["durum"] == "tamam":
-            s["gercek"] = gercek_sonuc(s.get("market") or "İY/MS", sonuc)
-            s["tuttu"] = "1" if s["gercek"] == s["secim"] else "0"
+            market = s.get("market") or "İY/MS"
+            s["gercek"] = gercek_sonuc(market, sonuc)
+            s["tuttu"] = "1" if tuttu_mu(market, s["secim"], s["gercek"]) else "0"
     tutar = float(satirlar[0]["tutar"])
     if any(s["tuttu"] == "0" for s in satirlar):
         durum, kazanc = "kaybetti", 0.0

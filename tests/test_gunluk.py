@@ -17,5 +17,5 @@ def test_kupon_sabahtan_once_olusmaz_sonra_bir_kez_olusur(veri_dizini, monkeypat
     assert ilk["yeni"] is True and ilk["mail"] is True and len(gonderilen) == 1
     ikinci = gunluk.calistir(SABAH + timedelta(hours=1))
     assert ikinci["yeni"] is False and len(gonderilen) == 1
-    assert {s["tur"] for s in kupon.kuponlari_oku()} == {"iyms", "ms"}
+    assert {s["tur"] for s in kupon.kuponlari_oku()} == set(kupon.TURLER)
     assert (veri_dizini / "raporlar" / "2026-09-30.md").exists()
