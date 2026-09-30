@@ -1,7 +1,8 @@
 name: Saatlik toplama
 
 # GitHub'ın zamanlayıcısı (cron) saatlerce gecikebiliyor ya da hiç çalışmıyor. Bu yüzden her çalışma
-# bitince `bekleme` ortamının bekleme süresi (55 dk) dolunca bir sonrakini kendisi başlatır (zincir).
+# bitince yaklaşık bir saat sonra bir sonrakini kendisi başlatır (zincir). Bekleme `bekleme` ortamının
+# Wait timer'ıyla (55 dk, runner harcamaz) yapılır; ortam ayarlı değilse devam işi kalan süre kadar uyur.
 # Cron sadece yedek: zincir koparsa yeniden başlatır. Aynı anda tek zincir olur (concurrency: zincir).
 
 on:
@@ -61,18 +62,19 @@ jobs:
     if: always() && (github.event_name == 'schedule' || inputs.zincir)
     runs-on: ubuntu-latest
     environment: bekleme
-    timeout-minutes: 5
+    timeout-minutes: 65
     steps:
       - name: Bir sonraki çalışmayı başlat
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Güvenlik: bekleme süresi tanımlı değilse zincir dakikada bir dönmesin
           basla=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" --jq .run_started_at)
           gecen=$(( $(date +%s) - $(date -d "$basla" +%s) ))
-          if [ "$gecen" -lt 2700 ]; then
-            echo "::warning::Bekleme olmadı ($gecen sn). 'bekleme' ortamına 55 dk Wait timer eklenmeli; zincir durduruldu."
-            exit 0
+          # Ortamın Wait timer'ı varsa zaten beklenmiştir; yoksa bir saati tamamlayana kadar uyunur
+          kalan=$(( 3360 - gecen ))
+          if [ "$kalan" -gt 0 ]; then
+            echo "::notice::'bekleme' ortamında Wait timer yok; $kalan sn bekleniyor."
+            sleep "$kalan"
           fi
           for deneme in 1 2 3; do
             gh workflow run saatlik.yml --repo "$GITHUB_REPOSITORY" --ref main -f zincir=true && exit 0
