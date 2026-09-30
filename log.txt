@@ -1,0 +1,28 @@
+200 225528 https://arsiv.mackolik.com/Mac/4445135/Ispanya-Hirvatistan ipucu: ['1/1', '2/1', 'oran']
+200 225528 https://arsiv.mackolik.com/Match/Default.aspx?id=4445135 ipucu: ['1/1', '2/1', 'oran']
+502 568 https://arsiv.mackolik.com/Match/MatchData.aspx?t=iddaa&id=4445135 ipucu: []
+200 2632 https://arsiv.mackolik.com/Match/MatchData.aspx?t=dtl&id=4445135&s=0 ipucu: []
+200 0 https://arsiv.mackolik.com/AjaxHandlers/MatchHandler.aspx?command=optimizedoddsdata&id=4445135 ipucu: []
+404 1245 https://arsiv.mackolik.com/Iddaa/MacDetay/4445135 ipucu: []
+404 555 https://vd.mackolik.com/iddaadata?id=4445135 ipucu: []
+404 555 https://vd.mackolik.com/matchdata?id=4445135 ipucu: []
+200 262904 https://arsiv.mackolik.com/Mac/3562540/Fatih-Karagumruk-Basaksehir ipucu: ['1/1', '2/1', 'oran']
+200 262904 https://arsiv.mackolik.com/Match/Default.aspx?id=3562540 ipucu: ['1/1', '2/1', 'oran']
+200 0 https://arsiv.mackolik.com/Match/MatchData.aspx?t=iddaa&id=3562540 ipucu: []
+200 2400 https://arsiv.mackolik.com/Match/MatchData.aspx?t=dtl&id=3562540&s=0 ipucu: []
+200 0 https://arsiv.mackolik.com/AjaxHandlers/MatchHandler.aspx?command=optimizedoddsdata&id=3562540 ipucu: []
+404 1245 https://arsiv.mackolik.com/Iddaa/MacDetay/3562540 ipucu: []
+404 555 https://vd.mackolik.com/iddaadata?id=3562540 ipucu: []
+404 555 https://vd.mackolik.com/matchdata?id=3562540 ipucu: []
+/AjaxHandlers/MatchHandler.aspx?command=optaStats&id=3562540
+/AjaxHandlers/MatchHandler.aspx?command=optaStats&id=4445135
+/AjaxHandlers/MatchHandler.aspx?command=optaTopPerformers&id=3562540
+/AjaxHandlers/MatchHandler.aspx?command=optaTopPerformers&id=4445135
+/AjaxHandlers/MatchHandler.aspx?command=rbStats&id=3562540
+/AjaxHandlers/MatchHandler.aspx?command=rbStats&id=4445135
+/AjaxHandlers/StandingHandler.aspx?command=matchStanding&id=3562540&sv=1
+/AjaxHandlers/StandingHandler.aspx?command=matchStanding&id=4445135&sv=1
+/AjaxHandlers/StandingHandler.aspx?command=otherMatches&id=3562540
+/AjaxHandlers/StandingHandler.aspx?command=otherMatches&id=4445135
+http://user.mackolik.com/UserPages/destek.aspx
+https://run.adxxxxxmost.fgsdgsdfgfdsgdsgdsg/adx/get.ashx?k=55002&preredir={amClickThru}

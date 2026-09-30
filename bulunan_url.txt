@@ -1,0 +1,12 @@
+/AjaxHandlers/MatchHandler.aspx?command=optaStats&id=3562540
+/AjaxHandlers/MatchHandler.aspx?command=optaStats&id=4445135
+/AjaxHandlers/MatchHandler.aspx?command=optaTopPerformers&id=3562540
+/AjaxHandlers/MatchHandler.aspx?command=optaTopPerformers&id=4445135
+/AjaxHandlers/MatchHandler.aspx?command=rbStats&id=3562540
+/AjaxHandlers/MatchHandler.aspx?command=rbStats&id=4445135
+/AjaxHandlers/StandingHandler.aspx?command=matchStanding&id=3562540&sv=1
+/AjaxHandlers/StandingHandler.aspx?command=matchStanding&id=4445135&sv=1
+/AjaxHandlers/StandingHandler.aspx?command=otherMatches&id=3562540
+/AjaxHandlers/StandingHandler.aspx?command=otherMatches&id=4445135
+http://user.mackolik.com/UserPages/destek.aspx
+https://run.adxxxxxmost.fgsdgsdfgfdsgdsgdsg/adx/get.ashx?k=55002&preredir={amClickThru}
