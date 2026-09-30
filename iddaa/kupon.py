@@ -9,7 +9,7 @@ Dört ayrı kupon, önümüzdeki 24 saatte başlayacak maçlardan (her maçtan e
         yetmezse 20 ve üstü. Tavandaki seçenekler aynı oranı alsa da gerçek şansları farklı; maçın MS ve 2.5 A/Ü
         oranlarına benzer geçmiş maçlarda o İY/MS sonucunun gerçek sıklığı en yüksek 3 maç seçilir.
 - ms:   MS 1-0-2 seçimleri (oran 1.40–5.00); beklenen dönüşü en yüksek seçimler.
-- iyms_deger: Her maçın beklenen dönüşü en yüksek İY/MS seçimi.
+- iyms_deger: Her maçın beklenen dönüşü en yüksek İY/MS seçimi (benzer geçmiş maçların sıklığıyla).
 - gol:  Toplam gol (0-1 / 2-3 / 4-5 / 6+); beklenen dönüşü en yüksek seçimler.
 ms, iyms_deger ve gol kuponlarında maç sayısı MBS'ye göre seçilir: 1, 2 ya da 3 maçlık kuponlardan (her seçimin
 MBS'si kupondaki maç sayısını geçmemeli) 1 TL'ye beklenen dönüşü en yüksek olan; eşitlikte az maçlı olan.
@@ -123,10 +123,10 @@ def model_adaylari(model: dict, oranlar: dict, kayitlar: dict, simdi: datetime) 
     return adaylar
 
 
-def hayal_adaylari(oranlar: dict, kayitlar: dict, simdi: datetime, tablo: dict) -> list[dict]:
-    """Her maçtan bir aday (tavan kademesindeki en olası İY/MS), kupon sırasıyla: önce 30+ oranlılar, sonra 20+;
-    her kademede tutma olasılığı yüksekten düşüğe."""
-    adaylar = []
+def iyms_olasiliklari(oranlar: dict, kayitlar: dict, simdi: datetime, tablo: dict):
+    """Penceredeki her maç için (maç_id, kayıt, İY/MS oranları, olasılıklar, MBS). Olasılık: maçın MS ve 2.5 A/Ü
+    oranlarına benzer geçmiş maçlarda o İY/MS sonucunun sıklığı, iddaa'nın kendi İY/MS olasılığına çekilerek.
+    (iddaa İY/MS oranlarına tavan koyduğu için sadece İY/MS oranından çıkan olasılık sürprizlerde yanıltıcı.)"""
     for mac_id, marketler in oranlar.items():
         kayit = kayitlar.get(mac_id)
         iyms = (marketler.get(config.IYMS) or {}).get("oranlar", {})
@@ -137,15 +137,34 @@ def hayal_adaylari(oranlar: dict, kayitlar: dict, simdi: datetime, tablo: dict) 
         anahtar = kalibrasyon.kosul_anahtari(ms, au)
         q = kalibrasyon.normallestir(iyms)
         p = {s: kalibrasyon.kosullu_olasilik(tablo, anahtar, s, q[s]) for s in iyms}
+        mbs = (marketler.get(config.IYMS) or {}).get("mbs") or kayit.get("mbs", "")
+        yield mac_id, kayit, iyms, p, mbs
+
+
+def _iyms_aday(mac_id, kayit, secim, oran, olasilik, mbs) -> dict:
+    return {"mac_id": mac_id, "lig": kayit.get("lig", ""), "ev": kayit["ev"], "dep": kayit["dep"],
+            "baslama_utc": kayit["baslama_utc"], "market": "İY/MS", "secim": secim, "oran": oran,
+            "tutma": round(olasilik, 4), "beklenen": round(oran * olasilik, 3), "mbs": mbs,
+            "kaynak": "iddaa geçmişi (benzer maçlar)"}
+
+
+def iyms_deger_kosullu(oranlar: dict, kayitlar: dict, simdi: datetime, tablo: dict) -> list[dict]:
+    """Her maçın beklenen dönüşü en yüksek İY/MS seçimi (benzer maç olasılığıyla); beklenene göre sıralı."""
+    adaylar = []
+    for mac_id, kayit, iyms, p, mbs in iyms_olasiliklari(oranlar, kayitlar, simdi, tablo):
+        secim = max(iyms, key=lambda s: iyms[s] * p[s])
+        adaylar.append(_iyms_aday(mac_id, kayit, secim, iyms[secim], p[secim], mbs))
+    return sorted(adaylar, key=lambda a: (-a["beklenen"], a["baslama_utc"], a["mac_id"]))
+
+
+def hayal_adaylari(oranlar: dict, kayitlar: dict, simdi: datetime, tablo: dict) -> list[dict]:
+    """Her maçtan bir aday (tavan kademesindeki en olası İY/MS), kupon sırasıyla: önce 30+ oranlılar, sonra 20+;
+    her kademede tutma olasılığı yüksekten düşüğe."""
+    adaylar = []
+    for mac_id, kayit, iyms, p, mbs in iyms_olasiliklari(oranlar, kayitlar, simdi, tablo):
         aday = kalibrasyon.mac_hayal_adayi(iyms, p, config.HAYAL_MIN_ORAN, config.KUPON_MIN_ORAN)
-        if not aday:
-            continue
-        secim, oran, olasilik = aday
-        adaylar.append({"mac_id": mac_id, "lig": kayit.get("lig", ""), "ev": kayit["ev"], "dep": kayit["dep"],
-                        "baslama_utc": kayit["baslama_utc"], "market": "İY/MS", "secim": secim, "oran": oran,
-                        "tutma": round(olasilik, 4), "beklenen": round(oran * olasilik, 3),
-                        "mbs": (marketler.get(config.IYMS) or {}).get("mbs") or kayit.get("mbs", ""),
-                        "kaynak": "iddaa geçmişi (benzer maçlar)"})
+        if aday:
+            adaylar.append(_iyms_aday(mac_id, kayit, *aday, mbs))
     ust = sorted((a for a in adaylar if a["oran"] >= config.HAYAL_MIN_ORAN), key=lambda a: (-a["tutma"], a["mac_id"]))
     alt = sorted((a for a in adaylar if a["oran"] < config.HAYAL_MIN_ORAN), key=lambda a: (-a["tutma"], a["mac_id"]))
     return ust + alt
@@ -189,8 +208,9 @@ def oneriler(simdi: datetime | None = None, model: dict | None = None) -> dict[s
                  else eski(iyms_adaylari(oranlar, kayitlar, simdi, kosullu))),
         "ms": (_model_turu(modelden, "MS", kayitlar, simdi, MS_MIN_ORAN, MS_MAX_ORAN)
                if "MS" in kapsam else eski(ms_adaylari(oranlar, kayitlar, analiz.ms_olasilik_oku(), simdi))),
-        "iyms_deger": (_model_turu(modelden, "İY/MS", kayitlar, simdi)
-                       if "İY/MS" in kapsam else eski(iyms_deger_adaylari(oranlar, kayitlar, kosullu, simdi))),
+        "iyms_deger": (iyms_deger_kosullu(oranlar, kayitlar, simdi, iyms_tablo) if iyms_tablo.get("hucre")
+                       else _model_turu(modelden, "İY/MS", kayitlar, simdi) if "İY/MS" in kapsam
+                       else eski(iyms_deger_adaylari(oranlar, kayitlar, kosullu, simdi))),
         "gol": (_model_turu(modelden, "Toplam gol", kayitlar, simdi)
                 if "Toplam gol" in kapsam else eski(gol_adaylari(oranlar, kayitlar, analiz.gol_tablosu_oku(), simdi))),
     }
