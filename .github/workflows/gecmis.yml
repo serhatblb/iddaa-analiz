@@ -27,6 +27,8 @@ jobs:
         run: python -m iddaa.gecmis
       - name: Geçmiş analiz tabloları
         run: python -m iddaa.analiz
+      - name: iddaa geçmişiyle model (kalibrasyon, geriye test)
+        run: python -m iddaa.kalibrasyon
       - name: Paneli güncelle
         run: python -m iddaa.panel
       - name: Veriyi repoya kaydet

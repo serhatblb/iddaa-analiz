@@ -1,4 +1,5 @@
 """Günlük iş: kuponları değerlendir, sabah 09:40'tan sonra bugünün kuponlarını bir kez oluştur, rapor ve mail.
+Her çalışmada ayrıca başlamasına az kalan maçların değerli seçimleri sanal tekli olarak kaydedilir (`tekler.py`).
 
 Saatlik çalışmanın içinden çağrılır; GitHub'ın zamanlanmış tetikleyicileri güvenilmez olduğu için günlük kupon
 ayrı bir zamanlamaya bağlı değildir. Aynı gün ikinci kez kupon oluşturmaz, mail de sadece kupon oluşturulduğunda gider.
@@ -7,7 +8,7 @@ import logging
 import sys
 from datetime import datetime, time, timezone
 
-from . import config, depo, kupon, rapor
+from . import config, depo, kupon, rapor, tekler
 
 log = logging.getLogger("gunluk")
 KUPON_SAATI = time(9, 40)
@@ -17,6 +18,7 @@ def calistir(simdi: datetime | None = None, zorla: bool = False) -> dict:
     simdi = (simdi or datetime.now(timezone.utc)).replace(microsecond=0)
     yerel = simdi.astimezone(config.TR)
     ozet = kupon.calistir(simdi, olustur=zorla or yerel.time() >= KUPON_SAATI)
+    ozet["tekler"] = tekler.calistir(simdi)
     if ozet["yeni"]:
         r = rapor.olustur(simdi)
         yol = depo.kok() / "raporlar" / f"{yerel.date().isoformat()}.md"

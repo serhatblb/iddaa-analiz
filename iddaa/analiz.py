@@ -137,17 +137,22 @@ def son_oranlar(simdi: datetime, marketler: set[str], geriye_gun: int = 2) -> di
     return dict(son)
 
 
-def kapanis_oranlari(kayitlar: dict, marketler: set[str]) -> dict[str, dict[str, dict[str, float]]]:
-    """Her maç ve market için başlamadan önceki son oranlar: {mac_id: {market: {secenek: oran}}}."""
+def kapanis_oranlari(kayitlar: dict, marketler: set[str],
+                     cizgili: bool = False) -> dict[str, dict[str, dict[str, float]]]:
+    """Her maç ve market için başlamadan önceki son oranlar: {mac_id: {market: {secenek: oran}}}.
+    cizgili=True ise çizgili marketler ayrı anahtar alır ('2_101|2.5')."""
     son: dict[tuple[str, str], tuple[str, dict]] = {}
-    for dosya in depo.oran_dosyalari():
+    ilk = min((k["baslama_utc"] for k in kayitlar.values() if k.get("baslama_utc")), default="")
+    baslangic = iso_oku(ilk) - timedelta(days=5) if ilk else None
+    for dosya in depo.oran_dosyalari(baslangic):
         for satir in depo.gz_csv_oku(dosya):
             if satir["market"] not in marketler:
                 continue
             kayit = kayitlar.get(satir["mac_id"])
             if not kayit or satir["zaman_utc"] >= kayit["baslama_utc"]:
                 continue
-            anahtar = (satir["mac_id"], satir["market"])
+            market = market_cizgi(satir["market"], satir.get("cizgi", "")) if cizgili else satir["market"]
+            anahtar = (satir["mac_id"], market)
             mevcut = son.get(anahtar)
             if mevcut is None or satir["zaman_utc"] > mevcut[0]:
                 mevcut = son[anahtar] = (satir["zaman_utc"], {})

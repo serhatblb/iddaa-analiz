@@ -78,3 +78,27 @@ jobs:
               *) exit "$kod" ;;
             esac
           done
+
+  analiz:
+    needs: oranlar
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: veri
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: iddaa geçmişiyle model (kalibrasyon, geriye test)
+        run: python -m iddaa.kalibrasyon
+      - name: Paneli güncelle
+        run: python -m iddaa.panel
+      - name: Kaydet
+        run: bash scripts/kaydet.sh "Model (iddaa geçmişi)"

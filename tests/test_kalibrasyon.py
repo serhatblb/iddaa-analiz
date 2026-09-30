@@ -149,3 +149,41 @@ def test_model_ile_kupon_adaylari(veri_dizini):
     assert oneriler["iyms"] == [] or oneriler["iyms"][0]["kaynak"] == "yabancı şirket verisi"  # model İY/MS'yi bilmiyor
     satirlar = kupon.kupon_olustur("2026-09-30", "ms", ms)
     assert len(satirlar) == 1 and satirlar[0]["mbs"] == "1"  # MBS 1: tek maçlık kupon
+
+
+def test_sanal_tekler(veri_dizini):
+    from datetime import datetime, timedelta, timezone
+
+    from conftest import SahteIstemci, mac
+
+    from iddaa import sonuc, tekler, topla
+    rnd = random.Random(9)
+    sayac = k.Sayaclar()
+    for lig, skor, marketler in _mac_uret(20000, rnd, 0.0):
+        sayac.ekle(lig, skor, marketler)
+    model = k.model_kur(sayac)
+    simdi = datetime(2026, 9, 30, 16, 0, tzinfo=timezone.utc)
+    bas = simdi + timedelta(hours=2)
+    m = mac(1, int(bas.timestamp()), ev="A", dep="B")
+    # Deplasman çok değerli görünsün: iddaa'nın payı düşük (adil orana yakın)
+    m["m"][0]["o"] = [{"no": 1, "odd": 1.7, "n": "1"}, {"no": 2, "odd": 4.2, "n": "0"}, {"no": 3, "odd": 6.5, "n": "2"}]
+    topla.calistir(SahteIstemci([m]), simdi - timedelta(hours=5))
+    assert tekler.calistir(simdi - timedelta(hours=5), model=model)["mac"] == 0  # henüz erken
+    ozet = tekler.calistir(simdi, model=model)
+    assert ozet["mac"] == 1 and ozet["secim"] >= 1
+    assert tekler.calistir(simdi + timedelta(hours=1), model=model)["mac"] == 0  # bir kez
+    satirlar = [s for s in tekler.oku() if s["market"]]
+    assert all(float(s["beklenen"]) >= 1.0 for s in satirlar)
+    # Sonuç: deplasman kazandı (0-1); sonuçlar dosyasına doğrudan yazılır
+    from iddaa import depo
+    kayitlar = depo.maclari_oku()
+    sonuclar = {"1": {"mac_id": "1", "iy_ev": 0, "iy_dep": 0, "ms_ev": 0, "ms_dep": 1, "durum": "tamam",
+                      "kaynak": "test", "guncelleme_utc": ""}}
+    depo.sonuclari_yaz(sonuclar, kayitlar, {"1"})
+    ozet = tekler.degerlendir()
+    hepsi = [r for r in ozet["satirlar"] if r["market"] == "hepsi" and not r["dilim"]][0]
+    assert hepsi["bahis"] == len(satirlar) and ozet["bekleyen"] == 0
+    kazanan = [s for s in satirlar if k.kazanan(s["market"], 0, 0, 0, 1) == s["secim"]]
+    assert hepsi["tutan"] == len(kazanan)
+    assert hepsi["clv"] == 1.0  # oranlar değişmedi: kapanış = aldığımız oran
+    assert sonuc  # modül içe aktarılabiliyor
