@@ -10,9 +10,12 @@ Her şey GitHub Actions'ta çalışır, bilgisayarın açık olması gerekmez.
 
 | Workflow | Zaman | İş |
 |---|---|---|
-| Saatlik toplama | Her saat :17 | Bülten, oranlar, en çok oynananlar; biten maçların sonuçları (Mackolik); panel |
+| Saatlik toplama | Her saat (zincir, cron yedek) | Bülten, oranlar, en çok oynananlar; sonuçlar ve lig eşleştirme (Mackolik); kuponlar, sanal tekliler; panel |
 | Günlük kupon ve rapor (yedek) | Her gün 09:43 | Saatlik çalışma zaten 09:40'tan sonraki ilk çalışmada bugünün dört kuponunu seçer, rapor yazar ve mail atar; bu workflow sadece yedek |
-| Geçmiş veri ve analiz | Her pazartesi 06:23 | football-data.co.uk'tan 22 lig, 2012'den bugüne maçlar; MS oran aralığı ve İY/MS adil oran tabloları |
+| Mackolik arşivi | Her pazartesi 08:11 | 2019'dan bugüne bitmiş bütün iddaa maçları: skorlar, lig, iddaa MS ve 2.5 A/Ü oranları |
+| Geçmiş maç oranları | Her gece 04:23 | Arşivdeki maçların Mackolik sayfalarından İY/MS, toplam gol, KG, İY, alt/üst, çifte şans oranları ve MBS (en yeniden eskiye, kaldığı yerden); sonra model |
+| Geçmiş veri ve analiz | Her pazartesi 06:23 | football-data.co.uk verisi (karşılaştırma için) ve model |
+| Keşif | Elle | Deneme betiklerini GitHub'da çalıştırıp çıktıyı `kesif/<isim>` dalına yazar |
 | Testler | Kod değişince | `pytest` |
 
 Toplama kuralları:
@@ -21,12 +24,35 @@ Toplama kuralları:
 - Başlamaya 75 dakika kala tüm marketler bir kez **kapanış** olarak kaydedilir.
 - İY/MS'si olmayan yakın maçlar 2 saatte bir tekrar kontrol edilir.
 
-Kuponlar (20 TL, kağıt üstü), önümüzdeki 24 saatte başlayacak maçlardan:
-- **İY/MS kuponu:** oranı 20–30 arası İY/MS seçenekleri; her maçtan en yüksek oranlı olan aday olur, en yüksek 3 aday seçilir.
-- **1-0-2 kuponu:** oranı 1.40–5.00 arası MS seçimleri; her seçimin geçmişte ne sıklıkla tuttuğu, iddaa'nın kâr payı
-  ayıklanmış olasılığı benzer (±2 puan) geçmiş seçimlerden bulunur. 1 TL'ye beklenen dönüşü en yüksek 3 seçim (farklı maçlar).
-- **İY/MS değer kuponu:** her maçta, ev sahibinin gücüne göre geçmişte 1 TL'ye en çok para döndüren İY/MS seçimi; en iyi 3.
-- **Gol kuponu:** toplam gol (0-1 / 2-3 / 4-5 / 6+); 2.5 Alt/Üst oranı benzer geçmiş maçların gol dağılımına göre en iyi 3.
+Kuponlar (20 TL, kağıt üstü), önümüzdeki 24 saatte başlayacak maçlardan; her maçtan en fazla bir seçim:
+- **İY/MS kuponu (hayal kuponu):** oranı 20–30 arası İY/MS seçeneklerinden 1 TL'ye beklenen dönüşü en yüksek 3 maç.
+- **1-0-2 kuponu:** oranı 1.40–5.00 arası MS seçimlerinden beklenen dönüşü en yüksekler.
+- **İY/MS değer kuponu:** her maçın beklenen dönüşü en yüksek İY/MS seçimi.
+- **Gol kuponu:** toplam gol (0-1 / 2-3 / 4-5 / 6+) seçimlerinden beklenen dönüşü en yüksekler.
+
+Beklenen dönüş = iddaa.com oranı (Kral) × modelin olasılığı. Son üç kuponda maç sayısı MBS'ye göre seçilir: 1, 2 ve 3
+maçlık kuponlardan (her seçimin MBS'si maç sayısını geçmemeli) beklenen dönüşü en yüksek olan; eşitlikte az maçlı olan.
+Her eklenen maç iddaa'nın payını bir kez daha çarpar.
+
+Sanal tekliler (`tekler.py`): başlamasına 20 dk – 4 saat kala her maçın beklenen dönüşü 1'in üstündeki bütün seçimleri
+1 TL oynanmış gibi kaydedilir; sonuç ve kapanış oranıyla (CLV) değerlendirilir. Modelin gerçekten işe yarayıp
+yaramadığını kuponlardan çok daha hızlı gösterir.
+
+## Model (iddaa'nın kendi geçmişi)
+
+`kalibrasyon.py`: "iddaa bu seçeneğe kâr payı ayıklanınca %q şans veriyordu; gerçekte ne sıklıkla tuttu?"
+Market ve seçenek başına logit(p) = a + b·logit(q) + c·logit(q)² eğrisi, üstüne lig düzeltmesi (az maçlı ligler genel
+ortalamaya çekilir, ampirik Bayes). Aynı marketin seçenekleri toplamı 1 olacak şekilde normalleştirilir.
+Veri: Mackolik arşivi (skorlar, lig, MS ve 2.5 A/Ü oranları) + maç sayfalarındaki oranlar (İY/MS, toplam gol, KG, İY,
+1.5/2.5/3.5 A/Ü). Mackolik'teki oranlar standart iddaa oranıdır; iddaa.com ve bayilerdeki Kral oran bunların 1.04 katı.
+
+Çıktılar (`data/analiz/`): `kalibrasyon.json` (model, son 36 ay), `geriye_test.json` (model son 12 ayı görmeden
+kurulur, o 12 ayda stratejiler denenir), `iddaa_senaryolar.json` (bütün geçmiş: her seçime / oran aralığına 1 TL),
+`iddaa_oran_tablosu.json` (Kral oran başına kaç kez oynandı, kaç kez tuttu).
+
+İlk bulgular (Ağustos 2019 – Eylül 2026, 396 bin maç): MS'de her seçime 1 TL → 0.83; favoriler (1.00–1.50) 0.90,
+5.00 üstü 0.69; 2.5 A/Ü 0.86. Hiçbir oran aralığı kâr ettirmiyor; oran yükseldikçe kayıp büyüyor (sürprizlere fazla şans
+veriliyor). iddaa her maçta bütün marketlere neredeyse aynı kâr payını koyuyor (standart oranla ~%22, İY/MS ~%31).
 
 Sonuçlar Mackolik'in günlük canlı sonuç verisinden (`vd.mackolik.com/livedata?date=GG/AA/YYYY`) iddaa maç
 numarasıyla eşleştirilerek alınır. MS için 90 dakika skoru kullanılır; ertelenen, hükmen ve yarıda kalan maçlar iptal
@@ -44,6 +70,10 @@ data/
   oynanma/mac/YYYY/MM/DD/HHMM.csv.gz     maç bazında oynanma payı
   kuponlar.csv                          kağıt üstü kuponlar
   adaylar/YYYY-MM-DD.json               o günün tüm kupon adayları
+  tekler/YYYY-MM.csv                    sanal tekliler (maça yakın değerli seçimler)
+  arsiv/YYYY-MM.csv.gz                  Mackolik arşivi: bitmiş iddaa maçları, skorlar, lig, MS ve 2.5 A/Ü oranları
+  arsiv_oran/YYYY-MM.csv.gz             maç sayfalarından geçmiş oranlar (İY/MS, toplam gol, KG, İY, A/Ü, ÇŞ) ve MBS
+  analiz/                               model ve analiz tabloları
   raporlar/YYYY-MM-DD.md                günlük raporlar
   ligler.csv, market_ayarlari.json      lig ve market isimleri
 ```
@@ -54,8 +84,11 @@ Tüm zamanlar UTC tutulur, raporlarda Türkiye saatine çevrilir.
 ## Zamanlama notu
 
 GitHub'ın zamanlanmış (cron) tetikleyicileri Ağustos 2026'dan beri bazı repolarda saatlerce gecikiyor ya da hiç
-çalışmıyor. Bu yüzden günlük kupon ayrı bir zamanlamaya bağlı değil; saatlik çalışmanın içinde yapılıyor.
-Saatlik çalışma elle de tetiklenebilir: Actions → Saatlik toplama → Run workflow.
+çalışmıyor. Bu yüzden saatlik çalışma bir zincir: her çalışma bitince `bekleme` ortamının 55 dakikalık bekleme süresi
+dolunca bir sonrakini kendisi başlatır. Cron sadece yedek. Zincir için repo ayarlarında bir kez
+Settings → Environments → `bekleme` → Wait timer 55 dakika tanımlanmalı; tanımlı değilse zincir kendini durdurur
+(uyarı yazar), cron ile devam edilir. Günlük kupon ayrı bir zamanlamaya bağlı değil, saatlik çalışmanın içinde.
+Saatlik çalışma elle de başlatılabilir: Actions → Saatlik toplama → Run workflow.
 
 ## Panel
 
@@ -63,11 +96,11 @@ Her çalışmada `docs/index.html` yeniden üretilir: kasa ve kuponlar, önümü
 geçmiş veride MS 1-0-2 oran aralıkları, ev sahibinin gücüne göre İY/MS adil oranları ve toplanan iddaa verisinin
 istatistikleri. Statik tek dosya; GitHub Pages (kaynak: `main` / `docs`) veya Vercel (kök dizin: `docs`) ile yayınlanabilir.
 
-## Değer hesabı
+## Eski değer hesabı (yedek)
 
-Geçmiş maçlar ev sahibinin kazanma olasılığına (oranlardan, kâr payı ayıklanarak) göre %5'lik dilimlere ayrılır.
-Her dilimde 9 İY/MS sonucunun ve 1-0-2'nin gerçek sıklığı ölçülür. Bugünkü bir iddaa maçı, iddaa'nın MS oranlarından
-aynı şekilde dilimine yerleştirilir; beklenen dönüş = iddaa oranı × o dilimdeki gerçek sıklık.
+Model bir marketi henüz kapsamıyorsa (ör. maç sayfası oranları inmeden önce İY/MS) football-data.co.uk verisiyle kurulan
+eski tablolar kullanılır: geçmiş maçlar ev sahibinin kazanma olasılığına göre %5'lik dilimlere ayrılır, her dilimde
+9 İY/MS sonucunun ve 1-0-2'nin gerçek sıklığı ölçülür; beklenen dönüş = iddaa oranı × o dilimdeki gerçek sıklık.
 
 ## SQL ile analiz
 
@@ -124,5 +157,7 @@ python -m pytest -q
 
 - [x] Toplayıcı, sonuçlar, kağıt kupon, günlük rapor
 - [x] football-data.co.uk geçmiş verisiyle MS ve İY/MS analizi, değer adayları, statik panel
-- [ ] Haftalık analiz raporu: market × oran aralığı × lig
-- [ ] Keşif/doğrulama ayrımıyla onaylı grupların günlük önerisi
+- [x] Mackolik arşivi: iddaa'nın kendi geçmiş oranları (2019'dan beri, bütün ligler)
+- [x] Kalibrasyon modeli, lig düzeltmesi, geriye dönük test, MBS'ye göre kupon, sanal tekliler
+- [ ] Bütün yılların maç sayfası oranları (her gece devam ediyor)
+- [ ] Oran hareketi (açılıştan kapanışa) ve "en çok oynananlar" etkisinin modele eklenmesi
