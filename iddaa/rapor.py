@@ -10,7 +10,9 @@ import smtplib
 from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
 
-from . import analiz, config, depo, kupon
+import math
+
+from . import analiz, config, depo, kupon, tekler
 from .bulten import iso_oku, iyms_sonucu
 
 log = logging.getLogger("rapor")
@@ -94,6 +96,41 @@ def _gecmis_bolumu(rapor: Rapor):
     rapor.tablo(["Ev kazanma olasılığı", "Örnek"] + IYMS_SIRASI, satirlar)
 
 
+STRATEJI_ADI = {"mac_basi": "Her maçın en iyi seçimi", "hayal_model": "İY/MS 20–30, en mantıklı",
+                "hayal_oran": "İY/MS 20–30, en yüksek oran"}
+
+
+def _iddaa_gecmisi_bolumu(rapor: Rapor) -> bool:
+    senaryo = depo.json_oku(analiz.analiz_yolu("iddaa_senaryolar.json"))
+    if not senaryo:
+        return False
+    rapor.bolum("iddaa geçmişi: her seçime 1 TL oynasaydın")
+    rapor.yazi(f"{senaryo['mac']:,} iddaa maçı ({senaryo.get('ilk', '')[:7]} → {senaryo.get('son', '')[:7]}), "
+               "Kral oranla. 1 TL → 1'in altındaysa uzun vadede kaybettirir.")
+    satirlar = [r for r in senaryo["satirlar"] if r["secenek"] == "hepsi"]
+    rapor.tablo(["Bahis", "Oran aralığı", "Seçim sayısı", "Tuttu", "1 TL →"],
+                [[r["market"], r["bant"] or "hepsi", f"{r['bahis']:,}", _yuzde(r["tutma"]), f"{r['getiri_kral']:.3f}"]
+                 for r in satirlar])
+    test = depo.json_oku(analiz.analiz_yolu("geriye_test.json")) or {}
+    secili = [r for r in test.get("satirlar", [])
+              if (r["strateji"] == "mac_basi" and r["esik"] in (0.0, 0.9, 1.0)) or r["strateji"].startswith("hayal")]
+    if secili:
+        rapor.bolum("Model geriye dönük test (son 12 ay, model bu maçları görmeden)")
+        rapor.tablo(["Strateji", "Bahis", "Beklenen eşiği", "Bahis sayısı", "Tuttu", "1 TL →"],
+                    [[STRATEJI_ADI.get(r["strateji"], r["strateji"]), r["market"],
+                      "hepsi" if not r["esik"] else f"≥ {r['esik']:.2f}", f"{r['bahis']:,}",
+                      _yuzde(r["tutan"] / r["bahis"]) if r["bahis"] else "-", f"{r['getiri_kral']:.3f}"]
+                     for r in sorted(secili, key=lambda r: (r["market"], r["strateji"], r["esik"]))])
+    tekli = tekler.degerlendir()
+    if tekli["satirlar"]:
+        rapor.bolum("Sanal tekliler (maça yakın değerli seçimler, 1 TL)")
+        rapor.tablo(["Bahis", "Beklenen", "Bahis sayısı", "Tuttu", "1 TL →", "Modelin beklentisi", "CLV"],
+                    [[r["market"], r["dilim"] or "hepsi", r["bahis"], _yuzde(r["tutan"] / r["bahis"]),
+                      f"{r['getiri']:.3f}", f"{r['beklenen']:.2f}", f"{r['clv']:.3f}" if r["clv"] else "-"]
+                     for r in tekli["satirlar"]])
+    return True
+
+
 def _aday_bolumu(rapor: Rapor, simdi: datetime):
     adaylar = kupon.oneriler(simdi)
     for tur, ad in kupon.TURLER.items():
@@ -101,7 +138,7 @@ def _aday_bolumu(rapor: Rapor, simdi: datetime):
         if not adaylar[tur]:
             rapor.yazi("Aday yok.")
             continue
-        rapor.tablo(["Maç", "Lig", "Başlama", "Seçim", "Oran", "Geçmişte tutma", "1 TL'ye dönen"],
+        rapor.tablo(["Maç", "Lig", "Başlama", "Seçim", "Oran", "Tutma şansı", "1 TL'ye dönen"],
                     [[f"{a['ev']} - {a['dep']}", a["lig"], _saat(a["baslama_utc"]), a["secim"], a["oran"],
                       _yuzde(float(a["tutma"])) if a.get("tutma") not in ("", None) else "-",
                       f"{float(a['beklenen']):.2f}" if a.get("beklenen") not in ("", None) else "-"]
@@ -169,13 +206,20 @@ def _kupon_bolumu(rapor: Rapor, baslik: str, satirlar: list[dict] | None, tur: s
                  }.get(tur, "Geçmiş verisi olan")
         rapor.yazi(f"{neden} yeterli maç yoktu ({ilk['secim']}), kupon oluşturulmadı.")
         return
-    rapor.tablo(["Maç", "Lig", "Başlama", "Market", "Seçim", "Oran", "Sonuç"],
+    rapor.tablo(["Maç", "Lig", "Başlama", "Market", "Seçim", "Oran", "Şans", "1 TL →", "MBS", "Sonuç"],
                 [[f"{s['ev']} - {s['dep']}", s["lig"], _saat(s["baslama_utc"]), s["market"], s["secim"], s["oran"],
+                  _yuzde(float(s["tutma"])) if s.get("tutma") not in ("", None) else "-",
+                  f"{float(s['beklenen']):.2f}" if s.get("beklenen") not in ("", None) else "-", s.get("mbs") or "-",
                   f"{SONUC_ETIKETI[s['tuttu']]} {s['gercek']}".strip() if s["tuttu"] in SONUC_ETIKETI else "bekliyor"]
                  for s in satirlar])
     durum = (f"KAZANDI: {_tl(float(ilk['kazanc']))}" if ilk["durum"] == "kazandi"
              else DURUM_ETIKETI.get(ilk["durum"], ilk["durum"]))
-    rapor.yazi(f"Toplam oran: {ilk['toplam_oran']} · Tutar: {_tl(float(ilk['tutar']))} · Durum: {durum}")
+    try:
+        beklenen = f" · Beklenen: 1 TL → {math.prod(float(s['beklenen']) for s in satirlar):.2f} TL"
+    except (KeyError, TypeError, ValueError):
+        beklenen = ""
+    rapor.yazi(f"{len(satirlar)} maç · Toplam oran: {ilk['toplam_oran']} · Tutar: {_tl(float(ilk['tutar']))}"
+               f"{beklenen} · Durum: {durum}")
 
 
 def olustur(simdi: datetime | None = None) -> Rapor:
@@ -201,7 +245,8 @@ def olustur(simdi: datetime | None = None) -> Rapor:
     kapanis = {m: v[config.IYMS] for m, v in kapanis_tum.items() if config.IYMS in v}
 
     _aday_bolumu(rapor, simdi)
-    _gecmis_bolumu(rapor)
+    if not _iddaa_gecmisi_bolumu(rapor):
+        _gecmis_bolumu(rapor)
 
     rapor.bolum("iddaa verisi: MS oranları (en çok örneği olan 10 oran)")
     ms_satirlari = [s for s in analiz.iddaa_ms_tablosu(kapanis_tum, sonuclar) if s["secim"] == "hepsi"]
