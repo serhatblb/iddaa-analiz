@@ -49,6 +49,7 @@ def oran_satirlari(mac: dict, tip: str, zaman: datetime, sadece: set[str] | None
                 "wodd": secenek.get("wodd", ""),
                 "tip": tip,
                 "zaman_utc": zaman_metni,
+                "mbs": market.get("mbc", ""),
             })
     return satirlar
 

@@ -44,7 +44,7 @@ def test_ilk_calisma_acilis_ve_kayit(veri_dizini):
     assert depo.anlik_yolu("oynanma/secenek", SIMDI).exists()
 
 
-def test_saatlik_sadece_iyms_ve_kapanis(veri_dizini):
+def test_saatlik_sadece_degisen_marketler_ve_kapanis(veri_dizini):
     istemci = SahteIstemci([
         mac(1, ts(SIMDI + timedelta(hours=10)), iyms=IYMS_ORANLARI),
         mac(2, ts(SIMDI + timedelta(hours=1, minutes=50)), iyms=IYMS_ORANLARI),
@@ -52,15 +52,36 @@ def test_saatlik_sadece_iyms_ve_kapanis(veri_dizini):
     ])
     topla.calistir(istemci, SIMDI)
     istemci.detay_istekleri.clear()
+    # Bir saat sonra: 1. maçta İY/MS 2/1 değişti (detaydan), 4. maçta MS değişti (listeden)
+    istemci.maclar[1]["m"][3]["o"][6]["odd"] = 29.0
+    istemci.maclar[4]["m"][0]["o"][0]["odd"] = 2.05
     sonraki = SIMDI + timedelta(hours=1)
     ozet = topla.calistir(istemci, sonraki)
     satirlar = depo.gz_csv_oku(depo.anlik_yolu("oranlar", sonraki))
-    tipler = {(s["mac_id"], s["tip"]) for s in satirlar}
-    assert ("1", "saatlik") in tipler and ("2", "kapanis") in tipler
-    assert all(s["market"] == "2_90" for s in satirlar if s["tip"] == "saatlik")
+    saatlik = {(s["mac_id"], s["market"]) for s in satirlar if s["tip"] == "saatlik"}
+    assert saatlik == {("1", "2_90"), ("4", "1_1")}
+    assert sum(1 for s in satirlar if s["tip"] == "saatlik" and s["mac_id"] == "1") == 9  # marketin tamamı
+    assert ("2", "kapanis") in {(s["mac_id"], s["tip"]) for s in satirlar}
     assert 4 not in istemci.detay_istekleri  # İY/MS'siz ve uzak maç tekrar çekilmez
-    assert ozet["kapanis"] == 1
+    assert ozet["kapanis"] == 1 and ozet["saatlik_satir"] == 12
     assert depo.maclari_oku()["2"]["kapanis"] == "1"
+    # Hiçbir şey değişmezse saatlik satır yazılmaz
+    ucuncu = SIMDI + timedelta(hours=2)
+    assert topla.calistir(istemci, ucuncu)["saatlik_satir"] == 0
+
+
+def test_mbs_kaydedilir(veri_dizini):
+    m = mac(6, ts(SIMDI + timedelta(hours=10)))
+    m["mbc"], m["kOdd"] = 3, True
+    m["m"][0]["mbc"] = 1
+    istemci = SahteIstemci([m])
+    topla.calistir(istemci, SIMDI)
+    assert (depo.maclari_oku()["6"]["mbs"], depo.maclari_oku()["6"]["kral"]) == ("3", "1")
+    ms = [s for s in depo.gz_csv_oku(depo.anlik_yolu("oranlar", SIMDI)) if s["market"] == "1_1"]
+    assert {s["mbs"] for s in ms} == {"1"}
+    istemci.maclar[6]["mbc"] = 1
+    topla.calistir(istemci, SIMDI + timedelta(hours=1))
+    assert depo.maclari_oku()["6"]["mbs"] == "1"
 
 
 def test_iyms_sonradan_acilirsa_yakalanir(veri_dizini):

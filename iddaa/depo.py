@@ -17,11 +17,12 @@ from . import config
 
 MAC_ALANLARI = [
     "mac_id", "lig_id", "lig", "ulke", "ev", "dep", "baslama_utc",
-    "ilk_gorulme_utc", "acilis", "kapanis", "iyms_var", "son_detay_utc",
+    "ilk_gorulme_utc", "acilis", "kapanis", "iyms_var", "son_detay_utc", "mbs", "kral",
 ]
+# oran: iddaa.com ve bayilerde geçerli (Kral Oran), wodd: diğer sitelerdeki standart oran (~%4 düşük)
 ORAN_ALANLARI = [
     "mac_id", "market", "market_id", "cizgi", "secenek_no", "secenek",
-    "oran", "wodd", "tip", "zaman_utc",
+    "oran", "wodd", "tip", "zaman_utc", "mbs",
 ]
 SECENEK_OYNANMA_ALANLARI = ["mac_id", "market_id", "secenek_no", "yuzde", "zaman_utc"]
 MAC_OYNANMA_ALANLARI = ["mac_id", "yuzde", "zaman_utc"]

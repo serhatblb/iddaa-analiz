@@ -10,6 +10,9 @@ TR = ZoneInfo("Europe/Istanbul")
 # iddaa market anahtarları: "{t}_{st}"
 IYMS = "2_90"                      # 1. Yarı / Maç Sonucu
 MAC_ONCESI_TIPLER = (1, 2)         # t=4 canlı marketler, toplanmıyor
+# Bültende gelen ve her saat izlenen marketler: MS, toplam gol, 1. yarı sonucu, karşılıklı gol, İY/MS, alt/üst.
+# Sadece oranı değişen marketler yazılır (bir seçenek değişse marketin bütün seçenekleri).
+SAATLIK_MARKETLER = {"1_1", "2_4", "2_88", "2_89", "2_90", "2_101"}
 
 # Toplama kuralları
 KAPANIS_ONCESI = timedelta(minutes=75)   # başlamaya bu kadar kala tüm marketlerin kapanış anlığı
