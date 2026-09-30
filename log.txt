@@ -1,0 +1,62 @@
+200 194876 1.0s https://arsiv.mackolik.com/Iddaa-Programi ['Yarı/Maç', 'openOddsDialog', 'iddaa', 'mbs']
+      //arsiv.mackolik.com/Genis-Iddaa-Programi
+      //arsiv.mackolik.com/Iddaa-Programi
+      //cm.mackolik.com/js5/Mackolik/IddaaStats.js?v=2.169
+      //cm.mackolik.com/js5/Mackolik/Program.js?v=22.169
+      //im.mackolik.com/img5/icons/iddaa-nlive.png
+      //im.mackolik.com/img5/iddaa-icon.png
+      //im.mackolik.com/img5/iddaa/mbs1.png
+      //im.mackolik.com/img5/iddaa/mbs3.png
+      http://im.mackolik.com/img5/icons/iddaa-icon.png
+      javascript:openOddsDialog('1', '2,5 Gol Alt/Üst', ['Alt','Üst'], ['2,49', '1,29'], null, 'openBmIddaa', '3267539', '82929625', ['1','2'])
+      javascript:openOddsDialog('1', '2,5 Gol Alt/Üst', ['Alt','Üst'], ['3,05', '1,12'], null, 'openBmIddaa', '3261539', '82891964', ['1','2'])
+      javascript:openOddsDialog('1', 'Maç Sonucu', ['1','X','2'], ['1', '9,14', '17,50'], null, 'openBmIddaa', '3261539', '82793381', ['1','2','3'])
+      javascript:openOddsDialog('1', 'Maç Sonucu', ['1','X','2'], ['3,33', '3,74', '1,64'], null, 'openBmIddaa', '3267539', '82922313', ['1','2','3'])
+      javascript:openOddsDialog('1', 'Çifte Şans', ['1/X','1/2','X/2'], ['1', '1', '4,69'], null, 'openBmIddaa', '3261539', '82891949', ['1','2','3'])
+      javascript:openOddsDialog('1', 'Çifte Şans', ['1/X','1/2','X/2'], ['1,73', '1,11', '1,15'], null, 'openBmIddaa', '3267539', '82922314', ['1','2','3'])
+      javascript:openOddsDialog('3', '2,5 Gol Alt/Üst', ['Alt','Üst'], ['1,46', '1,86'], null, 'openBmIddaa', '3166542', '83217624', ['1','2'])
+      javascript:openOddsDialog('3', '2,5 Gol Alt/Üst', ['Alt','Üst'], ['1,49', '1,82'], null, 'openBmIddaa', '3273427', '83231849', ['1','2'])
+      javascript:openOddsDialog('3', '2,5 Gol Alt/Üst', ['Alt','Üst'], ['1,51', '1,79'], null, 'openBmIddaa', '3168716', '82978662', ['1','2'])
+      javascript:openOddsDialog('3', '2,5 Gol Alt/Üst', ['Alt','Üst'], ['1,52', '1,77'], null, 'openBmIddaa', '3247637', '82530171', ['1','2'])
+      javascript:openOddsDialog('3', '2,5 Gol Alt/Üst', ['Alt','Üst'], ['1,53', '1,76'], null, 'openBmIddaa', '3225560', '83231651', ['1','2'])
+      javascript:openOddsDialog('3', '2,5 Gol Alt/Üst', ['Alt','Üst'], ['1,58', '1,70'], null, 'openBmIddaa', '3225563', '83231780', ['1','2'])
+      javascript:openOddsDialog('3', '2,5 Gol Alt/Üst', ['Alt','Üst'], ['1,65', '1,63'], null, 'openBmIddaa', '3170297', '82986132', ['1','2'])
+      javascript:openOddsDialog('3', '2,5 Gol Alt/Üst', ['Alt','Üst'], ['1,66', '1,61'], null, 'openBmIddaa', '3168684', '83219087', ['1','2'])
+      javascript:openOddsDialog('3', '2,5 Gol Alt/Üst', ['Alt','Üst'], ['1,66', '1,61'], null, 'openBmIddaa', '3168708', '83235786', ['1','2'])
+      javascript:openOddsDialog('3', '2,5 Gol Alt/Üst', ['Alt','Üst'], ['1,76', '1,52'], null, 'openBmIddaa', '3170312', '82986165', ['1','2'])
+      javascript:openOddsDialog('3', '2,5 Gol Alt/Üst', ['Alt','Üst'], ['1,89', '1,44'], null, 'openBmIddaa', '3168618', '82978579', ['1','2'])
+      javascript:openOddsDialog('3', '2,5 Gol Alt/Üst', ['Alt','Üst'], ['1,90', '1,44'], null, 'openBmIddaa', '3170320', '82749913', ['1','2'])
+      javascript:openOddsDialog('3', '2,5 Gol Alt/Üst', ['Alt','Üst'], ['2,21', '1,30'], null, 'openBmIddaa', '3168701', '83133527', ['1','2'])
+      javascript:openOddsDialog('3', '2,5 Gol Alt/Üst', ['Alt','Üst'], ['2,21', '1,30'], null, 'openBmIddaa', '3198100', '83129896', ['1','2'])
+      javascript:openOddsDialog('3', '2,5 Gol Alt/Üst', ['Alt','Üst'], ['2,45', '1,23'], null, 'openBmIddaa', '3168808', '82978763', ['1','2'])
+      javascript:openOddsDialog('3', 'Maç Sonucu', ['1','X','2'], ['1,21', '4,40', '5,89'], null, 'openBmIddaa', '3198100', '82622691', ['1','2','3'])
+      javascript:openOddsDialog('3', 'Maç Sonucu', ['1','X','2'], ['1,26', '3,92', '5,78'], null, 'openBmIddaa', '3170320', '82749903', ['1','2','3'])
+      javascript:openOddsDialog('3', 'Maç Sonucu', ['1','X','2'], ['1,33', '4', '4,51'], null, 'openBmIddaa', '3168808', '82978733', ['1','2','3'])
+      javascript:openOddsDialog('3', 'Maç Sonucu', ['1','X','2'], ['1,38', '3,53', '4,65'], null, 'openBmIddaa', '3170297', '82986106', ['1','2','3'])
+      javascript:openOddsDialog('3', 'Maç Sonucu', ['1','X','2'], ['1,45', '3,35', '4,24'], null, 'openBmIddaa', '3168684', '83219073', ['1','2','3'])
+      javascript:openOddsDialog('3', 'Maç Sonucu', ['1','X','2'], ['1,59', '3,04', '3,75'], null, 'openBmIddaa', '3225560', '83231640', ['1','2','3'])
+      javascript:openOddsDialog('3', 'Maç Sonucu', ['1','X','2'], ['1,68', '3,26', '3,12'], null, 'openBmIddaa', '3168618', '82978551', ['1','2','3'])
+      javascript:openOddsDialog('3', 'Maç Sonucu', ['1','X','2'], ['1,83', '2,88', '3,05'], null, 'openBmIddaa', '3166542', '83217612', ['1','2','3'])
+      javascript:openOddsDialog('3', 'Maç Sonucu', ['1','X','2'], ['1,84', '3,04', '2,87'], null, 'openBmIddaa', '3170312', '82986139', ['1','2','3'])
+      javascript:openOddsDialog('3', 'Maç Sonucu', ['1','X','2'], ['2,06', '2,98', '2,50'], null, 'openBmIddaa', '3168708', '83229044', ['1','2','3'])
+200 44233 0.5s https://arsiv.mackolik.com/Genis-Iddaa-Programi ['iddaa', 'MBS']
+      ./Genis-Iddaa-Programi
+      //arsiv.mackolik.com/Genis-Iddaa-Programi
+      //cm.mackolik.com/js5/Mackolik/Program.js?v=2.169
+      //cm.mackolik.com/js5/Mackolik/ProgramLarge.js?v=2.169
+404 1245 0.2s https://arsiv.mackolik.com/Iddaa-Programi?date=15/09/2026 []
+502 568 0.8s https://arsiv.mackolik.com/Genis-Iddaa-Programi?date=15/09/2026 []
+502 568 0.2s https://arsiv.mackolik.com/Iddaa-Programi/15-09-2026 []
+502 568 0.7s https://arsiv.mackolik.com/Genis-Iddaa-Programi/15-09-2026 []
+502 568 1.0s https://arsiv.mackolik.com/Iddaa/Program.aspx?date=15/09/2026 []
+200 67881 0.2s https://arsiv.mackolik.com/SearchWithOdds.aspx ['iddaa']
+      ./SearchWithOdds.aspx
+      //arsiv.mackolik.com/Genis-Iddaa-Programi
+      //arsiv.mackolik.com/Iddaa-Programi
+      //arsiv.mackolik.com/SearchWithOdds.aspx
+      //im.mackolik.com/img5/iddaa-icon.png
+maç 4445135 200 226474 0.8s gzip nginx/1.24.0 (Ubuntu)  İY/MS
+maç 4445134 200 229389 2.6s gzip nginx/1.24.0 (Ubuntu)  İY/MS
+maç 3562540 502 568 0.2s None nginx/1.24.0 (Ubuntu)  
+maç 4436000 502 568 0.8s None nginx/1.24.0 (Ubuntu)  
+maç 4440000 200 0 0.7s gzip nginx/1.24.0 (Ubuntu)  
