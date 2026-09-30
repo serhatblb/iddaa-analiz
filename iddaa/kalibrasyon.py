@@ -369,6 +369,44 @@ def senaryolar(sayac: "Sayaclar") -> dict:
     return {"satirlar": satirlar, "mac": sayac.mac}
 
 
+def hayal_kuponu(baslangic: str = "", bitis: str = "9999-12", tutar: float = 20.0) -> dict:
+    """Her gün 3 maçlık İY/MS kuponu (Kral oranı 20–30, eski kural: her maçtan aralıktaki en yüksek oranlı seçim,
+    günün en yüksek oranlı 3 seçimi) oynansaydı. Ayrıca aynı seçimler tek tek 1 TL oynansaydı."""
+    gunluk: dict[str, list[tuple[float, bool]]] = defaultdict(list)
+    for tarih, _, skor, marketler in mac_akisi(baslangic, bitis):
+        oranlar = marketler.get("İY/MS")
+        if not oranlar:
+            continue
+        gercek = kazanan("İY/MS", *skor)
+        aralikta = [(o * KRAL_KATSAYI, s == gercek) for s, o in oranlar.items()
+                    if HAYAL_ARALIGI[0] <= o * KRAL_KATSAYI <= HAYAL_ARALIGI[1]]
+        if aralikta:
+            gunluk[tarih].append(max(aralikta))
+    sonuc = {"gun": 0, "harcanan": 0.0, "kazanan": 0, "donen": 0.0, "iki_tutan": 0,
+             "tek_bahis": 0, "tek_tutan": 0, "tek_donus": 0.0, "kazanan_gunler": []}
+    for tarih, liste in sorted(gunluk.items()):
+        if len(liste) < 3:
+            continue
+        secilen = sorted(liste, reverse=True)[:3]
+        tutan = sum(t for _, t in secilen)
+        sonuc["gun"] += 1
+        sonuc["harcanan"] += tutar
+        sonuc["iki_tutan"] += tutan == 2
+        if tutan == 3:
+            kazanc = tutar * math.prod(o for o, _ in secilen)
+            sonuc["kazanan"] += 1
+            sonuc["donen"] += kazanc
+            sonuc["kazanan_gunler"].append([tarih, round(kazanc, 2)])
+        for o, t in secilen:
+            sonuc["tek_bahis"] += 1
+            sonuc["tek_tutan"] += t
+            sonuc["tek_donus"] += o if t else 0.0
+    sonuc["ilk"] = min(gunluk, default="")
+    sonuc["son"] = max(gunluk, default="")
+    sonuc["tek_getiri"] = round(sonuc["tek_donus"] / sonuc["tek_bahis"], 4) if sonuc["tek_bahis"] else 0
+    return sonuc
+
+
 def oran_tablosu(sayac: Sayaclar, min_ornek: int = 20) -> dict:
     """{market: {seçenek: [[Kral oran, n, tutan], ...]}} - 'bu oran geçmişte ne sıklıkla tuttu'.
     Geçmiş oranlar standart orandır; iddaa.com'da görülen Kral orana (×1.04) çevrilip gruplanır."""
@@ -469,7 +507,8 @@ def calistir(bugun: date | None = None) -> dict:
     depo.json_yaz(model_yolu(), model)
     depo.json_yaz(depo.kok() / "analiz" / "iddaa_oran_tablosu.json", oran_tablosu(tum))
     depo.json_yaz(depo.kok() / "analiz" / "iddaa_senaryolar.json",
-                  {**senaryolar(tum), "ilk": tum_ilk, "son": tum_son, "olusturma": bugun.isoformat()})
+                  {**senaryolar(tum), "ilk": tum_ilk, "son": tum_son, "olusturma": bugun.isoformat(),
+                   "hayal_kuponu": hayal_kuponu()})
     depo.json_yaz(depo.kok() / "analiz" / "iddaa_kalibrasyon_tablosu.json", kalibrasyon_tablosu(canli, model))
     depo.json_yaz(depo.kok() / "analiz" / "geriye_test.json",
                   {"satirlar": test_satirlari, "planlar": plan_ozeti, "egitim_baslangic": standart[0],

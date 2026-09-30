@@ -384,6 +384,25 @@ def iddaa_sorgu_karti(senaryo: dict) -> str:
 def iddaa_gecmisi_sekmesi(senaryo: dict, test: dict, tekli: dict) -> str:
     """Senaryolar (bütün geçmiş), geriye dönük test (son 12 ay) ve sanal tekliler."""
     parcalar = []
+    hayal = senaryo.get("hayal_kuponu") or {}
+    if hayal.get("gun"):
+        net = hayal["donen"] - hayal["harcanan"]
+        gunler = ", ".join(f"{g} ({_tl(t)})" for g, t in hayal.get("kazanan_gunler", [])[-5:])
+        parcalar.append(
+            f'<div class="kart"><h2>Her gün 3 maçlık İY/MS kuponu (oran {config.KUPON_MIN_ORAN:g}–'
+            f'{config.KUPON_MAX_ORAN:g}) oynasaydın</h2>'
+            f'<p class="aciklama">{_e(hayal["ilk"])} → {_e(hayal["son"])}, iddaa\'nın kendi oranlarıyla. Her gün, '
+            "her maçtan aralıktaki en yüksek oranlı İY/MS seçimi; günün en yüksek oranlı 3 seçimi, 20 TL.</p>"
+            '<div class="cevap">'
+            f'<div><span>{hayal["gun"]} gün</span><b>{_tl(hayal["harcanan"])}</b><span>harcanırdı</span></div>'
+            f'<div><span>Tutan kupon</span><b>{hayal["kazanan"]}</b><span>dönen {_tl(hayal["donen"])} · net '
+            f'<strong class="{"sonuc-iyi" if net > 0 else "sonuc-kotu"}">{_tl(net)}</strong></span></div>'
+            f'<div><span>3 maçın 2\'si tutan gün</span><b>{hayal["iki_tutan"]}</b>'
+            "<span>bir maç kala yatan kupon</span></div>"
+            f'<div><span>Aynı seçimler tek tek (1 TL)</span><b>%{100 * hayal["tek_tutan"] / max(hayal["tek_bahis"], 1):.1f} tuttu</b>'
+            f'<span>1 TL → <strong class="{"sonuc-iyi" if hayal["tek_getiri"] > 1 else "sonuc-kotu"}">'
+            f'{hayal["tek_getiri"]:.2f} TL</strong> ({hayal["tek_bahis"]:,} bahis)</span></div></div>'
+            + (f'<p class="aciklama">Tutan günler: {_e(gunler)}</p>' if gunler else "") + "</div>")
     satirlar = senaryo.get("satirlar", [])
     if satirlar:
         ozet = [[r["market"], "Hepsi" if r["secenek"] == "hepsi" else r["secenek"], f"{r['bahis']:,}",

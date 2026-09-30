@@ -109,7 +109,8 @@ def sayfa_getir(mk_id, oturum: requests.Session) -> str | None:
             return yanit.text
         if yanit.status_code == 404:
             return ""  # sayfa yok: oransız kayıt olarak yazılır, bir daha istenmez
-        time.sleep(3 * (deneme + 1))
+        if deneme < 2:
+            time.sleep(2 * (deneme + 1))  # 502 sık geliyor: kısa bekleyip yeniden dene
     return None
 
 

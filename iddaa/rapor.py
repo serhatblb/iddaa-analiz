@@ -104,6 +104,13 @@ def _iddaa_gecmisi_bolumu(rapor: Rapor) -> bool:
     senaryo = depo.json_oku(analiz.analiz_yolu("iddaa_senaryolar.json"))
     if not senaryo:
         return False
+    hayal = senaryo.get("hayal_kuponu") or {}
+    if hayal.get("gun"):
+        rapor.bolum(f"iddaa geçmişi: her gün 3 maçlık İY/MS kuponu ({config.KUPON_MIN_ORAN:g}–{config.KUPON_MAX_ORAN:g})")
+        rapor.yazi(f"{hayal['ilk']} → {hayal['son']}: {hayal['gun']} gün, {_tl(hayal['harcanan'])} harcanırdı; "
+                   f"{hayal['kazanan']} kupon tutardı, dönen {_tl(hayal['donen'])}. 3 maçın 2'si tutan gün: "
+                   f"{hayal['iki_tutan']}. Aynı seçimler tek tek 1 TL: %"
+                   f"{100 * hayal['tek_tutan'] / max(hayal['tek_bahis'], 1):.1f} tuttu, 1 TL → {hayal['tek_getiri']:.2f}.")
     rapor.bolum("iddaa geçmişi: her seçime 1 TL oynasaydın")
     rapor.yazi(f"{senaryo['mac']:,} iddaa maçı ({senaryo.get('ilk', '')[:7]} → {senaryo.get('son', '')[:7]}), "
                "Kral oranla. 1 TL → 1'in altındaysa uzun vadede kaybettirir.")

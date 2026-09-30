@@ -207,3 +207,12 @@ def test_bolme_plani():
     assert plan["MS"] == ("2022-10", "2025-09", "2025-10", "2026-09")
     assert plan["İY/MS"] == ("2026-01", "2026-02", "2026-03", "2026-05")  # az veri: ortadan ikiye
     assert "KG" not in plan
+
+
+def test_hayal_kuponu(veri_dizini):
+    rnd = random.Random(3)
+    _dosyalari_yaz(rnd, ["2026-08", "2026-09"])
+    h = k.hayal_kuponu()
+    # Sentetik veride her gün 400 maç, 20-30 arası 1/2 (26) ve 2/1 (27.04); sonuç 1/1 ya da 0/0: hiç tutmaz
+    assert h["gun"] == 2 and h["harcanan"] == 40 and h["kazanan"] == 0 and h["tek_bahis"] == 6
+    assert h["tek_tutan"] == 0 and h["tek_getiri"] == 0
