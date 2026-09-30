@@ -231,8 +231,9 @@ def _secim_etiketi(s: dict) -> str:
 
 
 ACIKLAMALAR = {
-    "iyms": f"Oranı {config.KUPON_MIN_ORAN:g}–{config.KUPON_MAX_ORAN:g} arası İY/MS seçeneklerinden, 1 TL'ye beklenen "
-            f"dönüşü en yüksek {config.KUPON_MAC_SAYISI} maç. Piyango mantığı; hep {config.KUPON_MAC_SAYISI} maç.",
+    "iyms": f"Piyango kuponu, hep {config.KUPON_MAC_SAYISI} maç. Günün en yüksek oranlı İY/MS seçenekleri (önce "
+            f"{config.HAYAL_MIN_ORAN:g} ve üstü; iddaa'nın tavanı ~36) arasından, benzer geçmiş maçlarda en sık "
+            "tutmuş olanlar. Aynı oranı alan sürprizlerin gerçek şansı farklı; en olasılarını seçer.",
     "ms": f"Oranı {config.MS_KUPON_MIN_ORAN:.2f}–{config.MS_KUPON_MAX_ORAN:.2f} arası 1-0-2 seçimlerinden 1 TL'ye "
           "beklenen dönüşü en yüksek olanlar. Maç sayısı MBS'ye göre: az maç, iddaa'nın payını az çarpar.",
     "iyms_deger": "Her maçın 1 TL'ye beklenen dönüşü en yüksek İY/MS seçimi. Maç sayısı MBS'ye göre.",
@@ -360,9 +361,7 @@ def _oran_json(satirlar: list[dict]) -> dict:
                          for r in satirlar]}
 
 
-STRATEJILER = {"mac_basi": "Her maçın en iyi seçimi", "hepsi": "Bütün seçimler",
-               "hayal_model": "20–30 arası, en mantıklı (yeni kural)",
-               "hayal_oran": "20–30 arası, en yüksek oran (eski kural)"}
+STRATEJILER = {"mac_basi": "Her maçın en iyi seçimi", "hepsi": "Bütün seçimler"}
 
 
 def _yuzde(x: float) -> str:
@@ -389,10 +388,11 @@ def iddaa_gecmisi_sekmesi(senaryo: dict, test: dict, tekli: dict) -> str:
         net = hayal["donen"] - hayal["harcanan"]
         gunler = ", ".join(f"{g} ({_tl(t)})" for g, t in hayal.get("kazanan_gunler", [])[-5:])
         parcalar.append(
-            f'<div class="kart"><h2>Her gün 3 maçlık İY/MS kuponu (oran {config.KUPON_MIN_ORAN:g}–'
-            f'{config.KUPON_MAX_ORAN:g}) oynasaydın</h2>'
-            f'<p class="aciklama">{_e(hayal["ilk"])} → {_e(hayal["son"])}, iddaa\'nın kendi oranlarıyla. Her gün, '
-            "her maçtan aralıktaki en yüksek oranlı İY/MS seçimi; günün en yüksek oranlı 3 seçimi, 20 TL.</p>"
+            '<div class="kart"><h2>Her gün İY/MS hayal kuponu oynasaydın</h2>'
+            f'<p class="aciklama">{_e(hayal["ilk"])} → {_e(hayal["son"])}, iddaa\'nın kendi oranlarıyla, bugünkü '
+            f"kupon kuralıyla (en yüksek oranlılar arasından en olası 3 maç, 20 TL). Ortalama kupon oranı "
+            f"{hayal.get('ort_kupon_orani', 0):,.0f}. Olasılıklar o ayın maçları çıkarılarak hesaplandı, yani "
+            "geleceği görmeden.</p>"
             '<div class="cevap">'
             f'<div><span>{hayal["gun"]} gün</span><b>{_tl(hayal["harcanan"])}</b><span>harcanırdı</span></div>'
             f'<div><span>Tutan kupon</span><b>{hayal["kazanan"]}</b><span>dönen {_tl(hayal["donen"])} · net '
@@ -403,7 +403,9 @@ def iddaa_gecmisi_sekmesi(senaryo: dict, test: dict, tekli: dict) -> str:
             f'<span>1 TL → <strong class="{"sonuc-iyi" if hayal["tek_getiri"] > 1 else "sonuc-kotu"}">'
             f'{hayal["tek_getiri"]:.2f} TL</strong> (hata payı ±{hayal.get("tek_hata", 0):.2f}, '
             f'{hayal["tek_bahis"]:,} bahis)</span></div></div>'
-            + (f'<p class="aciklama">Tutan günler: {_e(gunler)}</p>' if gunler else "") + "</div>")
+            + (f'<p class="aciklama">Tutan günler: {_e(gunler)}</p>' if gunler else "")
+            + (f'<p class="aciklama">Karşılaştırma: aynı maçlarda en yüksek oranlı seçeneği alsaydın tek tek 1 TL → '
+               f'{hayal["saf_tek_getiri"]:.2f} TL.</p>' if hayal.get("tek_bahis") else "") + "</div>")
     satirlar = senaryo.get("satirlar", [])
     if satirlar:
         ozet = [[r["market"], "Hepsi" if r["secenek"] == "hepsi" else r["secenek"], f"{r['bahis']:,}",
@@ -426,8 +428,7 @@ def iddaa_gecmisi_sekmesi(senaryo: dict, test: dict, tekli: dict) -> str:
             + _tablo(["Bahis", "Seçim", "Seçim sayısı", "Tuttu", "1 TL →", "Hata payı"], ozet, sol=2)
             + "</details></div>")
     test_satirlari = [r for r in test.get("satirlar", [])
-                      if (r["strateji"] == "mac_basi" and r["esik"] in (0.0, 1.0, 1.05))
-                      or r["strateji"].startswith("hayal")]
+                      if r["strateji"] == "mac_basi" and r["esik"] in (0.0, 1.0, 1.05)]
     if test_satirlari:
         satir = [[STRATEJILER.get(r["strateji"], r["strateji"]), r["market"],
                   "hepsi" if not r["esik"] else f"≥ {r['esik']:.2f}", f"{r['bahis']:,}",
@@ -494,7 +495,7 @@ def olustur(simdi: datetime | None = None) -> tuple[str, dict[str, dict]]:
                       for tur, ad in kupon.TURLER.items())
     sekme_kupon = (
         '<div class="bilgi">Dört ayrı kupon: <b>İY/MS</b> yüksek oranlı sürpriz, <b>1-0-2</b>, <b>İY/MS değer</b> ve '
-        "<b>Gol</b>. Şanslar iddaa'nın kendi geçmiş oranlarından kurulan modelden gelir. <b>1 TL →</b> değeri 1'in "
+        "<b>Gol</b>. Şanslar iddaa'nın kendi geçmiş oranlarından (2019'dan beri) hesaplanır. <b>1 TL →</b> değeri 1'in "
         "altındaysa o seçim uzun vadede kaybettirir; kuponun beklentisi seçimlerinkinin çarpımıdır. Son üç kuponda "
         "maç sayısı MBS'ye göre en iyi olan. Kağıt üstü; para yatırılmaz.</div>"
         f'<div class="kartlar">{kartlar}</div>'

@@ -96,8 +96,7 @@ def _gecmis_bolumu(rapor: Rapor):
     rapor.tablo(["Ev kazanma olasılığı", "Örnek"] + IYMS_SIRASI, satirlar)
 
 
-STRATEJI_ADI = {"mac_basi": "Her maçın en iyi seçimi", "hayal_model": "İY/MS 20–30, en mantıklı",
-                "hayal_oran": "İY/MS 20–30, en yüksek oran"}
+STRATEJI_ADI = {"mac_basi": "Her maçın en iyi seçimi"}
 
 
 def _iddaa_gecmisi_bolumu(rapor: Rapor) -> bool:
@@ -106,8 +105,9 @@ def _iddaa_gecmisi_bolumu(rapor: Rapor) -> bool:
         return False
     hayal = senaryo.get("hayal_kuponu") or {}
     if hayal.get("gun"):
-        rapor.bolum(f"iddaa geçmişi: her gün 3 maçlık İY/MS kuponu ({config.KUPON_MIN_ORAN:g}–{config.KUPON_MAX_ORAN:g})")
-        rapor.yazi(f"{hayal['ilk']} → {hayal['son']}: {hayal['gun']} gün, {_tl(hayal['harcanan'])} harcanırdı; "
+        rapor.bolum("iddaa geçmişi: her gün İY/MS hayal kuponu oynasaydın")
+        rapor.yazi(f"Bugünkü kuralla, ortalama kupon oranı {hayal.get('ort_kupon_orani', 0):,.0f}. "
+                   f"{hayal['ilk']} → {hayal['son']}: {hayal['gun']} gün, {_tl(hayal['harcanan'])} harcanırdı; "
                    f"{hayal['kazanan']} kupon tutardı, dönen {_tl(hayal['donen'])}. 3 maçın 2'si tutan gün: "
                    f"{hayal['iki_tutan']}. Aynı seçimler tek tek 1 TL: %"
                    f"{100 * hayal['tek_tutan'] / max(hayal['tek_bahis'], 1):.1f} tuttu, 1 TL → {hayal['tek_getiri']:.2f} "
@@ -122,7 +122,7 @@ def _iddaa_gecmisi_bolumu(rapor: Rapor) -> bool:
                  for r in satirlar])
     test = depo.json_oku(analiz.analiz_yolu("geriye_test.json")) or {}
     secili = [r for r in test.get("satirlar", [])
-              if (r["strateji"] == "mac_basi" and r["esik"] in (0.0, 0.9, 1.0)) or r["strateji"].startswith("hayal")]
+              if r["strateji"] == "mac_basi" and r["esik"] in (0.0, 0.9, 1.0)]
     if secili:
         rapor.bolum("Model geriye dönük test (model test dönemini görmeden kuruldu)")
         rapor.tablo(["Strateji", "Bahis", "Beklenen eşiği", "Bahis sayısı", "Tuttu", "1 TL →", "Hata payı",
@@ -212,7 +212,7 @@ def _kupon_bolumu(rapor: Rapor, baslik: str, satirlar: list[dict] | None, tur: s
         return
     ilk = satirlar[0]
     if ilk["durum"] == "aday_yok":
-        neden = {"iyms": f"Oranı {config.KUPON_MIN_ORAN:g}–{config.KUPON_MAX_ORAN:g} arası İY/MS seçeneği olan",
+        neden = {"iyms": f"Oranı {config.KUPON_MIN_ORAN:g} ve üstü İY/MS seçeneği olan",
                  "ms": f"Oranı {config.MS_KUPON_MIN_ORAN:.2f}–{config.MS_KUPON_MAX_ORAN:.2f} arası ve geçmiş verisi olan",
                  }.get(tur, "Geçmiş verisi olan")
         rapor.yazi(f"{neden} yeterli maç yoktu ({ilk['secim']}), kupon oluşturulmadı.")

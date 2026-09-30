@@ -25,6 +25,8 @@ SONUC_ARAMA_UFKU = timedelta(days=10)
 IPTAL_SURESI = timedelta(days=3)                # bu süre sonunda sonuç yoksa "belirsiz" sayılır
 
 # Kağıt üstü kupon
+# İY/MS hayal kuponu: önce bu orandan yüksek (iddaa'nın tavanı ~36) seçenekler, yetmezse yedek alt sınır
+HAYAL_MIN_ORAN = float(os.environ.get("HAYAL_MIN_ORAN", "30"))
 KUPON_MIN_ORAN = float(os.environ.get("KUPON_MIN_ORAN", "20"))
 KUPON_MAX_ORAN = float(os.environ.get("KUPON_MAX_ORAN", "30"))
 KUPON_MAC_SAYISI = int(os.environ.get("KUPON_MAC_SAYISI", "3"))

@@ -86,11 +86,11 @@ def test_deger_adaylari_ve_panel(veri_dizini):
     oneriler = kupon.oneriler(simdi)
     assert oneriler["iyms"][0]["secim"] == "2/1" and oneriler["iyms"][0]["beklenen"] == 5.2  # 26 × %20
     metin = "\n".join(rapor.olustur(simdi).md)
-    assert "Şu anki İY/MS adayları" in metin and "2/1" in metin
+    assert "Şu anki İY/MS hayal adayları" in metin and "2/1" in metin
     assert "Geçmiş veri: MS 1-0-2" in metin
     sayfa, dosyalar = panel.olustur(simdi)
     assert "<html" in sayfa and "Oran sorgula" in sayfa and "Ev sahibi (1)" in sayfa
-    assert "İY/MS kuponu" in sayfa and "1-0-2 kuponu" in sayfa and "Önizleme" in sayfa and "f-oran" in sayfa
+    assert "İY/MS hayal kuponu" in sayfa and "1-0-2 kuponu" in sayfa and "Önizleme" in sayfa and "f-oran" in sayfa
     assert len(dosyalar["ms_olasilik.json"]["1"]) == 100
     ms = dosyalar["gecmis_ms.json"]
     assert ms["alanlar"][:2] == ["secim", "oran"] and ["1", "1.50"] in [r[:2] for r in ms["satirlar"]]

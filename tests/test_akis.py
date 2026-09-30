@@ -93,7 +93,7 @@ def test_kupon_secimi_ve_degerlendirme(veri_dizini):
 
     r = rapor.olustur(ertesi)
     metin = "\n".join(r.md)
-    assert "Dünkü İY/MS kuponu" in metin
+    assert "Dünkü İY/MS hayal kuponu" in metin
     assert "Kaybetti" in metin
     assert "| 1/2 | 2 | 2 |" in metin  # 20–30 arası 1/2: 28 ve 25 oranlı iki örnek, ikisi de tuttu
 

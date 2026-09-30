@@ -5,7 +5,9 @@ kâr payı ayıklanınca %q şans veriyordu, gerçekte ne sıklıkla tuttu + lig
 yoksa yabancı şirket verisiyle (football-data) kurulan eski tablolar kullanılır. Beklenen = iddaa.com oranı × olasılık.
 
 Dört ayrı kupon, önümüzdeki 24 saatte başlayacak maçlardan (her maçtan en fazla bir seçim):
-- iyms: Oranı 20–30 arası İY/MS seçenekleri; beklenen dönüşü en yüksek 3 seçim (hayal kuponu, hep 3 maç).
+- iyms: İY/MS hayal kuponu, hep 3 maç. iddaa İY/MS oranlarına tavan koyuyor (~36): önce oranı 30 ve üstü seçenekler,
+        yetmezse 20 ve üstü. Tavandaki seçenekler aynı oranı alsa da gerçek şansları farklı; maçın MS ve 2.5 A/Ü
+        oranlarına benzer geçmiş maçlarda o İY/MS sonucunun gerçek sıklığı en yüksek 3 maç seçilir.
 - ms:   MS 1-0-2 seçimleri (oran 1.40–5.00); beklenen dönüşü en yüksek seçimler.
 - iyms_deger: Her maçın beklenen dönüşü en yüksek İY/MS seçimi.
 - gol:  Toplam gol (0-1 / 2-3 / 4-5 / 6+); beklenen dönüşü en yüksek seçimler.
@@ -27,7 +29,7 @@ KUPON_ALANLARI = ["tarih", "tur", "sira", "mac_id", "lig", "ev", "dep", "baslama
                   "oran", "tutma", "beklenen", "gercek", "tuttu", "toplam_oran", "tutar", "durum", "kazanc", "mbs",
                   "kaynak"]
 SABIT_MAC_SAYILI = {"iyms"}   # hayal kuponu hep 3 maç; diğerleri MBS'ye göre en iyi maç sayısı
-TURLER = {"iyms": "İY/MS kuponu", "ms": "1-0-2 kuponu", "iyms_deger": "İY/MS değer kuponu", "gol": "Gol kuponu"}
+TURLER = {"iyms": "İY/MS hayal kuponu", "ms": "1-0-2 kuponu", "iyms_deger": "İY/MS değer kuponu", "gol": "Gol kuponu"}
 MS_MIN_ORAN = config.MS_KUPON_MIN_ORAN
 MS_MAX_ORAN = config.MS_KUPON_MAX_ORAN
 EN_ERKEN_BASLAMA = timedelta(minutes=15)
@@ -121,6 +123,33 @@ def model_adaylari(model: dict, oranlar: dict, kayitlar: dict, simdi: datetime) 
     return adaylar
 
 
+def hayal_adaylari(oranlar: dict, kayitlar: dict, simdi: datetime, tablo: dict) -> list[dict]:
+    """Her maçtan bir aday (tavan kademesindeki en olası İY/MS), kupon sırasıyla: önce 30+ oranlılar, sonra 20+;
+    her kademede tutma olasılığı yüksekten düşüğe."""
+    adaylar = []
+    for mac_id, marketler in oranlar.items():
+        kayit = kayitlar.get(mac_id)
+        iyms = (marketler.get(config.IYMS) or {}).get("oranlar", {})
+        if not kayit or not _pencerede(kayit, simdi) or len(iyms) < 9:
+            continue
+        ms = (marketler.get(analiz.MS) or {}).get("oranlar", {})
+        au = (marketler.get(analiz.ALT_UST_25) or {}).get("oranlar", {})
+        anahtar = kalibrasyon.kosul_anahtari(ms, au)
+        p = {s: kalibrasyon.kosullu_olasilik(tablo, anahtar, s) for s in iyms}
+        aday = kalibrasyon.mac_hayal_adayi(iyms, p, config.HAYAL_MIN_ORAN, config.KUPON_MIN_ORAN)
+        if not aday:
+            continue
+        secim, oran, olasilik = aday
+        adaylar.append({"mac_id": mac_id, "lig": kayit.get("lig", ""), "ev": kayit["ev"], "dep": kayit["dep"],
+                        "baslama_utc": kayit["baslama_utc"], "market": "İY/MS", "secim": secim, "oran": oran,
+                        "tutma": round(olasilik, 4), "beklenen": round(oran * olasilik, 3),
+                        "mbs": (marketler.get(config.IYMS) or {}).get("mbs") or kayit.get("mbs", ""),
+                        "kaynak": "iddaa geçmişi (benzer maçlar)"})
+    ust = sorted((a for a in adaylar if a["oran"] >= config.HAYAL_MIN_ORAN), key=lambda a: (-a["tutma"], a["mac_id"]))
+    alt = sorted((a for a in adaylar if a["oran"] < config.HAYAL_MIN_ORAN), key=lambda a: (-a["tutma"], a["mac_id"]))
+    return ust + alt
+
+
 def _model_turu(model_adaylar: list[dict], market: str, kayitlar: dict, simdi: datetime,
                 min_oran: float = 1.0, max_oran: float = 1e9) -> list[dict]:
     return mac_basina_en_iyi([a for a in model_adaylar if a["market"] == market
@@ -149,13 +178,14 @@ def oneriler(simdi: datetime | None = None, model: dict | None = None) -> dict[s
     kapsam = set((model.get("marketler") or {}).keys())
     modelden = model_adaylari(model, oranlar, kayitlar, simdi) if kapsam else []
     kosullu = analiz.kosullu_oku()
+    iyms_tablo = kalibrasyon.kosullu_oku()
 
     def eski(adaylar):
         return [{**a, "kaynak": "yabancı şirket verisi"} for a in adaylar]
 
     return {
-        "iyms": (_model_turu(modelden, "İY/MS", kayitlar, simdi, config.KUPON_MIN_ORAN, config.KUPON_MAX_ORAN)
-                 if "İY/MS" in kapsam else eski(iyms_adaylari(oranlar, kayitlar, simdi, kosullu))),
+        "iyms": (hayal_adaylari(oranlar, kayitlar, simdi, iyms_tablo) if iyms_tablo.get("hucre")
+                 else eski(iyms_adaylari(oranlar, kayitlar, simdi, kosullu))),
         "ms": (_model_turu(modelden, "MS", kayitlar, simdi, MS_MIN_ORAN, MS_MAX_ORAN)
                if "MS" in kapsam else eski(ms_adaylari(oranlar, kayitlar, analiz.ms_olasilik_oku(), simdi))),
         "iyms_deger": (_model_turu(modelden, "İY/MS", kayitlar, simdi)

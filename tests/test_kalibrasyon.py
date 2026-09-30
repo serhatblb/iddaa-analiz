@@ -98,8 +98,8 @@ def test_mac_akisi_ve_calistir(veri_dizini):
     satir = {(s["strateji"], s["market"], s["esik"]): s for s in test["satirlar"]}
     assert satir[("hepsi", "MS", 0.0)]["bahis"] == 3 * 400 * 12  # maç başına 3 seçim
     assert satir[("mac_basi", "MS", 0.0)]["bahis"] == 400 * 12
-    # İY/MS 20-30 (Kral): 1/2 = 25×1.04 = 26 ve 2/1 = 26×1.04 = 27.04 aralıkta; eski kural en yüksek oranı seçer
-    assert satir[("hayal_oran", "İY/MS", 0.0)]["bahis"] == 400 * 12
+    kosullu = k.kosullu_oku()
+    assert kosullu["genel"]["n"] == 400 * 21 and sum(h["n"] for h in kosullu["hucre"].values()) == 400 * 21
     tablo = depo.json_oku(depo.kok() / "analiz" / "iddaa_oran_tablosu.json")
     assert tablo["İY/MS"]["2/1"][0][:2] == [27.04, 400 * 21]  # Kral orana çevrilmiş
     senaryo = depo.json_oku(depo.kok() / "analiz" / "iddaa_senaryolar.json")
@@ -214,10 +214,25 @@ def test_bolme_plani():
 def test_hayal_kuponu(veri_dizini):
     rnd = random.Random(3)
     _dosyalari_yaz(rnd, ["2026-08", "2026-09"])
-    h = k.hayal_kuponu()
-    # Sentetik veride her gün 400 maç, 20-30 arası 1/2 (26) ve 2/1 (27.04); sonuç 1/1 ya da 0/0: hiç tutmaz
+    k.calistir(date(2026, 9, 30))
+    h = depo.json_oku(depo.kok() / "analiz" / "iddaa_senaryolar.json")["hayal_kuponu"]
+    # Sentetik veride 30+ oranlı İY/MS seçeneği yok (en yüksek 27.04): yedek kademe (20+) kullanılır; 1/2 ve 2/1
+    # hiç tutmuyor (sonuç hep 1/1 ya da 0/0)
     assert h["gun"] == 2 and h["harcanan"] == 40 and h["kazanan"] == 0 and h["tek_bahis"] == 6
-    assert h["tek_tutan"] == 0 and h["tek_getiri"] == 0
+    assert h["tek_tutan"] == 0 and h["ort_kupon_orani"] > 20 ** 3
+
+
+def test_hayal_secimi_ve_kosullu_olasilik():
+    tablo = {"genel": {"n": 1000, "1/2": 20}, "hucre": {"3|1": {"n": 950, "1/2": 57}, "0|1": {"n": 10, "1/2": 0}}}
+    assert abs(k.kosullu_olasilik(tablo, "3|1", "1/2") - (57 + 50 * 0.02) / 1000) < 1e-12
+    assert abs(k.kosullu_olasilik(tablo, "yok", "1/2") - 0.02) < 1e-12
+    assert k.kosullu_olasilik(tablo, "0|1", "1/2") < 0.02  # az maçlı hücre genele çekilir ama sıfıra inmez
+    # tavan kademesi önce, kademe içinde olasılığa göre
+    adaylar = [("a", 36.4, 0.02, 0), ("b", 36.4, 0.03, 0), ("c", 25.0, 0.09, 0), ("d", 31.0, 0.01, 0)]
+    assert [x[0] for x in k.hayal_secimi(adaylar, 30, 20)] == ["b", "a", "d"]
+    assert [x[0] for x in k.hayal_secimi(adaylar[:2] + adaylar[2:3], 30, 20)] == ["b", "a", "c"]
+    assert k.kosul_anahtari({"1": 2.0, "0": 3.4, "2": 3.8}, {"Alt": 1.9, "Üst": 1.9}) == "4|1"
+
 
 
 def test_dar_aralikta_egri_uzatilmaz():

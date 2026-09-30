@@ -307,7 +307,58 @@ def mac_secenekleri(model: dict, marketler: dict[str, dict], lig: str | None = N
 # --- geriye dönük test ---
 
 ESIKLER = [0.0, 0.9, 1.0, 1.05, 1.1]
-HAYAL_ARALIGI = (20.0, 30.0)   # İY/MS hayal kuponu oran aralığı (Kral oran)
+IYMS_SECENEKLERI = ["1/1", "1/0", "1/2", "0/1", "0/0", "0/2", "2/1", "2/0", "2/2"]
+KOSUL_ONCUL = 50               # koşullu İY/MS sıklığında az maçlı hücreyi genel sıklığa çeken sanal maç sayısı
+
+
+# --- İY/MS koşullu sıklıklar (hayal kuponu için) ---
+#
+# iddaa İY/MS oranlarına tavan koyuyor (~36 Kral oran): gerçekte 40'lık da 100'lük de sürpriz aynı oranı alıyor.
+# Tavandaki seçenekleri ayırmak için maçın MS ve 2.5 A/Ü oranlarına göre benzer geçmiş maçlarda (bütün arşiv,
+# 2019'dan beri) 9 İY/MS sonucunun gerçek sıklığı kullanılır. Hücre: (ev − deplasman olasılığı, %5'lik) ×
+# (2.5 üst olasılığı: <%45, %45–58, >%58; A/Ü yoksa ayrı).
+
+def kosul_anahtari(ms: dict[str, float], au: dict[str, float] | None) -> str | None:
+    if not ms or not all(ms.get(s) and ms[s] > 1.0 for s in ("1", "0", "2")):
+        return None
+    q = normallestir({s: ms[s] for s in ("1", "0", "2")})
+    fark = round((q["1"] - q["2"]) / 0.05)
+    if au and au.get("Alt") and au.get("Üst") and min(au["Alt"], au["Üst"]) > 1.0:
+        ust = normallestir({"Alt": au["Alt"], "Üst": au["Üst"]})["Üst"]
+        gol = 0 if ust < 0.45 else 1 if ust < 0.58 else 2
+    else:
+        gol = 9
+    return f"{fark}|{gol}"
+
+
+def kosullu_olasilik(tablo: dict, anahtar: str | None, secim: str, cikar: dict | None = None) -> float:
+    """Hücredeki gerçek sıklık, az maçlı hücre genel sıklığa çekilerek. cikar: aynı yapıda, hariç tutulacak
+    sayımlar (simülasyonda o ayın kendi maçları)."""
+    genel = tablo["genel"]
+    g_n = genel["n"] - ((cikar or {}).get("genel", {}).get("n", 0))
+    g_s = genel.get(secim, 0) - ((cikar or {}).get("genel", {}).get(secim, 0))
+    oncul = g_s / g_n if g_n else 0.0
+    hucre = tablo["hucre"].get(anahtar) if anahtar else None
+    if not hucre:
+        return oncul
+    c = ((cikar or {}).get("hucre", {}) or {}).get(anahtar, {})
+    n = hucre["n"] - c.get("n", 0)
+    y = hucre.get(secim, 0) - c.get(secim, 0)
+    return (y + KOSUL_ONCUL * oncul) / (n + KOSUL_ONCUL)
+
+
+def _kosul_ekle(tablo: dict, anahtar: str, gercek: str) -> None:
+    for yer in (tablo["genel"], tablo["hucre"].setdefault(anahtar, {"n": 0})):
+        yer["n"] = yer.get("n", 0) + 1
+        yer[gercek] = yer.get(gercek, 0) + 1
+
+
+def kosullu_yolu():
+    return depo.kok() / "analiz" / "iddaa_iyms_kosullu.json"
+
+
+def kosullu_oku() -> dict:
+    return depo.json_oku(kosullu_yolu()) or {}
 
 
 def _test_sayaci():
@@ -328,7 +379,7 @@ def geriye_test(model: dict, baslangic: str, bitis: str, sadece: set[str] | None
     Stratejiler (market başına):
       hepsi     : beklenen >= eşik olan her seçim
       mac_basi  : her maçın beklenen dönüşü en yüksek seçimi, beklenen >= eşik ise
-      hayal_*   : İY/MS, Kral oranı 20-30 arası; 'model' en yüksek beklenen, 'oran' en yüksek oran (eski kural)
+    (İY/MS hayal kuponu ayrıca `hayal_kuponu` ile denenir.)
     Getiri: 1 TL'ye dönen para (standart oran ve Kral oran ile). 1'in altı zarar demek.
     """
     sonuc = _test_sayaci()
@@ -349,14 +400,6 @@ def geriye_test(model: dict, baslangic: str, bitis: str, sadece: set[str] | None
             for esik in ESIKLER:
                 if beklenen[en_iyi] >= esik:
                     _say(sonuc, ("mac_basi", market, esik), oranlar[en_iyi], en_iyi == gercek)
-            if market == "İY/MS":
-                aralikta = [s for s, o in oranlar.items()
-                            if HAYAL_ARALIGI[0] <= o * KRAL_KATSAYI <= HAYAL_ARALIGI[1]]
-                if aralikta:
-                    s_model = max(aralikta, key=beklenen.get)
-                    s_oran = max(aralikta, key=oranlar.get)
-                    _say(sonuc, ("hayal_model", market, 0.0), oranlar[s_model], s_model == gercek)
-                    _say(sonuc, ("hayal_oran", market, 0.0), oranlar[s_oran], s_oran == gercek)
     cikti = []
     for (strateji, market, esik), s in sorted(sonuc.items()):
         n = s["bahis"]
@@ -411,42 +454,75 @@ def senaryolar(sayac: "Sayaclar") -> dict:
     return {"satirlar": satirlar, "mac": sayac.mac}
 
 
-def hayal_kuponu(baslangic: str = "", bitis: str = "9999-12", tutar: float = 20.0) -> dict:
-    """Her gün 3 maçlık İY/MS kuponu (Kral oranı 20–30, eski kural: her maçtan aralıktaki en yüksek oranlı seçim,
-    günün en yüksek oranlı 3 seçimi) oynansaydı. Ayrıca aynı seçimler tek tek 1 TL oynansaydı."""
-    gunluk: dict[str, list[tuple[float, bool]]] = defaultdict(list)
+def hayal_secimi(adaylar: list[tuple[str, float, float, object]], min_oran: float, yedek_min: float,
+                 adet: int = 3) -> list[tuple[str, float, float, object]]:
+    """[(maç, Kral oran, olasılık, ek)] -> hayal kuponu: önce min_oran ve üstü, yetmezse yedek_min ve üstü;
+    her kademede tutma olasılığı en yüksekler. Adaylar maç başına tek seçim olmalı."""
+    ust = sorted((a for a in adaylar if a[1] >= min_oran), key=lambda a: -a[2])
+    alt = sorted((a for a in adaylar if yedek_min <= a[1] < min_oran), key=lambda a: -a[2])
+    return (ust + alt)[:adet]
+
+
+def mac_hayal_adayi(oranlar: dict[str, float], p: dict[str, float], min_oran: float, yedek_min: float):
+    """Bir maçın hayal kuponu adayı: tavan kademesindeki (yoksa yedek kademedeki) en olası seçenek."""
+    for alt in (min_oran, yedek_min):
+        uygun = [s for s, o in oranlar.items() if o >= alt]
+        if uygun:
+            s = max(uygun, key=lambda x: p[x])
+            return s, oranlar[s], p[s]
+    return None
+
+
+def hayal_kuponu(tablo: dict, ay_tablolari: dict[str, dict], baslangic: str = "", bitis: str = "9999-12",
+                 tutar: float = 20.0) -> dict:
+    """Her gün 3 maçlık İY/MS hayal kuponu (kupon kuralıyla: Kral oran 30+, yetmezse 20+, tutma olasılığı en
+    yüksek 3 maç) oynansaydı. Olasılıklar o ayın maçları çıkarılmış koşullu sıklıklardan (geleceği görmeden).
+    Karşılaştırma: aynı kademede rastgele (ilk) seçim yerine en yüksek oranlı seçim."""
+    gunluk: dict[str, list] = defaultdict(list)
     for tarih, _, skor, marketler in mac_akisi(baslangic, bitis):
         oranlar = marketler.get("İY/MS")
         if not oranlar:
             continue
-        gercek = kazanan("İY/MS", *skor)
-        aralikta = [(o * KRAL_KATSAYI, s == gercek) for s, o in oranlar.items()
-                    if HAYAL_ARALIGI[0] <= o * KRAL_KATSAYI <= HAYAL_ARALIGI[1]]
-        if aralikta:
-            gunluk[tarih].append(max(aralikta))
-    sonuc = {"gun": 0, "harcanan": 0.0, "kazanan": 0, "donen": 0.0, "iki_tutan": 0,
-             "tek_bahis": 0, "tek_tutan": 0, "tek_donus": 0.0, "kazanan_gunler": []}
+        kral = {s: o * KRAL_KATSAYI for s, o in oranlar.items()}
+        anahtar = kosul_anahtari(marketler.get("MS"), marketler.get("2.5 A/Ü"))
+        cikar = ay_tablolari.get(tarih[:7])
+        p = {s: kosullu_olasilik(tablo, anahtar, s, cikar) for s in kral}
+        aday = mac_hayal_adayi(kral, p, config.HAYAL_MIN_ORAN, config.KUPON_MIN_ORAN)
+        if aday:
+            gercek = kazanan("İY/MS", *skor)
+            s, o, ps = aday
+            en_yuksek = max(kral, key=kral.get)
+            gunluk[tarih].append((s, o, ps, (s == gercek, kral[en_yuksek], en_yuksek == gercek)))
+    sonuc = {"gun": 0, "harcanan": 0.0, "kazanan": 0, "donen": 0.0, "iki_tutan": 0, "tek_bahis": 0,
+             "tek_tutan": 0, "tek_donus": 0.0, "kazanan_gunler": [], "toplam_oran": 0.0,
+             "saf_tek_tutan": 0, "saf_tek_donus": 0.0}
     for tarih, liste in sorted(gunluk.items()):
-        if len(liste) < 3:
+        secilen = hayal_secimi(liste, config.HAYAL_MIN_ORAN, config.KUPON_MIN_ORAN)
+        if len(secilen) < 3:
             continue
-        secilen = sorted(liste, reverse=True)[:3]
-        tutan = sum(t for _, t in secilen)
+        tutan = sum(e[0] for *_, e in secilen)
+        oran = math.prod(o for _, o, _, _ in secilen)
         sonuc["gun"] += 1
         sonuc["harcanan"] += tutar
+        sonuc["toplam_oran"] += oran
         sonuc["iki_tutan"] += tutan == 2
         if tutan == 3:
-            kazanc = tutar * math.prod(o for o, _ in secilen)
             sonuc["kazanan"] += 1
-            sonuc["donen"] += kazanc
-            sonuc["kazanan_gunler"].append([tarih, round(kazanc, 2)])
-        for o, t in secilen:
+            sonuc["donen"] += tutar * oran
+            sonuc["kazanan_gunler"].append([tarih, round(tutar * oran, 2)])
+        for _, o, _, (tuttu, o_saf, saf_tuttu) in secilen:
             sonuc["tek_bahis"] += 1
-            sonuc["tek_tutan"] += t
-            sonuc["tek_donus"] += o if t else 0.0
+            sonuc["tek_tutan"] += tuttu
+            sonuc["tek_donus"] += o if tuttu else 0.0
+            sonuc["saf_tek_tutan"] += saf_tuttu
+            sonuc["saf_tek_donus"] += o_saf if saf_tuttu else 0.0
+    n = sonuc["tek_bahis"]
     sonuc["ilk"] = min(gunluk, default="")
     sonuc["son"] = max(gunluk, default="")
-    sonuc["tek_getiri"] = round(sonuc["tek_donus"] / sonuc["tek_bahis"], 4) if sonuc["tek_bahis"] else 0
-    sonuc["tek_hata"] = hata_payi(sonuc["tek_bahis"], sonuc["tek_tutan"], sonuc["tek_donus"])
+    sonuc["ort_kupon_orani"] = round(sonuc["toplam_oran"] / sonuc["gun"], 0) if sonuc["gun"] else 0
+    sonuc["tek_getiri"] = round(sonuc["tek_donus"] / n, 4) if n else 0
+    sonuc["tek_hata"] = hata_payi(n, sonuc["tek_tutan"], sonuc["tek_donus"])
+    sonuc["saf_tek_getiri"] = round(sonuc["saf_tek_donus"] / n, 4) if n else 0
     return sonuc
 
 
@@ -516,11 +592,18 @@ def calistir(bugun: date | None = None) -> dict:
     canli, tum = Sayaclar(), Sayaclar()
     sayim: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
     tum_ilk, tum_son = "", ""
+    kosullu = {"genel": {"n": 0}, "hucre": {}}
+    ay_kosullu: dict[str, dict] = defaultdict(lambda: {"genel": {"n": 0}, "hucre": {}})
     for tarih, lig, skor, marketler in mac_akisi():
         tum.ekle(lig, skor, marketler)
         tum_ilk, tum_son = tum_ilk or tarih, tarih
         for market in marketler:
             sayim[market][tarih[:7]] += 1
+        anahtar = kosul_anahtari(marketler.get("MS"), marketler.get("2.5 A/Ü"))
+        if anahtar:
+            gercek = kazanan("İY/MS", *skor)
+            _kosul_ekle(kosullu, anahtar, gercek)
+            _kosul_ekle(ay_kosullu[tarih[:7]], anahtar, gercek)
         if tarih[:7] >= canli_bas:
             canli.ekle(lig, skor, marketler)
     model = model_kur(canli)
@@ -552,7 +635,8 @@ def calistir(bugun: date | None = None) -> dict:
     depo.json_yaz(depo.kok() / "analiz" / "iddaa_oran_tablosu.json", oran_tablosu(tum))
     depo.json_yaz(depo.kok() / "analiz" / "iddaa_senaryolar.json",
                   {**senaryolar(tum), "ilk": tum_ilk, "son": tum_son, "olusturma": bugun.isoformat(),
-                   "hayal_kuponu": hayal_kuponu()})
+                   "hayal_kuponu": hayal_kuponu(kosullu, ay_kosullu)})
+    depo.json_yaz(kosullu_yolu(), kosullu)
     depo.json_yaz(depo.kok() / "analiz" / "iddaa_kalibrasyon_tablosu.json", kalibrasyon_tablosu(canli, model))
     depo.json_yaz(depo.kok() / "analiz" / "geriye_test.json",
                   {"satirlar": test_satirlari, "planlar": plan_ozeti, "egitim_baslangic": standart[0],
