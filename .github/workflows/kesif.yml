@@ -32,6 +32,7 @@ jobs:
         env:
           BETIK: ${{ inputs.betik }}
           ARG: ${{ inputs.arg }}
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           mkdir -p /tmp/cikti
           set -o pipefail
