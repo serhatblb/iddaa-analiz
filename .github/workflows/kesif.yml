@@ -1,0 +1,50 @@
+name: Keşif
+
+# Elle çalıştırılan deneme işleri: bir betiği çalıştırır, çıktı klasörünü `kesif/<isim>` dalına yazar.
+on:
+  workflow_dispatch:
+    inputs:
+      betik:
+        description: "Çalıştırılacak Python betiği (repo içi yol)"
+        required: true
+      isim:
+        description: "Çıktı dalı adı (kesif/<isim>)"
+        required: true
+      arg:
+        description: "Betiğe ek argümanlar"
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  kesif:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Çalıştır
+        env:
+          BETIK: ${{ inputs.betik }}
+          ARG: ${{ inputs.arg }}
+        run: |
+          mkdir -p /tmp/cikti
+          set -o pipefail
+          python "$BETIK" --cikti /tmp/cikti $ARG 2>&1 | tee /tmp/cikti/log.txt
+      - name: Çıktıyı dala yaz
+        if: always()
+        env:
+          ISIM: ${{ inputs.isim }}
+          TOKEN: ${{ github.token }}
+        run: |
+          cd /tmp/cikti
+          git init -q -b cikti
+          git add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -qm "kesif $ISIM ($GITHUB_RUN_ID)"
+          git push -qf "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "cikti:kesif/${ISIM}"
