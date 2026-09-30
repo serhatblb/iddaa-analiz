@@ -110,24 +110,27 @@ def _iddaa_gecmisi_bolumu(rapor: Rapor) -> bool:
         rapor.yazi(f"{hayal['ilk']} → {hayal['son']}: {hayal['gun']} gün, {_tl(hayal['harcanan'])} harcanırdı; "
                    f"{hayal['kazanan']} kupon tutardı, dönen {_tl(hayal['donen'])}. 3 maçın 2'si tutan gün: "
                    f"{hayal['iki_tutan']}. Aynı seçimler tek tek 1 TL: %"
-                   f"{100 * hayal['tek_tutan'] / max(hayal['tek_bahis'], 1):.1f} tuttu, 1 TL → {hayal['tek_getiri']:.2f}.")
+                   f"{100 * hayal['tek_tutan'] / max(hayal['tek_bahis'], 1):.1f} tuttu, 1 TL → {hayal['tek_getiri']:.2f} "
+                   f"(hata payı ±{hayal.get('tek_hata', 0):.2f}).")
     rapor.bolum("iddaa geçmişi: her seçime 1 TL oynasaydın")
     rapor.yazi(f"{senaryo['mac']:,} iddaa maçı ({senaryo.get('ilk', '')[:7]} → {senaryo.get('son', '')[:7]}), "
                "Kral oranla. 1 TL → 1'in altındaysa uzun vadede kaybettirir.")
     satirlar = [r for r in senaryo["satirlar"] if r["secenek"] == "hepsi"]
-    rapor.tablo(["Bahis", "Oran aralığı", "Seçim sayısı", "Tuttu", "1 TL →"],
-                [[r["market"], r["bant"] or "hepsi", f"{r['bahis']:,}", _yuzde(r["tutma"]), f"{r['getiri_kral']:.3f}"]
+    rapor.tablo(["Bahis", "Oran aralığı", "Seçim sayısı", "Tuttu", "1 TL →", "Hata payı"],
+                [[r["market"], r["bant"] or "hepsi", f"{r['bahis']:,}", _yuzde(r["tutma"]), f"{r['getiri_kral']:.3f}",
+                  f"±{r.get('hata', 0):.2f}"]
                  for r in satirlar])
     test = depo.json_oku(analiz.analiz_yolu("geriye_test.json")) or {}
     secili = [r for r in test.get("satirlar", [])
               if (r["strateji"] == "mac_basi" and r["esik"] in (0.0, 0.9, 1.0)) or r["strateji"].startswith("hayal")]
     if secili:
         rapor.bolum("Model geriye dönük test (model test dönemini görmeden kuruldu)")
-        rapor.tablo(["Strateji", "Bahis", "Beklenen eşiği", "Bahis sayısı", "Tuttu", "1 TL →", "Test dönemi"],
+        rapor.tablo(["Strateji", "Bahis", "Beklenen eşiği", "Bahis sayısı", "Tuttu", "1 TL →", "Hata payı",
+                     "Test dönemi"],
                     [[STRATEJI_ADI.get(r["strateji"], r["strateji"]), r["market"],
                       "hepsi" if not r["esik"] else f"≥ {r['esik']:.2f}", f"{r['bahis']:,}",
                       _yuzde(r["tutan"] / r["bahis"]) if r["bahis"] else "-", f"{r['getiri_kral']:.3f}",
-                      r.get("test", "")]
+                      f"±{r.get('hata', 0):.2f}", r.get("test", "")]
                      for r in sorted(secili, key=lambda r: (r["market"], r["strateji"], r["esik"]))])
     tekli = tekler.degerlendir()
     if tekli["satirlar"]:

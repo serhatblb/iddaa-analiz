@@ -338,8 +338,18 @@ def geriye_test(model: dict, baslangic: str, bitis: str, sadece: set[str] | None
         n = s["bahis"]
         cikti.append({"strateji": strateji, "market": market, "esik": esik, "bahis": n, "tutan": s["tutan"],
                       "getiri": round(s["donus"] / n, 4) if n else 0,
-                      "getiri_kral": round(s["donus"] * KRAL_KATSAYI / n, 4) if n else 0})
+                      "getiri_kral": round(s["donus"] * KRAL_KATSAYI / n, 4) if n else 0,
+                      "hata": hata_payi(n, s["tutan"], s["donus"] * KRAL_KATSAYI)})
     return {"baslangic": baslangic, "bitis": bitis, "satirlar": cikti}
+
+
+def hata_payi(bahis: int, tutan: int, donus: float) -> float:
+    """Getirinin %95 hata payı (yaklaşık): tutan bahislerin ortalama oranı × √(p(1-p)/n) × 1.96.
+    Az tutan bahiste (yüksek oran) getiri şansa çok bağlıdır; 1'in üstü bile tesadüf olabilir."""
+    if not bahis or not tutan:
+        return 0.0
+    p = tutan / bahis
+    return round(1.96 * (donus / tutan) * math.sqrt(p * (1 - p) / bahis), 4)
 
 
 # İY/MS ve MS için oran bantları (Kral oran): "bu aralıkta oynasaydın ne olurdu"
@@ -369,7 +379,8 @@ def senaryolar(sayac: "Sayaclar") -> dict:
     for (market, secenek, bant), (n, y, donus) in toplam.items():
         if n:
             satirlar.append({"market": market, "secenek": secenek, "bant": bant, "bahis": n, "tutan": y,
-                             "tutma": round(y / n, 4), "getiri_kral": round(donus / n, 4)})
+                             "tutma": round(y / n, 4), "getiri_kral": round(donus / n, 4),
+                             "hata": hata_payi(n, y, donus)})
     sira = {m: i for i, m in enumerate(MARKETLER)}
     satirlar.sort(key=lambda r: (sira.get(r["market"], 99), r["secenek"] != "hepsi", r["secenek"],
                                  float(r["bant"].split("–")[0].rstrip("+")) if r["bant"] else -1))
@@ -411,6 +422,7 @@ def hayal_kuponu(baslangic: str = "", bitis: str = "9999-12", tutar: float = 20.
     sonuc["ilk"] = min(gunluk, default="")
     sonuc["son"] = max(gunluk, default="")
     sonuc["tek_getiri"] = round(sonuc["tek_donus"] / sonuc["tek_bahis"], 4) if sonuc["tek_bahis"] else 0
+    sonuc["tek_hata"] = hata_payi(sonuc["tek_bahis"], sonuc["tek_tutan"], sonuc["tek_donus"])
     return sonuc
 
 

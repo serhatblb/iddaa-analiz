@@ -401,25 +401,30 @@ def iddaa_gecmisi_sekmesi(senaryo: dict, test: dict, tekli: dict) -> str:
             "<span>bir maç kala yatan kupon</span></div>"
             f'<div><span>Aynı seçimler tek tek (1 TL)</span><b>%{100 * hayal["tek_tutan"] / max(hayal["tek_bahis"], 1):.1f} tuttu</b>'
             f'<span>1 TL → <strong class="{"sonuc-iyi" if hayal["tek_getiri"] > 1 else "sonuc-kotu"}">'
-            f'{hayal["tek_getiri"]:.2f} TL</strong> ({hayal["tek_bahis"]:,} bahis)</span></div></div>'
+            f'{hayal["tek_getiri"]:.2f} TL</strong> (hata payı ±{hayal.get("tek_hata", 0):.2f}, '
+            f'{hayal["tek_bahis"]:,} bahis)</span></div></div>'
             + (f'<p class="aciklama">Tutan günler: {_e(gunler)}</p>' if gunler else "") + "</div>")
     satirlar = senaryo.get("satirlar", [])
     if satirlar:
         ozet = [[r["market"], "Hepsi" if r["secenek"] == "hepsi" else r["secenek"], f"{r['bahis']:,}",
-                 _yuzde(r["tutma"]), _getiri_td(r["getiri_kral"])]
+                 _yuzde(r["tutma"]), _getiri_td(r["getiri_kral"]), f'<td class="soluk">±{r.get("hata", 0):.2f}</td>']
                 for r in satirlar if not r["bant"]]
-        bantlar = [[r["market"], r["bant"], f"{r['bahis']:,}", _yuzde(r["tutma"]), _getiri_td(r["getiri_kral"])]
+        bantlar = [[r["market"], r["bant"], f"{r['bahis']:,}", _yuzde(r["tutma"]), _getiri_td(r["getiri_kral"]),
+                    f'<td class="soluk">±{r.get("hata", 0):.2f}</td>']
                    for r in satirlar if r["bant"] and r["secenek"] == "hepsi"]
         parcalar.append(
             '<div class="kart"><h2>Her seçime 1 TL oynasaydın</h2>'
             f'<p class="aciklama">{senaryo.get("mac", 0):,} iddaa maçı ({_e(senaryo.get("ilk", "")[:7])} → '
             f'{_e(senaryo.get("son", "")[:7])}). Kral oranla hesaplandı. 1 TL → 0.85 demek: her 100 TL\'nin '
             "85'i geri döner, 15'i iddaa'nın payı. Kombine kuponda bu kayıp her maç için bir kez daha çarpılır "
-            "(3 maç: 0.85 × 0.85 × 0.85 ≈ 0.61).</p>"
+            "(3 maç: 0.85 × 0.85 × 0.85 ≈ 0.61). MS ve 2.5 A/Ü bütün maçlardan; İY/MS, toplam gol, KG ve diğerleri "
+            "maç sayfası oranları indirilmiş maçlardan (her gece geriye doğru artıyor). Hata payı: sonuç şans "
+            "eseri bu kadar oynayabilir.</p>"
             "<h3>Oran aralıklarına göre</h3>"
-            + _tablo(["Bahis", "Oran aralığı", "Seçim sayısı", "Tuttu", "1 TL →"], bantlar, sol=2)
+            + _tablo(["Bahis", "Oran aralığı", "Seçim sayısı", "Tuttu", "1 TL →", "Hata payı"], bantlar, sol=2)
             + "<details><summary>Seçenek seçenek</summary>"
-            + _tablo(["Bahis", "Seçim", "Seçim sayısı", "Tuttu", "1 TL →"], ozet, sol=2) + "</details></div>")
+            + _tablo(["Bahis", "Seçim", "Seçim sayısı", "Tuttu", "1 TL →", "Hata payı"], ozet, sol=2)
+            + "</details></div>")
     test_satirlari = [r for r in test.get("satirlar", [])
                       if (r["strateji"] == "mac_basi" and r["esik"] in (0.0, 1.0, 1.05))
                       or r["strateji"].startswith("hayal")]
@@ -427,14 +432,16 @@ def iddaa_gecmisi_sekmesi(senaryo: dict, test: dict, tekli: dict) -> str:
         satir = [[STRATEJILER.get(r["strateji"], r["strateji"]), r["market"],
                   "hepsi" if not r["esik"] else f"≥ {r['esik']:.2f}", f"{r['bahis']:,}",
                   _yuzde(r["tutan"] / r["bahis"]) if r["bahis"] else "-", _getiri_td(r["getiri_kral"]),
-                  r.get("test", "")]
+                  f'<td class="soluk">±{r.get("hata", 0):.2f}</td>', r.get("test", "")]
                  for r in sorted(test_satirlari, key=lambda r: (r["market"], r["strateji"], r["esik"]))]
         parcalar.append(
             '<div class="kart"><h2>Model geçmişte işe yarar mıydı? (geriye dönük test)</h2>'
             "<p class=\"aciklama\">Model her bahis için test döneminden önceki maçlarla kuruldu, test dönemindeki "
             "maçları hiç görmeden denendi. Eşik: modelin hesapladığı 1 TL → beklenen dönüş. "
-            "Burada 1'in üstünde kalan bir satır, gerçek bir avantaj adayıdır.</p>"
-            + _tablo(["Strateji", "Bahis", "Beklenen", "Bahis sayısı", "Tuttu", "1 TL →", "Test dönemi"], satir, sol=2)
+            "Bir satırın gerçek avantaj sayılması için 1 TL → değeri hata payını çıkarınca bile 1'in üstünde "
+            "kalmalı.</p>"
+            + _tablo(["Strateji", "Bahis", "Beklenen", "Bahis sayısı", "Tuttu", "1 TL →", "Hata payı", "Test dönemi"],
+                     satir, sol=2)
             + "</div>")
     tekli_satirlar = tekli.get("satirlar", [])
     parcalar.append(
