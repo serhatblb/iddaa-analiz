@@ -62,7 +62,8 @@ def calistir(istemci: IddaaIstemci | None = None, simdi: datetime | None = None)
     ozet = {"bulten": 0, "detay": 0, "iyms_mac": 0, "yeni": 0, "kapanis": 0, "hata": 0}
 
     bulten = istemci.bulten() or {}
-    maclar = [m for m in bulten.get("events") or [] if not m.get("il") and m.get("hn") and m.get("an")]
+    # "il" canlı bahis açık demek, maçın başladığı anlamına gelmez; başlamış maçlar aşağıda saatle ayıklanır
+    maclar = [m for m in bulten.get("events") or [] if m.get("hn") and m.get("an")]
     ozet["bulten"] = len(maclar)
 
     for mac in maclar:

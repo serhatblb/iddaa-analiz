@@ -74,3 +74,13 @@ def test_iyms_sonradan_acilirsa_yakalanir(veri_dizini):
     topla.calistir(istemci, sonra)
     assert depo.maclari_oku()["5"]["iyms_var"] == "1"
     assert any(s["market"] == "2_90" for s in depo.gz_csv_oku(depo.anlik_yolu("oranlar", sonra)))
+
+
+def test_canli_bahis_acik_mac_da_kaydedilir(veri_dizini):
+    # il=True: canlı bahis açık; maç henüz başlamadıysa normal maç gibi toplanmalı
+    istemci = SahteIstemci([mac(8, ts(SIMDI + timedelta(hours=6)), iyms=IYMS_ORANLARI, canli=True),
+                            mac(9, ts(SIMDI - timedelta(minutes=10)), canli=True)])
+    ozet = topla.calistir(istemci, SIMDI)
+    kayitlar = depo.maclari_oku()
+    assert "8" in kayitlar and kayitlar["8"]["iyms_var"] == "1"
+    assert "9" not in kayitlar and ozet["yeni"] == 1
