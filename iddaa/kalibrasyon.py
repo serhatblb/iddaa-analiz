@@ -202,18 +202,25 @@ class Sayaclar:
                 s[1] += tuttu
 
 
-def model_kur(sayac: Sayaclar, min_lig_ornek: int = 200) -> dict:
-    """Global eğriler + lig düzeltmeleri (ampirik Bayes ile sıfıra çekilmiş)."""
+MIN_MODEL_MAC = 2000   # bir market modele en az bu kadar maçla girer; azsa kuponlar eski tablolarla seçilir
+
+
+def model_kur(sayac: Sayaclar, min_lig_ornek: int = 200, min_mac: int = MIN_MODEL_MAC) -> dict:
+    """Global eğriler + lig düzeltmeleri (ampirik Bayes ile sıfıra çekilmiş). Az maçlı marketler atlanır."""
     model: dict = {"marketler": {}}
     gruplar = defaultdict(list)
     for (market, secenek, d), (n, y, sq) in sayac.dilim.items():
         gruplar[(market, secenek)].append((logit(sq / n), n, y))
     for (market, secenek), dilimler in gruplar.items():
+        if sum(n for _, n, _ in dilimler) < min_mac:
+            continue
         katsayi = _irls(dilimler) if sum(n for _, n, _ in dilimler) >= 300 else [0.0, 1.0, 0.0]
         model["marketler"].setdefault(market, {})[secenek] = {"katsayi": [round(k, 6) for k in katsayi], "lig": {}}
     # Lig düzeltmesi: u_ham = (O - E) / V, örnekleme varyansı 1/V; τ² momentlerden
     lig_toplam = defaultdict(lambda: [0.0, 0.0, 0.0, 0])   # (market, seçenek, lig) -> [O, E, V, n]
     for (market, secenek, lig, _), (n, y, sq) in sayac.lig_dilim.items():
+        if secenek not in model["marketler"].get(market, {}):
+            continue
         katsayi = model["marketler"][market][secenek]["katsayi"]
         p = egrisel_olasilik(katsayi, sq / n)
         t = lig_toplam[(market, secenek, lig)]
@@ -426,7 +433,7 @@ def kalibrasyon_tablosu(sayac: Sayaclar, model: dict) -> list[dict]:
     """Rapor için: market/seçenek başına iddaa olasılığı dilimleri, gerçek sıklık ve model."""
     satirlar = []
     for (market, secenek, d), (n, y, sq) in sorted(sayac.dilim.items()):
-        if n < 200:
+        if n < 200 or secenek not in model["marketler"].get(market, {}):
             continue
         katsayi = model["marketler"][market][secenek]["katsayi"]
         satirlar.append({"market": market, "secenek": secenek, "q": round(sq / n, 4), "ornek": n,
@@ -457,7 +464,7 @@ def bolme_plani(sayim: dict[str, dict[str, int]], bu_ay: str) -> dict[str, tuple
             plan[market] = (egitim_bas, egitim_bit, test_bas, bu_ay)
             continue
         dolu = sorted(a for a, n in aylar.items() if n)
-        if len(dolu) >= 4:
+        if len(dolu) >= 4 and sum(aylar.values()) >= 2 * MIN_MODEL_MAC:
             orta = dolu[len(dolu) // 2]
             plan[market] = (dolu[0], ay_ekle(orta, -1), orta, dolu[-1])
     return plan

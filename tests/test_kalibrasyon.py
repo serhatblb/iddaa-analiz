@@ -205,7 +205,9 @@ def test_bolme_plani():
              "KG": {"2026-09": 50}}
     plan = k.bolme_plani(sayim, "2026-09")
     assert plan["MS"] == ("2022-10", "2025-09", "2025-10", "2026-09")
-    assert plan["İY/MS"] == ("2026-01", "2026-02", "2026-03", "2026-05")  # az veri: ortadan ikiye
+    assert "İY/MS" not in plan  # 500 maç: test için çok az
+    sayim["İY/MS"] = {a: 1000 for a in sayim["İY/MS"]}
+    assert k.bolme_plani(sayim, "2026-09")["İY/MS"] == ("2026-01", "2026-02", "2026-03", "2026-05")  # ikiye
     assert "KG" not in plan
 
 
