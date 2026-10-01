@@ -21,6 +21,6 @@ tarih,tur,sira,mac_id,lig,ev,dep,baslama_utc,market,secim,oran,tutma,beklenen,ge
 2026-10-01,iyms_deger,1,3170438,UEFA Uluslar Ligi,Malta,Cebelitarık,2026-10-01T18:45:00Z,İY/MS,2/1,33.0,0.0377,1.244,,,5203.44,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
 2026-10-01,iyms_deger,2,3170311,UEFA Uluslar Ligi,Azerbaycan,Lihtenştayn,2026-10-01T16:00:00Z,İY/MS,1/0,36.5,0.0276,1.006,0/0,0,5203.44,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
 2026-10-01,iyms_deger,3,3176341,Fransa Ulusal Lig,SC Bastia,Orleans,2026-10-01T18:45:00Z,İY/MS,0/0,4.32,0.216,0.933,,,5203.44,20.0,kaybetti,0.0,2,iddaa geçmişi (benzer maçlar)
-2026-10-01,gol,1,3170338,UEFA Uluslar Ligi,Almanya,Sırbistan,2026-10-01T18:45:00Z,Toplam gol,2-3 gol,2.3,0.3936,0.905,,,11.59,20.0,bekliyor,,1,iddaa geçmişi
-2026-10-01,gol,2,3170450,U21 Avrupa Şampiyonası,Ermenistan U21,İtalya U21,2026-10-01T16:30:00Z,Toplam gol,2-3 gol,2.52,0.3542,0.893,,,11.59,20.0,bekliyor,,2,iddaa geçmişi
-2026-10-01,gol,3,3170379,UEFA Uluslar Ligi,Galler,Norveç,2026-10-01T18:45:00Z,Toplam gol,2-3 gol,2.0,0.4453,0.891,,,11.59,20.0,bekliyor,,1,iddaa geçmişi
+2026-10-01,gol,1,3170338,UEFA Uluslar Ligi,Almanya,Sırbistan,2026-10-01T18:45:00Z,Toplam gol,2-3 gol,2.3,0.3936,0.905,,,11.59,20.0,kaybetti,0.0,1,iddaa geçmişi
+2026-10-01,gol,2,3170450,U21 Avrupa Şampiyonası,Ermenistan U21,İtalya U21,2026-10-01T16:30:00Z,Toplam gol,2-3 gol,2.52,0.3542,0.893,1 gol,0,11.59,20.0,kaybetti,0.0,2,iddaa geçmişi
+2026-10-01,gol,3,3170379,UEFA Uluslar Ligi,Galler,Norveç,2026-10-01T18:45:00Z,Toplam gol,2-3 gol,2.0,0.4453,0.891,,,11.59,20.0,kaybetti,0.0,1,iddaa geçmişi
