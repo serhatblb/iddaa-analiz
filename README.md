@@ -24,7 +24,7 @@ Toplama kuralları:
 - Başlamaya 75 dakika kala tüm marketler bir kez **kapanış** olarak kaydedilir.
 - İY/MS'si olmayan yakın maçlar 2 saatte bir tekrar kontrol edilir.
 
-Kuponlar (20 TL, kağıt üstü), önümüzdeki 24 saatte başlayacak maçlardan; her maçtan en fazla bir seçim:
+Kuponlar (20 TL, kağıt üstü), bugün (Türkiye saatiyle gece 24:00'e kadar) başlayacak maçlardan; her maçtan en fazla bir seçim:
 - **İY/MS hayal kuponu:** hep 3 maç. iddaa İY/MS oranlarına tavan koyuyor (~36 Kral oran); günün en yüksek oranlı
   (30 ve üstü, yetmezse 20 ve üstü) İY/MS seçenekleri arasından, maçın MS ve 2.5 A/Ü oranlarına benzer geçmiş maçlarda
   (2019'dan beri bütün arşiv) en sık tutmuş 3 maç. Tavandaki sürprizler aynı oranı alsa da gerçek şansları farklı:
@@ -95,9 +95,10 @@ Saatlik çalışma elle de başlatılabilir: Actions → Saatlik toplama → Run
 
 ## Panel
 
-Her çalışmada `docs/index.html` yeniden üretilir: kasa ve kuponlar, önümüzdeki 24 saatin değerli görünen seçimleri,
-geçmiş veride MS 1-0-2 oran aralıkları, ev sahibinin gücüne göre İY/MS adil oranları ve toplanan iddaa verisinin
-istatistikleri. Statik tek dosya; GitHub Pages (kaynak: `main` / `docs`) veya Vercel (kök dizin: `docs`) ile yayınlanabilir.
+Her çalışmada `docs/index.html` yeniden üretilir. Üç sekme: **Bugün** (dört kupon ve kasa), **Geçmiş** (kupon başına bir
+satır, ✅/❌) ve **Oran sorgula** (bir oran yaz, iddaa'nın 2019'dan beri kendi oranlarıyla ne sıklıkla tuttuğunu gör).
+Günlük mail de kısa: bugünün kuponları, dünün sonuçları, kasa. Model, geriye dönük test ve sanal tekliler
+`data/analiz/` ve `data/tekler/` altında tutulur, panelde gösterilmez.
 
 ## Eski değer hesabı (yedek)
 
