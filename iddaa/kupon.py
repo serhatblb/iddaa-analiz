@@ -247,10 +247,17 @@ def mbs_ile_sec(adaylar: list[dict], en_fazla: int = config.KUPON_MAC_SAYISI) ->
     return en_iyi
 
 
+def kupon_secimi(tur: str, adaylar: list[dict], mac_sayisi: int = config.KUPON_MAC_SAYISI) -> list[dict]:
+    """Kupona girecek seçimler (boşsa kupon çıkmaz)."""
+    if tur in SABIT_MAC_SAYILI:
+        return adaylar[:mac_sayisi] if len(adaylar) >= mac_sayisi else []
+    return mbs_ile_sec(adaylar, mac_sayisi)
+
+
 def kupon_olustur(tarih: str, tur: str, adaylar: list[dict], mac_sayisi: int = config.KUPON_MAC_SAYISI,
                   tutar: float = config.KUPON_TUTARI) -> list[dict]:
-    secilen = adaylar[:mac_sayisi] if tur in SABIT_MAC_SAYILI else mbs_ile_sec(adaylar, mac_sayisi)
-    if not secilen or (tur in SABIT_MAC_SAYILI and len(secilen) < mac_sayisi):
+    secilen = kupon_secimi(tur, adaylar, mac_sayisi)
+    if not secilen:
         return [{"tarih": tarih, "tur": tur, "sira": 0, "durum": "aday_yok", "tutar": 0, "kazanc": 0,
                  "secim": f"{len(adaylar)} aday"}]
     toplam = 1.0

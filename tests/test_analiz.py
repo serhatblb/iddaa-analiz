@@ -88,11 +88,9 @@ def test_deger_adaylari_ve_panel(veri_dizini):
     metin = "\n".join(rapor.olustur(simdi).md)
     assert "Bugünkü İY/MS hayal kuponu" in metin and "Kasa" in metin
     sayfa, dosyalar = panel.olustur(simdi)
-    assert "<html" in sayfa and "Oran sorgula" in sayfa and "Ev sahibi (1)" in sayfa
-    assert "İY/MS hayal kuponu" in sayfa and "1-0-2 kuponu" in sayfa and "Önizleme" in sayfa and "f-oran" in sayfa
-    assert len(dosyalar["ms_olasilik.json"]["1"]) == 100
-    ms = dosyalar["gecmis_ms.json"]
-    assert ms["alanlar"][:2] == ["secim", "oran"] and ["1", "1.50"] in [r[:2] for r in ms["satirlar"]]
+    assert "<html" in sayfa and "Oran sorgula" in sayfa and "f-market" in sayfa
+    assert "İY/MS hayal kuponu" in sayfa and "1-0-2 kuponu" in sayfa and "Önizleme" in sayfa
+    assert dosyalar == {}  # iddaa geçmişi tablosu yoksa veri dosyası da yok
 
 
 def test_ms_olasilik_ve_adaylar(veri_dizini):

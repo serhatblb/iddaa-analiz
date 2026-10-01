@@ -267,7 +267,8 @@ def _kupon_kisa(rapor: Rapor, ad: str, satirlar: list[dict] | None, sonuc_goster
                  "belirsiz": "sonuç bulunamadı"}.get(ilk["durum"], "sonuç bekleniyor")
         rapor.bolum(f"{ad}: {durum}")
     else:
-        rapor.bolum(f"{ad} · {len(satirlar)} maç · oran {toplam:,.2f} · {_tl(float(ilk['tutar']))} → "
+        oran = f"{toplam:,.0f}".replace(",", ".") if toplam >= 1000 else f"{toplam:.2f}"
+        rapor.bolum(f"{ad} · {len(satirlar)} maç · oran {oran} · {_tl(float(ilk['tutar']))} → "
                     f"{_tl(float(ilk['tutar']) * toplam)}")
     rapor.liste(maddeler)
 
