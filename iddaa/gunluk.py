@@ -24,7 +24,7 @@ def calistir(simdi: datetime | None = None, zorla: bool = False) -> dict:
         yol = depo.kok() / "raporlar" / f"{yerel.date().isoformat()}.md"
         yol.parent.mkdir(parents=True, exist_ok=True)
         yol.write_text("\n".join(r.md), encoding="utf-8")
-        ozet["mail"] = rapor.mail_gonder(r, f"iddaa rapor {yerel.strftime('%d.%m.%Y')}")
+        ozet["mail"] = rapor.mail_gonder(r, f"iddaa kuponları {yerel.strftime('%d.%m.%Y')}")
     return ozet
 
 

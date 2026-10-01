@@ -34,6 +34,10 @@ class Rapor:
         self.md += [metin, ""]
         self.htm.append(f"<p>{html.escape(metin)}</p>")
 
+    def liste(self, maddeler: list[str]):
+        self.md += [f"- {m}" for m in maddeler] + [""]
+        self.htm.append("<ul>" + "".join(f"<li>{html.escape(m)}</li>" for m in maddeler) + "</ul>")
+
     def tablo(self, basliklar: list[str], satirlar: list[list]):
         self.md.append("| " + " | ".join(basliklar) + " |")
         self.md.append("|" + "---|" * len(basliklar))
@@ -233,7 +237,72 @@ def _kupon_bolumu(rapor: Rapor, baslik: str, satirlar: list[dict] | None, tur: s
                f"{beklenen} · Durum: {durum}")
 
 
+PANEL = "https://serhatblb.github.io/iddaa-analiz/"
+
+
+def _secim_metni(s: dict) -> str:
+    market = s.get("market") or "İY/MS"
+    return s["secim"] if market == "Toplam gol" else f"{market} {s['secim']}"
+
+
+def _kupon_kisa(rapor: Rapor, ad: str, satirlar: list[dict] | None, sonuc_goster: bool):
+    if not satirlar:
+        rapor.yazi(f"{ad}: kupon yok.")
+        return
+    ilk = satirlar[0]
+    if ilk["durum"] == "aday_yok":
+        rapor.yazi(f"{ad}: bugün uygun maç yoktu, kupon oluşturulmadı.")
+        return
+    maddeler = []
+    for s in satirlar:
+        isaret = ""
+        if sonuc_goster:
+            isaret = {"1": "✅ ", "0": "❌ ", "iptal": "➖ ", "?": "❔ "}.get(s["tuttu"], "⏳ ")
+        sonuc = f" (sonuç {s['gercek']})" if sonuc_goster and s["tuttu"] in ("0", "1") else ""
+        maddeler.append(f"{isaret}{_saat(s['baslama_utc'])[-5:]} {s['ev']} – {s['dep']}: "
+                        f"{_secim_metni(s)} @ {float(s['oran']):.2f}{sonuc}")
+    toplam = float(ilk["toplam_oran"])
+    if sonuc_goster:
+        durum = {"kazandi": f"KAZANDI {_tl(float(ilk['kazanc']))}", "kaybetti": "kaybetti",
+                 "belirsiz": "sonuç bulunamadı"}.get(ilk["durum"], "sonuç bekleniyor")
+        rapor.bolum(f"{ad}: {durum}")
+    else:
+        rapor.bolum(f"{ad} · {len(satirlar)} maç · oran {toplam:,.2f} · {_tl(float(ilk['tutar']))} → "
+                    f"{_tl(float(ilk['tutar']) * toplam)}")
+    rapor.liste(maddeler)
+
+
 def olustur(simdi: datetime | None = None) -> Rapor:
+    """Kısa günlük mail: bugünün dört kuponu, dünün sonuçları, kasa ve panel bağlantısı."""
+    simdi = (simdi or datetime.now(timezone.utc)).replace(microsecond=0)
+    bugun = simdi.astimezone(config.TR).date()
+    dun = bugun - timedelta(days=1)
+    kuponlar = kupon.kuponlara_ayir(kupon.kuponlari_oku())
+
+    rapor = Rapor(f"iddaa kuponları — {bugun.strftime('%d.%m.%Y')}")
+    rapor.yazi("Kağıt üstü, her kupon 20 TL. Saatler Türkiye saati.")
+    for tur, ad in kupon.TURLER.items():
+        _kupon_kisa(rapor, f"Bugünkü {ad}", kuponlar.get((bugun.isoformat(), tur)), False)
+    if any((dun.isoformat(), tur) in kuponlar for tur in kupon.TURLER):
+        for tur, ad in kupon.TURLER.items():
+            _kupon_kisa(rapor, f"Dünkü {ad}", kuponlar.get((dun.isoformat(), tur)), True)
+
+    rapor.bolum("Kasa (başlangıçtan beri)")
+    satirlar, yatirilan, donen = [], 0.0, 0.0
+    for tur, ad in kupon.TURLER.items():
+        k = kupon.kasa(kuponlar, tur)
+        yatirilan += k["yatirilan"]
+        donen += k["donen"]
+        satirlar.append([ad, k["kupon"], k["kazanan"], _tl(k["net"])])
+    satirlar.append(["Toplam", "", "", _tl(donen - yatirilan)])
+    rapor.tablo(["Kupon", "Oynanan", "Tutan", "Net"], satirlar)
+    rapor.yazi(f"Bütçe {_tl(config.KUPON_BUTCE)} · kalan {_tl(config.KUPON_BUTCE - yatirilan + donen)}")
+    rapor.yazi(f"Panel: {PANEL}")
+    return rapor
+
+
+def _eski_olustur(simdi: datetime | None = None) -> Rapor:
+    """Eski uzun rapor (artık mail için kullanılmıyor)."""
     simdi = (simdi or datetime.now(timezone.utc)).replace(microsecond=0)
     bugun = simdi.astimezone(config.TR).date()
     dun = bugun - timedelta(days=1)
@@ -247,33 +316,13 @@ def olustur(simdi: datetime | None = None) -> Rapor:
     for tur, ad in kupon.TURLER.items():
         _kupon_bolumu(rapor, f"Dünkü {ad}", kuponlar.get((dun.isoformat(), tur)), tur)
 
-    rapor.bolum("Kağıt üstü kasa")
-    rapor.tablo(["Kupon türü", "Kupon", "Kazanan", "Yatırılan", "Dönen", "Net", "Bütçeden kalan"],
-                [[ad, k["kupon"], k["kazanan"], _tl(k["yatirilan"]), _tl(k["donen"]), _tl(k["net"]), _tl(k["kalan"])]
-                 for tur, ad in kupon.TURLER.items() for k in [kupon.kasa(kuponlar, tur)]])
-
     kapanis_tum = analiz.kapanis_oranlari(kayitlar, {config.IYMS, analiz.MS})
     kapanis = {m: v[config.IYMS] for m, v in kapanis_tum.items() if config.IYMS in v}
-
     _aday_bolumu(rapor, simdi)
     if _iddaa_gecmisi_bolumu(rapor):
         _veri_durumu(rapor, simdi, kayitlar, sonuclar, kapanis)
         return rapor
     _gecmis_bolumu(rapor)
-
-    rapor.bolum("iddaa verisi: MS oranları (en çok örneği olan 10 oran)")
-    ms_satirlari = [s for s in analiz.iddaa_ms_tablosu(kapanis_tum, sonuclar) if s["secim"] == "hepsi"]
-    if ms_satirlari:
-        _ms_tablosu(rapor, sorted(ms_satirlari, key=lambda r: -r["ornek"])[:10], maks=False)
-    else:
-        rapor.yazi("Henüz sonucu belli olan veri yok.")
-
-    rapor.bolum(f"iddaa verisi: İY/MS tek seçim (oran {config.KUPON_MIN_ORAN:g}–{config.KUPON_MAX_ORAN:g})")
-    rapor.yazi("Getiri 1'in üstündeyse o seçim uzun vadede kazandırıyor demektir.")
-    _istatistik_tablosu(rapor, iyms_istatistik(kapanis, sonuclar, config.KUPON_MIN_ORAN, config.KUPON_MAX_ORAN))
-    rapor.bolum("iddaa verisi: İY/MS tüm oranlar")
-    _istatistik_tablosu(rapor, iyms_istatistik(kapanis, sonuclar))
-
     _veri_durumu(rapor, simdi, kayitlar, sonuclar, kapanis)
     return rapor
 
