@@ -34,6 +34,8 @@ def _olay(oid, ev, dep, bas, o1, o0, o2):
 def test_isim_eslesme():
     assert isim.benzerlik("Sl Benfica", "Benfica") >= 0.95
     assert isim.benzerlik("Bayern Münih", "Bayern Munich") >= 0.8
+    assert isim.benzerlik("Almanya", "Germany") >= 0.95 and isim.benzerlik("Çekya", "Czech Republic") >= 0.95
+    assert isim.benzerlik("Almanya", "Spain") < 0.6
     adaylar = [("Manchester United", "Chelsea", 1), ("Manchester City", "Arsenal", 2)]
     assert isim.en_iyi_eslesme("Man City", "Arsenal FC", adaylar) == 2
     assert isim.en_iyi_eslesme("Liverpool", "Everton", adaylar) is None
