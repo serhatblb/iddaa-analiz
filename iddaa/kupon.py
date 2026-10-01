@@ -11,9 +11,8 @@ Dört ayrı kupon, bugün (Türkiye saatiyle gece 24:00'e kadar) başlayacak ma�
 - ms:   MS 1-0-2 seçimleri (oran 1.40–5.00); beklenen dönüşü en yüksek seçimler.
 - iyms_deger: Her maçın beklenen dönüşü en yüksek İY/MS seçimi (benzer geçmiş maçların sıklığıyla).
 - gol:  Toplam gol (0-1 / 2-3 / 4-5 / 6+); beklenen dönüşü en yüksek seçimler.
-ms, iyms_deger ve gol kuponlarında maç sayısı MBS'ye göre seçilir: 1, 2 ya da 3 maçlık kuponlardan (her seçimin
-MBS'si kupondaki maç sayısını geçmemeli) 1 TL'ye beklenen dönüşü en yüksek olan; eşitlikte az maçlı olan.
-Çünkü her eklenen maç iddaa'nın kâr payını bir kez daha çarpar.
+Her kupon 3 maç (kullanıcı tercihi). Her eklenen maç iddaa'nın kâr payını bir kez daha çarpar; tek maçlık kupon uzun
+vadede daha az kaybettirir ama 3 maç tercih edildi. (MBS en fazla 3 olduğu için 3 maçlık kupon her zaman oynanabilir.)
 """
 import logging
 from datetime import datetime, timedelta, timezone
@@ -28,7 +27,8 @@ log = logging.getLogger("kupon")
 KUPON_ALANLARI = ["tarih", "tur", "sira", "mac_id", "lig", "ev", "dep", "baslama_utc", "market", "secim",
                   "oran", "tutma", "beklenen", "gercek", "tuttu", "toplam_oran", "tutar", "durum", "kazanc", "mbs",
                   "kaynak"]
-SABIT_MAC_SAYILI = {"iyms"}   # hayal kuponu hep 3 maç; diğerleri MBS'ye göre en iyi maç sayısı
+# Kullanıcı tercihi: her kupon hep 3 maç (MBS kuralıyla en az maç seçimi kapalı; mbs_ile_sec yedek olarak duruyor)
+SABIT_MAC_SAYILI = {"iyms", "ms", "iyms_deger", "gol"}
 TURLER = {"iyms": "İY/MS hayal kuponu", "ms": "1-0-2 kuponu", "iyms_deger": "İY/MS değer kuponu", "gol": "Gol kuponu"}
 MS_MIN_ORAN = config.MS_KUPON_MIN_ORAN
 MS_MAX_ORAN = config.MS_KUPON_MAX_ORAN

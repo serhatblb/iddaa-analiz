@@ -33,9 +33,8 @@ Kuponlar (20 TL, kağıt üstü), bugün (Türkiye saatiyle gece 24:00'e kadar) 
 - **İY/MS değer kuponu:** her maçın beklenen dönüşü en yüksek İY/MS seçimi.
 - **Gol kuponu:** toplam gol (0-1 / 2-3 / 4-5 / 6+) seçimlerinden beklenen dönüşü en yüksekler.
 
-Beklenen dönüş = iddaa.com oranı (Kral) × modelin olasılığı. Son üç kuponda maç sayısı MBS'ye göre seçilir: 1, 2 ve 3
-maçlık kuponlardan (her seçimin MBS'si maç sayısını geçmemeli) beklenen dönüşü en yüksek olan; eşitlikte az maçlı olan.
-Her eklenen maç iddaa'nın payını bir kez daha çarpar.
+Beklenen dönüş = iddaa.com oranı (Kral) × modelin olasılığı. Her kupon 3 maç (tercih). Her eklenen maç iddaa'nın payını
+bir kez daha çarpar: 1 maçta 1 TL → ~0.91, 3 maçta ~0.75.
 
 Sanal tekliler (`tekler.py`): başlamasına 20 dk – 4 saat kala her maçın beklenen dönüşü 1'in üstündeki bütün seçimleri
 1 TL oynanmış gibi kaydedilir; sonuç ve kapanış oranıyla (CLV) değerlendirilir. Modelin gerçekten işe yarayıp

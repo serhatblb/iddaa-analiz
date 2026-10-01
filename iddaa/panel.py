@@ -117,9 +117,9 @@ if(location.hash) sekmeAc(location.hash.slice(1));
 
 ACIKLAMALAR = {
     "iyms": "Günün en yüksek oranlı 3 İY/MS'si; aynı oranlılar arasından geçmişte en sık tutanlar. Piyango.",
-    "ms": "1-0-2'de en az kaybettiren seçim(ler).",
-    "iyms_deger": "İY/MS'de en az kaybettiren seçim(ler).",
-    "gol": "Toplam gol (0-1 / 2-3 / 4-5 / 6+) aralığında en az kaybettiren seçim(ler).",
+    "ms": "1-0-2'de geçmişe göre en az kaybettiren 3 seçim.",
+    "iyms_deger": "İY/MS'de geçmişe göre en az kaybettiren 3 seçim.",
+    "gol": "Toplam gol (0-1 / 2-3 / 4-5 / 6+) aralığında geçmişe göre en az kaybettiren 3 seçim.",
 }
 DURUM = {"bekliyor": ("Bekliyor", "sabit"), "kazandi": ("KAZANDI", "kazandi"), "kaybetti": ("Kaybetti", "kaybetti"),
          "belirsiz": ("Sonuç bulunamadı", "")}

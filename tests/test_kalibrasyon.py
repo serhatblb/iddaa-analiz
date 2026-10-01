@@ -149,7 +149,8 @@ def test_model_ile_kupon_adaylari(veri_dizini):
     assert abs(ms[0]["beklenen"] - ms[0]["oran"] * ms[0]["tutma"]) < 0.01
     assert oneriler["iyms"] == [] or oneriler["iyms"][0]["kaynak"] == "yabancı şirket verisi"  # model İY/MS'yi bilmiyor
     satirlar = kupon.kupon_olustur("2026-09-30", "ms", ms)
-    assert len(satirlar) == 1 and satirlar[0]["mbs"] == "1"  # MBS 1: tek maçlık kupon
+    assert satirlar[0]["durum"] == "aday_yok"  # her kupon 3 maç; tek aday yetmez
+    assert len(kupon.kupon_olustur("2026-09-30", "ms", ms * 3)) == 3
 
 
 def test_sanal_tekler(veri_dizini):
