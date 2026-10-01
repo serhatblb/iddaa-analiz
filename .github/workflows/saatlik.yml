@@ -49,6 +49,7 @@ jobs:
           GMAIL_ADRES: ${{ secrets.GMAIL_ADRES }}
           GMAIL_UYGULAMA_SIFRESI: ${{ secrets.GMAIL_UYGULAMA_SIFRESI }}
           MAIL_ALICI: ${{ secrets.MAIL_ALICI }}
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
         run: python -m iddaa.gunluk
       - name: Paneli güncelle
         if: always()

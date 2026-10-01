@@ -13,7 +13,7 @@ import logging
 from datetime import datetime, timezone
 from pathlib import Path
 
-from . import analiz, config, depo, kalibrasyon, kupon
+from . import analiz, config, depo, kalibrasyon, kupon, pinnacle
 from .bulten import iso_oku
 
 log = logging.getLogger("panel")
@@ -221,6 +221,24 @@ def _bant_tablosu(senaryo: dict) -> str:
     return _tablo(["Bahis", "Oran aralığı", "Kaç kez", "Tuttu", "1 TL →"], satirlar, sol=2)
 
 
+def _pinnacle_karti(bugun: str) -> str:
+    """Deneme: bugün iddaa oranı Pinnacle'ın adil fiyatından yüksek olan seçimler (veri yoksa gösterilmez)."""
+    if not (pinnacle.dizin() / f"{bugun}.csv").exists():
+        return ""
+    firsat = pinnacle.firsatlar(bugun)
+    d = pinnacle.degerlendir()
+    govde = "".join(
+        f'<div class="secim"><div class="mac"><b>{_e(f["ev"])} – {_e(f["dep"])}</b>'
+        f'<span>{_e(_saat(f["baslama_utc"]))} · Pinnacle {f["pinnacle"]:.2f} · 1 TL → {f["beklenen"]:.2f}</span></div>'
+        f'<div class="sag"><span class="pill">MS {_e(f["secim"])}</span><span class="oran">{f["oran"]:.2f}</span>'
+        '<span class="isaret"></span></div></div>' for f in firsat) or '<p class="bos">Bugün yok.</p>'
+    gecmis = (f'<div class="alt-satir">Şimdiye kadar {d["gun"]} gün: {d["firsat"]["bahis"]} seçim, {d["firsat"]["tutan"]} '
+              f'tuttu, 1 TL → <b>{d["firsat"]["getiri"]:.2f}</b></div>' if d["firsat"]["bahis"] else "")
+    return ('<div class="kart"><h2>Deneme: iddaa &gt; Pinnacle <span class="rozet">Kağıt üstü</span></h2>'
+            '<p class="aciklama">iddaa\'nın oranı, Pinnacle\'ın hesapladığı gerçek şanstan yüksek olan 1-0-2 seçimleri. '
+            "Sabah bir kez bakılır.</p>" + govde + gecmis + "</div>")
+
+
 def olustur(simdi: datetime | None = None) -> tuple[str, dict[str, dict]]:
     """(index.html içeriği, {dosya adı: json içeriği})"""
     simdi = (simdi or datetime.now(timezone.utc)).replace(microsecond=0)
@@ -239,7 +257,7 @@ def olustur(simdi: datetime | None = None) -> tuple[str, dict[str, dict]]:
         + ("" if any((bugun, t) in kuponlar for t in kupon.TURLER) else " · önizleme, 09:40'tan sonra sabitlenir")
         + '</span>'
         f'<span>Kasa: <b>{_tl(donen - yatirilan)}</b> · bütçeden kalan <b>{_tl(config.KUPON_BUTCE - yatirilan + donen)}</b>'
-        f'</span></p><div class="kartlar">{kartlar}</div>')
+        f'</span></p><div class="kartlar">{kartlar}</div>' + _pinnacle_karti(bugun))
 
     # --- Geçmiş ---
     satirlar = []

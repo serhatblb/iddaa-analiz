@@ -33,6 +33,7 @@ jobs:
           BETIK: ${{ inputs.betik }}
           ARG: ${{ inputs.arg }}
           PYTHONPATH: ${{ github.workspace }}
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
         run: |
           mkdir -p /tmp/cikti
           set -o pipefail

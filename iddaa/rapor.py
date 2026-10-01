@@ -12,7 +12,7 @@ from email.message import EmailMessage
 
 import math
 
-from . import analiz, config, depo, kupon, tekler
+from . import analiz, config, depo, kupon, pinnacle, tekler
 from .bulten import iso_oku, iyms_sonucu
 
 log = logging.getLogger("rapor")
@@ -287,6 +287,19 @@ def olustur(simdi: datetime | None = None) -> Rapor:
     if any((dun.isoformat(), tur) in kuponlar for tur in kupon.TURLER):
         for tur, ad in kupon.TURLER.items():
             _kupon_kisa(rapor, f"Dünkü {ad}", kuponlar.get((dun.isoformat(), tur)), True)
+
+    if (pinnacle.dizin() / f"{bugun.isoformat()}.csv").exists():
+        firsat = pinnacle.firsatlar(bugun.isoformat())
+        rapor.bolum("Deneme: iddaa oranı Pinnacle'ın adil fiyatından yüksek olanlar")
+        if firsat:
+            rapor.liste([f"{_saat(f['baslama_utc'])[-5:]} {f['ev']} – {f['dep']}: MS {f['secim']} @ {f['oran']:.2f} "
+                         f"(Pinnacle {f['pinnacle']:.2f}, 1 TL → {f['beklenen']:.2f})" for f in firsat])
+        else:
+            rapor.yazi("Bugün yok.")
+        d = pinnacle.degerlendir()
+        if d["firsat"]["bahis"]:
+            rapor.yazi(f"Şimdiye kadar ({d['gun']} gün): {d['firsat']['bahis']} seçim, {d['firsat']['tutan']} tuttu, "
+                       f"1 TL → {d['firsat']['getiri']:.2f}. Bütün seçimlerde 1 TL → {d['hepsi']['getiri']:.2f}.")
 
     rapor.bolum("Kasa (başlangıçtan beri)")
     satirlar, yatirilan, donen = [], 0.0, 0.0
