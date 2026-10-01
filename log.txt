@@ -1,0 +1,46 @@
+iddaa e-futbol ligleri: 4
+    137001  GT SPORTS LİGİ (2x6 DAKİKA) | None | GTL
+    137002  eADRIATIC LİGİ (2x5 DAKİKA) | None | EAL
+    80665 GT Champions League 6 | GTŞL6 2x6 | INT
+    80667 GT Europa League 4 | GT AL4 2x6 | INT
+
+bülten canlı=False: 16 maç
+  marketler: [('2_887', 22), ('2_884', 16)]
+    3280000 1790852700 137002 | Spain (Nathan) - Portugal (Phantom) | [] | sc: None
+    3279964 1790853600 137002 | Germany (Cezar) - Portugal (Phantom) | [] | sc: None
+    3280870 1790853300 137001 | Olympiacos Piraeus (Thunder) - Olympique Marseille (Penn) | [] | sc: None
+    3280559 1790855100 137001 | Olympiacos Piraeus (Thunder) - Sl Benfica (Tiago) | [] | sc: None
+    3280551 1790853300 137001 | Juventus (Snake) - Sl Benfica (Tiago) | [] | sc: None
+    3277083 1790854500 137002 | Germany (Cezar) - France (Haidan) | [] | sc: None
+    3277159 1790852700 137002 | Germany (Cezar) - England (Vangogh) | [] | sc: None
+    3277135 1790854200 137002 | FC Barcelona (Oliver) - Liverpool FC (Donatello) | [] | sc: None
+    3277128 1790855100 137002 | Real Madrid (Leonardo) - Liverpool FC (Donatello) | [] | sc: None
+    3277122 1790855100 137002 | FC Barcelona (Oliver) - Atletico Madrid (Flash) | [] | sc: None
+    3277163 1790853600 137002 | England (Vangogh) - France (Haidan) | [] | sc: None
+    3277027 1790853300 137002 | PSG (Noah) - FC Barcelona (Oliver) | [] | sc: None
+  detay marketleri: ['2_884', '2_885', '2_886', '2_887']
+
+bülten canlı=True: 19 maç
+  marketler: [('2_887', 22), ('2_884', 16), ('4_779', 3), ('4_780', 1)]
+    3276847 1790851800 137002 | Germany (Cezar) - Spain (Nathan) | [] | sc: None
+    3279957 1790851800 137002 | France (Haidan) - Portugal (Phantom) | [] | sc: None
+    3276902 1790852400 137002 | PSG (Noah) - Liverpool FC (Donatello) | [] | sc: None
+    3280000 1790852700 137002 | Spain (Nathan) - Portugal (Phantom) | [] | sc: None
+    3279964 1790853600 137002 | Germany (Cezar) - Portugal (Phantom) | [] | sc: None
+    3280870 1790853300 137001 | Olympiacos Piraeus (Thunder) - Olympique Marseille (Penn) | [] | sc: None
+    3280559 1790855100 137001 | Olympiacos Piraeus (Thunder) - Sl Benfica (Tiago) | [] | sc: None
+    3280551 1790853300 137001 | Juventus (Snake) - Sl Benfica (Tiago) | [] | sc: None
+    3277083 1790854500 137002 | Germany (Cezar) - France (Haidan) | [] | sc: None
+    3277159 1790852700 137002 | Germany (Cezar) - England (Vangogh) | [] | sc: None
+    3277135 1790854200 137002 | FC Barcelona (Oliver) - Liverpool FC (Donatello) | [] | sc: None
+    3277128 1790855100 137002 | Real Madrid (Leonardo) - Liverpool FC (Donatello) | [] | sc: None
+
+403 5827 https://www.totalcorner.com/league/view/12995 | oyuncu etiketi örnekleri: []
+
+403 5827 https://www.totalcorner.com/league/view/12985 | oyuncu etiketi örnekleri: []
+
+403 5882 https://www.totalcorner.com/league/view/12995/end/page:5 | oyuncu etiketi örnekleri: []
+
+403 5769 https://footystats.org/esports/esoccer-battle | oyuncu etiketi örnekleri: []
+
+403 5642 https://esoccerbet.org/fifa-8-minutes/ | oyuncu etiketi örnekleri: []

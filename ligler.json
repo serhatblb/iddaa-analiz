@@ -1,0 +1,38 @@
+[
+ {
+  "i": 137001,
+  "cid": "GTL",
+  "p": 1,
+  "ic": "https://i.iddaa.com/i/iddaa/90/gtl.png",
+  "si": "137",
+  "n": " GT SPORTS LİGİ (2x6 DAKİKA)"
+ },
+ {
+  "i": 137002,
+  "cid": "EAL",
+  "p": 2,
+  "ic": "https://i.iddaa.com/i/iddaa/90/eal.png",
+  "si": "137",
+  "n": " eADRIATIC LİGİ (2x5 DAKİKA)"
+ },
+ {
+  "i": 80665,
+  "cid": "INT",
+  "p": 80765,
+  "ic": "https://i.iddaa.com/i/iddaa/90/int.png",
+  "sn": "GTŞL6 2x6",
+  "si": "137",
+  "n": "GT Champions League 6",
+  "cref": 196712
+ },
+ {
+  "i": 80667,
+  "cid": "INT",
+  "p": 80767,
+  "ic": "https://i.iddaa.com/i/iddaa/90/int.png",
+  "sn": "GT AL4 2x6",
+  "si": "137",
+  "n": "GT Europa League 4",
+  "cref": 161297
+ }
+]
