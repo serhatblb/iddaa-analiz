@@ -156,6 +156,17 @@ python -m iddaa.rapor     # rapor
 python -m pytest -q
 ```
 
+## Bulgular
+
+- **iddaa'nın kendi geçmişi (2019–2026, 396 bin maç):** Hiçbir bahis türü ve oran aralığı 1 TL'ye 1 TL'den fazla
+  döndürmedi. MS'de favoriler (1.00–1.50) 0.90, 5.00 üstü 0.69; İY/MS her aralıkta 0.66–0.81. Oran yükseldikçe kayıp büyüyor.
+- **Yabancı piyasayla karşılaştırma** (`scripts/yabanci_karsilastirma.py`; 53.519 maç, 22 Avrupa ligi, Pinnacle kapanış oranı
+  ölçü): iddaa Kral oranının Pinnacle'ın adil fiyatını geçtiği seçim 7 yılda 141 binde 107 (%0.08); bunlar da kâr etmedi.
+  Pinnacle'a göre en "ucuz" seçimler (beklenen 0.90–0.95) 1 TL'ye 0.92 döndürdü; ortalama 0.85. Yani kapanış oranlarında
+  sistematik bir açık yok, ama yabancı piyasa en az kaybettiren seçimleri bulmakta işe yarıyor.
+- **E-futbol** (GT Sports Ligi, eAdriatic Ligi): iddaa'nın payı ~%25 (futbolda ~%17). Biten maçların skoru iddaa'da tutulmuyor,
+  Mackolik'te e-futbol yok, sonuç siteleri otomatik erişimi engelliyor; bu yüzden test edilmedi.
+
 ## Yol haritası
 
 - [x] Toplayıcı, sonuçlar, kağıt kupon, günlük rapor
