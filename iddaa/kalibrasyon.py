@@ -308,7 +308,7 @@ def mac_secenekleri(model: dict, marketler: dict[str, dict], lig: str | None = N
 
 ESIKLER = [0.0, 0.9, 1.0, 1.05, 1.1]
 IYMS_SECENEKLERI = ["1/1", "1/0", "1/2", "0/1", "0/0", "0/2", "2/1", "2/0", "2/2"]
-KOSUL_ONCUL = 50               # koşullu İY/MS sıklığında az maçlı hücreyi iddaa'nın olasılığına çeken sanal maç
+KOSUL_ONCUL = 200              # koşullu İY/MS sıklığında az maçlı hücreyi bir üst kademeye çeken sanal maç sayısı
 
 
 # --- İY/MS koşullu sıklıklar (hayal kuponu için) ---
@@ -332,16 +332,42 @@ def kosul_anahtari(ms: dict[str, float], au: dict[str, float] | None) -> str | N
     return f"{fark}|{gol}"
 
 
+_FARK_ONBELLEK: dict[int, dict] = {}
+
+
+def _fark_toplami(tablo: dict) -> dict[str, dict]:
+    """Aynı güç farkındaki (gol seviyesinden bağımsız) hücrelerin toplamı: {fark: {"n":.., seçim: ..}}."""
+    anahtar = id(tablo)
+    if anahtar not in _FARK_ONBELLEK:
+        toplam: dict[str, dict] = {}
+        for h, sayim in (tablo.get("hucre") or {}).items():
+            t = toplam.setdefault(h.split("|")[0], {})
+            for k, v in sayim.items():
+                t[k] = t.get(k, 0) + v
+        _FARK_ONBELLEK[anahtar] = toplam
+    return _FARK_ONBELLEK[anahtar]
+
+
+def _sayim(tablo: dict | None, fark: bool, anahtar: str, secim: str) -> tuple[int, int]:
+    if not tablo:
+        return 0, 0
+    yer = (_fark_toplami(tablo) if fark else tablo.get("hucre", {})).get(anahtar) or {}
+    return yer.get("n", 0), yer.get(secim, 0)
+
+
 def kosullu_olasilik(tablo: dict, anahtar: str | None, secim: str, oncul: float, cikar: dict | None = None) -> float:
-    """Hücredeki gerçek sıklık; az maçlı hücre öncüle (iddaa'nın kendi İY/MS oranından çıkan olasılık) çekilir,
-    hücre yoksa öncül döner. cikar: aynı yapıda, hariç tutulacak sayımlar (simülasyonda o ayın kendi maçları)."""
-    hucre = tablo.get("hucre", {}).get(anahtar) if anahtar else None
-    if not hucre:
+    """Benzer geçmiş maçlarda sıklık, iki kademe çekilerek: önce aynı güç farkındaki bütün maçlara (gol seviyesi
+    fark etmeksizin), o da iddaa'nın kendi İY/MS olasılığına. Az maçlı hücre böylece tek başına uç değer üretmez.
+    cikar: aynı yapıda, hariç tutulacak sayımlar (simülasyonda o ayın kendi maçları)."""
+    if not anahtar or not tablo.get("hucre"):
         return oncul
-    c = ((cikar or {}).get("hucre", {}) or {}).get(anahtar, {})
-    n = hucre["n"] - c.get("n", 0)
-    y = hucre.get(secim, 0) - c.get(secim, 0)
-    return (y + KOSUL_ONCUL * oncul) / (n + KOSUL_ONCUL)
+    fark = anahtar.split("|")[0]
+    n_f, y_f = _sayim(tablo, True, fark, secim)
+    c_n, c_y = _sayim(cikar, True, fark, secim)
+    p_fark = (y_f - c_y + KOSUL_ONCUL * oncul) / (n_f - c_n + KOSUL_ONCUL)
+    n_h, y_h = _sayim(tablo, False, anahtar, secim)
+    c_n, c_y = _sayim(cikar, False, anahtar, secim)
+    return (y_h - c_y + KOSUL_ONCUL * p_fark) / (n_h - c_n + KOSUL_ONCUL)
 
 
 def _kosul_ekle(tablo: dict, anahtar: str, gercek: str) -> None:

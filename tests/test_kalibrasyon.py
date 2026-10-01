@@ -224,7 +224,8 @@ def test_hayal_kuponu(veri_dizini):
 
 def test_hayal_secimi_ve_kosullu_olasilik():
     tablo = {"genel": {"n": 1000, "1/2": 20}, "hucre": {"3|1": {"n": 950, "1/2": 57}, "0|1": {"n": 10, "1/2": 0}}}
-    assert abs(k.kosullu_olasilik(tablo, "3|1", "1/2", 0.02) - (57 + 50 * 0.02) / 1000) < 1e-12
+    p_fark = (57 + 200 * 0.02) / (950 + 200)          # "3" farkındaki bütün maçlar
+    assert abs(k.kosullu_olasilik(tablo, "3|1", "1/2", 0.02) - (57 + 200 * p_fark) / (950 + 200)) < 1e-12
     assert k.kosullu_olasilik(tablo, "yok", "1/2", 0.03) == 0.03   # hücre yoksa iddaa'nın olasılığı
     assert k.kosullu_olasilik(tablo, None, "1/2", 0.03) == 0.03
     assert 0 < k.kosullu_olasilik(tablo, "0|1", "1/2", 0.02) < 0.02  # az maçlı hücre öncüle çekilir

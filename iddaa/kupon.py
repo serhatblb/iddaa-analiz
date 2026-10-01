@@ -4,7 +4,7 @@ Olasılıklar iddaa'nın kendi geçmiş oranlarıyla kurulan modelden gelir (`ka
 kâr payı ayıklanınca %q şans veriyordu, gerçekte ne sıklıkla tuttu + lig düzeltmesi). Model o market için henüz
 yoksa yabancı şirket verisiyle (football-data) kurulan eski tablolar kullanılır. Beklenen = iddaa.com oranı × olasılık.
 
-Dört ayrı kupon, önümüzdeki 24 saatte başlayacak maçlardan (her maçtan en fazla bir seçim):
+Dört ayrı kupon, bugün (Türkiye saatiyle gece 24:00'e kadar) başlayacak maçlardan (her maçtan en fazla bir seçim):
 - iyms: İY/MS hayal kuponu, hep 3 maç. iddaa İY/MS oranlarına tavan koyuyor (~36): önce oranı 30 ve üstü seçenekler,
         yetmezse 20 ve üstü. Tavandaki seçenekler aynı oranı alsa da gerçek şansları farklı; maçın MS ve 2.5 A/Ü
         oranlarına benzer geçmiş maçlarda o İY/MS sonucunun gerçek sıklığı en yüksek 3 maç seçilir.
@@ -40,9 +40,16 @@ def kupon_yolu():
     return depo.kok() / "kuponlar.csv"
 
 
+def gun_sonu(simdi: datetime) -> datetime:
+    """Türkiye saatiyle o günün bitişi (gece 24:00)."""
+    yerel = simdi.astimezone(config.TR)
+    return datetime.combine(yerel.date() + timedelta(days=1), datetime.min.time(), tzinfo=config.TR)
+
+
 def _pencerede(kayit: dict, simdi: datetime) -> bool:
+    """Kuponlara sadece bugün (Türkiye saatiyle gece 24:00'ten önce) başlayan maçlar girer."""
     bas = iso_oku(kayit["baslama_utc"])
-    return simdi + EN_ERKEN_BASLAMA <= bas <= simdi + PENCERE
+    return simdi + EN_ERKEN_BASLAMA <= bas < gun_sonu(simdi)
 
 
 # --- aday bulma ---
