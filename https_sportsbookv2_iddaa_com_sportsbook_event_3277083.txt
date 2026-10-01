@@ -1,0 +1,1 @@
+{"isSuccess":false,"data":null,"message":null,"error":{"code":402,"name":"EventNotNull","message":"Şu anda oynanabilir bahis bulunmamaktadır."},"info":null,"date":null}
