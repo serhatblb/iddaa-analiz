@@ -30,9 +30,9 @@ tarih,tur,sira,mac_id,lig,ev,dep,baslama_utc,market,secim,oran,tutma,beklenen,ge
 2026-10-02,ms,1,3245775,Fas Botola,Wydad Temara,UTS Union Touarga,2026-10-02T18:00:00Z,MS,0,2.49,0.3703,0.922,,,5.09,20.0,bekliyor,,3,iddaa geçmişi + lig
 2026-10-02,ms,2,3173041,UEFA Uluslar Ligi,Faroe Adaları,Slovakya,2026-10-02T18:45:00Z,MS,2,1.45,0.6349,0.921,,,5.09,20.0,bekliyor,,1,iddaa geçmişi + lig
 2026-10-02,ms,3,3172993,UEFA Uluslar Ligi,Belçika,Türkiye,2026-10-02T18:45:00Z,MS,1,1.41,0.6511,0.918,,,5.09,20.0,bekliyor,,1,iddaa geçmişi + lig
-2026-10-02,iyms_deger,1,3172802,UEFA Uluslar Ligi,Letonya,Karadağ,2026-10-02T16:00:00Z,İY/MS,1/2,28.5,0.0357,1.018,,,3287.59,20.0,bekliyor,,1,iddaa geçmişi (benzer maçlar)
-2026-10-02,iyms_deger,2,3173041,UEFA Uluslar Ligi,Faroe Adaları,Slovakya,2026-10-02T18:45:00Z,İY/MS,1/0,21.05,0.047,0.988,,,3287.59,20.0,bekliyor,,1,iddaa geçmişi (benzer maçlar)
-2026-10-02,iyms_deger,3,3172880,UEFA Uluslar Ligi,Bosna Hersek,İsveç,2026-10-02T18:45:00Z,İY/MS,0/0,5.48,0.17,0.932,,,3287.59,20.0,bekliyor,,1,iddaa geçmişi (benzer maçlar)
+2026-10-02,iyms_deger,1,3172802,UEFA Uluslar Ligi,Letonya,Karadağ,2026-10-02T16:00:00Z,İY/MS,1/2,28.5,0.0357,1.018,2/2,0,3287.59,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
+2026-10-02,iyms_deger,2,3173041,UEFA Uluslar Ligi,Faroe Adaları,Slovakya,2026-10-02T18:45:00Z,İY/MS,1/0,21.05,0.047,0.988,,,3287.59,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
+2026-10-02,iyms_deger,3,3172880,UEFA Uluslar Ligi,Bosna Hersek,İsveç,2026-10-02T18:45:00Z,İY/MS,0/0,5.48,0.17,0.932,,,3287.59,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
 2026-10-02,gol,1,3172993,UEFA Uluslar Ligi,Belçika,Türkiye,2026-10-02T18:45:00Z,Toplam gol,2-3 gol,2.07,0.4273,0.885,,,7.91,20.0,bekliyor,,1,iddaa geçmişi
 2026-10-02,gol,2,3172689,UEFA Uluslar Ligi,Polonya,Romanya,2026-10-02T18:45:00Z,Toplam gol,2-3 gol,1.98,0.4455,0.882,,,7.91,20.0,bekliyor,,1,iddaa geçmişi
 2026-10-02,gol,3,3172880,UEFA Uluslar Ligi,Bosna Hersek,İsveç,2026-10-02T18:45:00Z,Toplam gol,2-3 gol,1.93,0.4563,0.881,,,7.91,20.0,bekliyor,,1,iddaa geçmişi
