@@ -48,13 +48,13 @@ tarih,tur,sira,mac_id,lig,ev,dep,baslama_utc,market,secim,oran,tutma,beklenen,ge
 2026-10-03,gol,1,3176232,UEFA Uluslar Ligi,İspanya,Çekya,2026-10-03T18:45:00Z,Toplam gol,2-3 gol,2.46,0.3589,0.883,4 gol,0,9.45,20.0,kaybetti,0.0,1,iddaa geçmişi + lig
 2026-10-03,gol,2,3176349,UEFA Uluslar Ligi,Hırvatistan,İngiltere,2026-10-03T16:00:00Z,Toplam gol,2-3 gol,1.96,0.4473,0.877,7 gol,0,9.45,20.0,kaybetti,0.0,1,iddaa geçmişi + lig
 2026-10-03,gol,3,3176973,UEFA Uluslar Ligi,Belarus,San Marino,2026-10-03T16:00:00Z,Toplam gol,2-3 gol,1.96,0.4467,0.876,4 gol,0,9.45,20.0,kaybetti,0.0,1,iddaa geçmişi + lig
-2026-10-04,iyms,1,3180700,"Arjantin Primera LPF, Kapanış",CA Huracan,CA Aldosivi,2026-10-04T17:45:00Z,İY/MS,2/1,32.5,0.0369,1.2,,,39739.38,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
+2026-10-04,iyms,1,3180700,"Arjantin Primera LPF, Kapanış",CA Huracan,CA Aldosivi,2026-10-04T17:45:00Z,İY/MS,2/1,32.5,0.0369,1.2,1/1,0,39739.38,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
 2026-10-04,iyms,2,3179692,UEFA Uluslar Ligi,Malta,Andorra,2026-10-04T16:00:00Z,İY/MS,2/1,33.5,0.0284,0.952,0/1,0,39739.38,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
 2026-10-04,iyms,3,3180629,"Arjantin Primera LPF, Kapanış",Talleres,Belgrano,2026-10-04T20:00:00Z,İY/MS,1/2,36.5,0.0218,0.796,,,39739.38,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
 2026-10-04,ms,1,3179910,İran Azadegan Ligi,NM Soleyman,FC Fard,2026-10-04T15:00:00Z,MS,0,2.6,0.3574,0.929,,,16.77,20.0,kaybetti,0.0,3,iddaa geçmişi + lig
 2026-10-04,ms,2,3245843,Fas Botola 2,KAC Kenitra,US Yacoub Mansour,2026-10-04T16:00:00Z,MS,0,2.53,0.3669,0.928,2,0,16.77,20.0,kaybetti,0.0,3,iddaa geçmişi + lig
 2026-10-04,ms,3,3245866,Fas Botola 2,CRS Salmi,JS Massira,2026-10-04T16:00:00Z,MS,0,2.55,0.3636,0.927,0,1,16.77,20.0,kaybetti,0.0,3,iddaa geçmişi + lig
-2026-10-04,iyms_deger,1,3180700,"Arjantin Primera LPF, Kapanış",CA Huracan,CA Aldosivi,2026-10-04T17:45:00Z,İY/MS,2/1,32.5,0.0369,1.2,,,28851.88,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
+2026-10-04,iyms_deger,1,3180700,"Arjantin Primera LPF, Kapanış",CA Huracan,CA Aldosivi,2026-10-04T17:45:00Z,İY/MS,2/1,32.5,0.0369,1.2,1/1,0,28851.88,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
 2026-10-04,iyms_deger,2,3179692,UEFA Uluslar Ligi,Malta,Andorra,2026-10-04T16:00:00Z,İY/MS,2/1,33.5,0.0284,0.952,0/1,0,28851.88,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
 2026-10-04,iyms_deger,3,3179398,UEFA Uluslar Ligi,Kosova,Avusturya,2026-10-04T16:00:00Z,İY/MS,1/2,26.5,0.0352,0.933,0/0,0,28851.88,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
 2026-10-04,gol,1,3180154,UEFA Uluslar Ligi,Hollanda,Sırbistan,2026-10-04T18:45:00Z,Toplam gol,2-3 gol,2.21,0.399,0.882,,,9.0,20.0,bekliyor,,1,iddaa geçmişi + lig
