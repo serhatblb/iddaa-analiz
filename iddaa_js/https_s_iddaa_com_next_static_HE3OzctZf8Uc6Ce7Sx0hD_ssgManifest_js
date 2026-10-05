@@ -1,0 +1,1 @@
+self.__SSG_MANIFEST=new Set(["\u002Flig-analiz\u002Ffikstur\u002F[league]","\u002Flig-analiz\u002Fpuan-durumu\u002F[league]","\u002Fspor-haberleri","\u002Fyardim\u002F[content]","\u002Fyardim\u002F[content]\u002Fdetay\u002F[url]","\u002Fyardim\u002Fdetay\u002F[url]"]);self.__SSG_MANIFEST_CB&&self.__SSG_MANIFEST_CB()
