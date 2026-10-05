@@ -2,6 +2,7 @@
 import re
 import unicodedata
 from difflib import SequenceMatcher
+from functools import lru_cache
 
 GURULTU = {"fc", "afc", "cf", "sc", "ac", "as", "ss", "us", "fk", "sk", "cd", "ud", "rc", "rcd", "sd", "real", "club",
            "de", "town", "city", "united", "utd", "the", "1", "sv", "vfb", "vfl", "tsg", "fsv", "bk", "if", "kv",
@@ -39,6 +40,7 @@ def _ascii(ad: str) -> str:
     return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9 ]", " ", ad.decode().lower())).strip()
 
 
+@lru_cache(maxsize=200_000)
 def norm(ad: str) -> str:
     duz = _ascii(ad)
     for sonek in (" u21", " u19", " u23", " k"):

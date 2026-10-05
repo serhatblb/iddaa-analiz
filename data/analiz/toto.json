@@ -1,0 +1,365 @@
+{
+ "olusturma": "2026-10-05",
+ "gecmis": {
+  "hafta": 357,
+  "ilk": "2019-08-26",
+  "son": "2026-09-20",
+  "15_cikmayan_oran": 0.255,
+  "en_uzun_devir_serisi": 3,
+  "en_buyuk_15_havuzu": {
+   "no": 325,
+   "program": "30-02 Ocak",
+   "havuz": 143607090,
+   "kazanan": 47
+  }
+ },
+ "ortalama_oyuncu": {
+  "en_yuksek": [
+   {
+    "no": 333,
+    "program": "27-29 Mart",
+    "getiri": 1.138,
+    "devir15": 78145663,
+    "devir_toplam": 78145663,
+    "hasilat": 175273629
+   },
+   {
+    "no": 290,
+    "program": "30-01 Mayıs",
+    "getiri": 1.034,
+    "devir15": 17312277,
+    "devir_toplam": 37097736,
+    "hasilat": 108227763
+   },
+   {
+    "no": 309,
+    "program": "11-13 Ekim",
+    "getiri": 0.973,
+    "devir15": 24457743,
+    "devir_toplam": 24457743,
+    "hasilat": 87063490
+   },
+   {
+    "no": 221,
+    "program": "02-04 Şubat",
+    "getiri": 0.97,
+    "devir15": 23295938,
+    "devir_toplam": 23295938,
+    "hasilat": 83624475
+   },
+   {
+    "no": 296,
+    "program": "12-13 Temmuz",
+    "getiri": 0.953,
+    "devir15": 24931260,
+    "devir_toplam": 24931260,
+    "hasilat": 95311543
+   },
+   {
+    "no": 325,
+    "program": "30-02 Ocak",
+    "getiri": 0.946,
+    "devir15": 73604006,
+    "devir_toplam": 73604006,
+    "hasilat": 289169368
+   }
+  ],
+  "1_ustu_hafta": 2,
+  "hafta": 164
+ },
+ "stratejiler": {
+  "olasılık": {
+   "hepsi": {
+    "hafta": 145,
+    "getiri": 1.268,
+    "aralik90": [
+     1.103,
+     1.449
+    ],
+    "medyan_hafta": 0.804,
+    "12_14_kismi": 0.769,
+    "15_kismi": 0.499
+   },
+   "2023/24 (2 TL)": {
+    "hafta": 43,
+    "getiri": 1.066,
+    "aralik90": [
+     0.8,
+     1.362
+    ],
+    "medyan_hafta": 0.711,
+    "12_14_kismi": 0.607,
+    "15_kismi": 0.459
+   },
+   "2024/25 (4 TL)": {
+    "hafta": 30,
+    "getiri": 1.182,
+    "aralik90": [
+     0.814,
+     1.583
+    ],
+    "medyan_hafta": 0.632,
+    "12_14_kismi": 0.824,
+    "15_kismi": 0.359
+   },
+   "2025/26 (10 TL)": {
+    "hafta": 72,
+    "getiri": 1.425,
+    "aralik90": [
+     1.163,
+     1.707
+    ],
+    "medyan_hafta": 1.08,
+    "12_14_kismi": 0.843,
+    "15_kismi": 0.581
+   },
+   "devredenli": {
+    "hafta": 34,
+    "getiri": 1.519,
+    "aralik90": [
+     1.087,
+     2.001
+    ],
+    "medyan_hafta": 1.152,
+    "12_14_kismi": 0.642,
+    "15_kismi": 0.877
+   },
+   "devredensiz": {
+    "hafta": 111,
+    "getiri": 1.191,
+    "aralik90": [
+     1.012,
+     1.376
+    ],
+    "medyan_hafta": 0.798,
+    "12_14_kismi": 0.808,
+    "15_kismi": 0.383
+   }
+  },
+  "tek favori": {
+   "hepsi": {
+    "hafta": 145,
+    "getiri": 0.94,
+    "aralik90": [
+     0.348,
+     1.705
+    ],
+    "medyan_hafta": 0.0,
+    "12_14_kismi": 0.94,
+    "15_kismi": 0.0
+   },
+   "2023/24 (2 TL)": {
+    "hafta": 43,
+    "getiri": 0.855,
+    "aralik90": [
+     0.214,
+     1.671
+    ],
+    "medyan_hafta": 0.0,
+    "12_14_kismi": 0.855,
+    "15_kismi": 0.0
+   },
+   "2024/25 (4 TL)": {
+    "hafta": 30,
+    "getiri": 1.712,
+    "aralik90": [
+     0.0,
+     5.137
+    ],
+    "medyan_hafta": 0.0,
+    "12_14_kismi": 1.712,
+    "15_kismi": 0.0
+   },
+   "2025/26 (10 TL)": {
+    "hafta": 72,
+    "getiri": 0.668,
+    "aralik90": [
+     0.143,
+     1.332
+    ],
+    "medyan_hafta": 0.0,
+    "12_14_kismi": 0.668,
+    "15_kismi": 0.0
+   },
+   "kolon_medyan": 1
+  },
+  "sistem p≥0.27": {
+   "hepsi": {
+    "hafta": 145,
+    "getiri": 1.03,
+    "aralik90": [
+     0.709,
+     1.398
+    ],
+    "medyan_hafta": 0.079,
+    "12_14_kismi": 0.857,
+    "15_kismi": 0.173
+   },
+   "2023/24 (2 TL)": {
+    "hafta": 43,
+    "getiri": 1.139,
+    "aralik90": [
+     0.466,
+     2.063
+    ],
+    "medyan_hafta": 0.081,
+    "12_14_kismi": 0.774,
+    "15_kismi": 0.365
+   },
+   "2024/25 (4 TL)": {
+    "hafta": 30,
+    "getiri": 0.975,
+    "aralik90": [
+     0.385,
+     1.687
+    ],
+    "medyan_hafta": 0.139,
+    "12_14_kismi": 0.799,
+    "15_kismi": 0.175
+   },
+   "2025/26 (10 TL)": {
+    "hafta": 72,
+    "getiri": 0.989,
+    "aralik90": [
+     0.599,
+     1.428
+    ],
+    "medyan_hafta": 0.03,
+    "12_14_kismi": 0.932,
+    "15_kismi": 0.057
+   },
+   "kolon_medyan": 972
+  },
+  "sistem p≥0.25": {
+   "hepsi": {
+    "hafta": 145,
+    "getiri": 1.143,
+    "aralik90": [
+     0.808,
+     1.534
+    ],
+    "medyan_hafta": 0.274,
+    "12_14_kismi": 0.757,
+    "15_kismi": 0.386
+   },
+   "2023/24 (2 TL)": {
+    "hafta": 43,
+    "getiri": 1.289,
+    "aralik90": [
+     0.691,
+     2.071
+    ],
+    "medyan_hafta": 0.341,
+    "12_14_kismi": 0.871,
+    "15_kismi": 0.418
+   },
+   "2024/25 (4 TL)": {
+    "hafta": 30,
+    "getiri": 1.13,
+    "aralik90": [
+     0.418,
+     2.252
+    ],
+    "medyan_hafta": 0.238,
+    "12_14_kismi": 0.726,
+    "15_kismi": 0.404
+   },
+   "2025/26 (10 TL)": {
+    "hafta": 72,
+    "getiri": 1.062,
+    "aralik90": [
+     0.646,
+     1.537
+    ],
+    "medyan_hafta": 0.177,
+    "12_14_kismi": 0.702,
+    "15_kismi": 0.36
+   },
+   "kolon_medyan": 7776
+  },
+  "eşit rastgele": {
+   "hepsi": {
+    "hafta": 145,
+    "getiri": 0.708,
+    "aralik90": [
+     0.321,
+     1.302
+    ],
+    "medyan_hafta": 0.08,
+    "12_14_kismi": 0.633,
+    "15_kismi": 0.075
+   },
+   "2023/24 (2 TL)": {
+    "hafta": 43,
+    "getiri": 0.218,
+    "aralik90": [
+     0.148,
+     0.297
+    ],
+    "medyan_hafta": 0.079,
+    "12_14_kismi": 0.141,
+    "15_kismi": 0.077
+   },
+   "2024/25 (4 TL)": {
+    "hafta": 30,
+    "getiri": 0.448,
+    "aralik90": [
+     0.235,
+     0.694
+    ],
+    "medyan_hafta": 0.055,
+    "12_14_kismi": 0.373,
+    "15_kismi": 0.075
+   },
+   "2025/26 (10 TL)": {
+    "hafta": 72,
+    "getiri": 1.11,
+    "aralik90": [
+     0.357,
+     2.266
+    ],
+    "medyan_hafta": 0.095,
+    "12_14_kismi": 1.036,
+    "15_kismi": 0.074
+   }
+  }
+ },
+ "yil": [
+  {
+   "haftalik_kolon": 10,
+   "yillik_maliyet": 5200.0,
+   "ortalama_net": -2113,
+   "medyan_net": -4686,
+   "kar_olasiligi": 0.102,
+   "yuzde10": -5164,
+   "yuzde90": 277
+  },
+  {
+   "haftalik_kolon": 100,
+   "yillik_maliyet": 52000.0,
+   "ortalama_net": 35509,
+   "medyan_net": -35541,
+   "kar_olasiligi": 0.154,
+   "yuzde10": -45774,
+   "yuzde90": 19940
+  },
+  {
+   "haftalik_kolon": 250,
+   "yillik_maliyet": 130000.0,
+   "ortalama_net": 9883,
+   "medyan_net": -76631,
+   "kar_olasiligi": 0.153,
+   "yuzde10": -106028,
+   "yuzde90": 38281
+  },
+  {
+   "haftalik_kolon": 1000,
+   "yillik_maliyet": 520000.0,
+   "ortalama_net": 138214,
+   "medyan_net": -226319,
+   "kar_olasiligi": 0.195,
+   "yuzde10": -358290,
+   "yuzde90": 472434
+  }
+ ]
+}
