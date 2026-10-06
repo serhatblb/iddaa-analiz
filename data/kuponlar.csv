@@ -75,7 +75,7 @@ tarih,tur,sira,mac_id,lig,ev,dep,baslama_utc,market,secim,oran,tutma,beklenen,ge
 2026-10-06,iyms,1,3185439,UEFA Uluslar Ligi,Belarus,Finlandiya,2026-10-06T18:45:00Z,İY/MS,1/2,32.5,0.0271,0.882,,,35587.5,20.0,bekliyor,,1,iddaa geçmişi (benzer maçlar)
 2026-10-06,iyms,2,3185214,UEFA Uluslar Ligi,Arnavutluk,San Marino,2026-10-06T18:45:00Z,İY/MS,2/1,36.5,0.0266,0.97,,,35587.5,20.0,bekliyor,,1,iddaa geçmişi (benzer maçlar)
 2026-10-06,iyms,3,3185246,UEFA Uluslar Ligi,İskoçya,Slovenya,2026-10-06T18:45:00Z,İY/MS,2/1,30.0,0.0266,0.798,,,35587.5,20.0,bekliyor,,1,iddaa geçmişi (benzer maçlar)
-2026-10-06,ms,1,3185382,UEFA Uluslar Ligi,Kazakistan,Faroe Adaları,2026-10-06T14:00:00Z,MS,0,2.79,0.3295,0.919,,,10.7,20.0,bekliyor,,1,iddaa geçmişi + lig
+2026-10-06,ms,1,3185382,UEFA Uluslar Ligi,Kazakistan,Faroe Adaları,2026-10-06T14:00:00Z,MS,0,2.79,0.3295,0.919,0,1,10.7,20.0,bekliyor,,1,iddaa geçmişi + lig
 2026-10-06,ms,2,3185332,UEFA Uluslar Ligi,Estonya,İzlanda,2026-10-06T18:45:00Z,MS,2,1.47,0.6241,0.917,,,10.7,20.0,bekliyor,,1,iddaa geçmişi + lig
 2026-10-06,ms,3,3215736,"Çin 2.Lig, Düşme Turu, Grup A",Guangdong Mingtu,Dalian Yingbo B,2026-10-06T11:30:00Z,MS,0,2.61,0.3492,0.911,0,1,10.7,20.0,bekliyor,,3,iddaa geçmişi + lig
 2026-10-06,iyms_deger,1,3185214,UEFA Uluslar Ligi,Arnavutluk,San Marino,2026-10-06T18:45:00Z,İY/MS,2/1,36.5,0.0266,0.97,,,600.94,20.0,bekliyor,,1,iddaa geçmişi (benzer maçlar)
