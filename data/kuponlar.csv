@@ -73,14 +73,14 @@ tarih,tur,sira,mac_id,lig,ev,dep,baslama_utc,market,secim,oran,tutma,beklenen,ge
 2026-10-05,gol,2,3182949,UEFA Uluslar Ligi,Bosna Hersek,Polonya,2026-10-05T18:45:00Z,Toplam gol,2-3 gol,1.87,0.4693,0.878,1 gol,0,7.55,20.0,kaybetti,0.0,1,iddaa geçmişi + lig
 2026-10-05,gol,3,3182991,UEFA Uluslar Ligi,Romanya,İsveç,2026-10-05T18:45:00Z,Toplam gol,2-3 gol,1.97,0.4459,0.878,1 gol,0,7.55,20.0,kaybetti,0.0,1,iddaa geçmişi + lig
 2026-10-06,iyms,1,3185439,UEFA Uluslar Ligi,Belarus,Finlandiya,2026-10-06T18:45:00Z,İY/MS,1/2,32.5,0.0271,0.882,1/1,0,35587.5,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
-2026-10-06,iyms,2,3185214,UEFA Uluslar Ligi,Arnavutluk,San Marino,2026-10-06T18:45:00Z,İY/MS,2/1,36.5,0.0266,0.97,,,35587.5,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
-2026-10-06,iyms,3,3185246,UEFA Uluslar Ligi,İskoçya,Slovenya,2026-10-06T18:45:00Z,İY/MS,2/1,30.0,0.0266,0.798,,,35587.5,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
+2026-10-06,iyms,2,3185214,UEFA Uluslar Ligi,Arnavutluk,San Marino,2026-10-06T18:45:00Z,İY/MS,2/1,36.5,0.0266,0.97,1/1,0,35587.5,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
+2026-10-06,iyms,3,3185246,UEFA Uluslar Ligi,İskoçya,Slovenya,2026-10-06T18:45:00Z,İY/MS,2/1,30.0,0.0266,0.798,1/2,0,35587.5,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
 2026-10-06,ms,1,3185382,UEFA Uluslar Ligi,Kazakistan,Faroe Adaları,2026-10-06T14:00:00Z,MS,0,2.79,0.3295,0.919,0,1,10.7,20.0,kaybetti,0.0,1,iddaa geçmişi + lig
 2026-10-06,ms,2,3185332,UEFA Uluslar Ligi,Estonya,İzlanda,2026-10-06T18:45:00Z,MS,2,1.47,0.6241,0.917,0,0,10.7,20.0,kaybetti,0.0,1,iddaa geçmişi + lig
 2026-10-06,ms,3,3215736,"Çin 2.Lig, Düşme Turu, Grup A",Guangdong Mingtu,Dalian Yingbo B,2026-10-06T11:30:00Z,MS,0,2.61,0.3492,0.911,0,1,10.7,20.0,kaybetti,0.0,3,iddaa geçmişi + lig
-2026-10-06,iyms_deger,1,3185214,UEFA Uluslar Ligi,Arnavutluk,San Marino,2026-10-06T18:45:00Z,İY/MS,2/1,36.5,0.0266,0.97,,,600.94,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
+2026-10-06,iyms_deger,1,3185214,UEFA Uluslar Ligi,Arnavutluk,San Marino,2026-10-06T18:45:00Z,İY/MS,2/1,36.5,0.0266,0.97,1/1,0,600.94,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
 2026-10-06,iyms_deger,2,3185332,UEFA Uluslar Ligi,Estonya,İzlanda,2026-10-06T18:45:00Z,İY/MS,0/2,4.2,0.2175,0.914,0/0,0,600.94,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
 2026-10-06,iyms_deger,3,3185448,UEFA Uluslar Ligi,Moldova,Slovakya,2026-10-06T18:45:00Z,İY/MS,0/2,3.92,0.2314,0.907,2/2,0,600.94,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
-2026-10-06,gol,1,3185214,UEFA Uluslar Ligi,Arnavutluk,San Marino,2026-10-06T18:45:00Z,Toplam gol,2-3 gol,2.7,0.3296,0.89,,,13.29,20.0,bekliyor,,1,iddaa geçmişi + lig
-2026-10-06,gol,2,3185350,UEFA Uluslar Ligi,İngiltere,Çekya,2026-10-06T18:45:00Z,Toplam gol,2-3 gol,2.3,0.384,0.883,3 gol,1,13.29,20.0,bekliyor,,1,iddaa geçmişi + lig
-2026-10-06,gol,3,3185229,UEFA Uluslar Ligi,İsviçre,Kuzey Makedonya,2026-10-06T18:45:00Z,Toplam gol,2-3 gol,2.14,0.4121,0.882,3 gol,1,13.29,20.0,bekliyor,,1,iddaa geçmişi + lig
+2026-10-06,gol,1,3185214,UEFA Uluslar Ligi,Arnavutluk,San Marino,2026-10-06T18:45:00Z,Toplam gol,2-3 gol,2.7,0.3296,0.89,3 gol,1,13.29,20.0,kazandi,265.79,1,iddaa geçmişi + lig
+2026-10-06,gol,2,3185350,UEFA Uluslar Ligi,İngiltere,Çekya,2026-10-06T18:45:00Z,Toplam gol,2-3 gol,2.3,0.384,0.883,3 gol,1,13.29,20.0,kazandi,265.79,1,iddaa geçmişi + lig
+2026-10-06,gol,3,3185229,UEFA Uluslar Ligi,İsviçre,Kuzey Makedonya,2026-10-06T18:45:00Z,Toplam gol,2-3 gol,2.14,0.4121,0.882,3 gol,1,13.29,20.0,kazandi,265.79,1,iddaa geçmişi + lig
