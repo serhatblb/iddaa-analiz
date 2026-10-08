@@ -93,14 +93,14 @@ tarih,tur,sira,mac_id,lig,ev,dep,baslama_utc,market,secim,oran,tutma,beklenen,ge
 2026-10-07,gol,2,3266295,"Finlandiya Ykkonen, Düşme Turu",KuPS Akatemia,FC Inter 2,2026-10-07T16:00:00Z,Toplam gol,2-3 gol,2.69,0.3214,0.865,3 gol,1,10.43,20.0,kaybetti,0.0,3,iddaa geçmişi
 2026-10-07,gol,3,3204122,Japonya İmparatorluk Kupası,Sanfrecce Hiroshima,Iwaki FC,2026-10-07T09:30:00Z,Toplam gol,2-3 gol,2.04,0.4189,0.855,4 gol,0,10.43,20.0,kaybetti,0.0,2,iddaa geçmişi
 2026-10-08,iyms,1,3201917,"Finlandiya Veikkausliiga, Şampiyonluk Gr",HJK Helsinki,Vaasan Ps,2026-10-08T15:00:00Z,İY/MS,1/2,36.5,0.0107,0.392,1/1,0,48627.12,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
-2026-10-08,iyms,2,3201922,"Finlandiya Veikkausliiga, Şampiyonluk Gr",Kuopion,Oulu,2026-10-08T16:00:00Z,İY/MS,1/2,36.5,0.0107,0.392,,,48627.12,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
+2026-10-08,iyms,2,3201922,"Finlandiya Veikkausliiga, Şampiyonluk Gr",Kuopion,Oulu,2026-10-08T16:00:00Z,İY/MS,1/2,36.5,0.0107,0.392,2/2,0,48627.12,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
 2026-10-08,iyms,3,3194419,İrlanda Premier Lig,Shamrock R,Drogheda,2026-10-08T19:00:00Z,İY/MS,1/2,36.5,0.0094,0.342,,,48627.12,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
-2026-10-08,ms,1,3201922,"Finlandiya Veikkausliiga, Şampiyonluk Gr",Kuopion,Oulu,2026-10-08T16:00:00Z,MS,1,1.42,0.6501,0.923,,,5.27,20.0,bekliyor,,1,iddaa geçmişi + lig
-2026-10-08,ms,2,3201917,"Finlandiya Veikkausliiga, Şampiyonluk Gr",HJK Helsinki,Vaasan Ps,2026-10-08T15:00:00Z,MS,1,1.45,0.6361,0.922,1,1,5.27,20.0,bekliyor,,1,iddaa geçmişi + lig
-2026-10-08,ms,3,3291749,Fas Botola,Mas Maghrib A Fes,R Casablanca,2026-10-08T20:00:00Z,MS,0,2.56,0.3579,0.916,,,5.27,20.0,bekliyor,,3,iddaa geçmişi + lig
+2026-10-08,ms,1,3201922,"Finlandiya Veikkausliiga, Şampiyonluk Gr",Kuopion,Oulu,2026-10-08T16:00:00Z,MS,1,1.42,0.6501,0.923,2,0,5.27,20.0,kaybetti,0.0,1,iddaa geçmişi + lig
+2026-10-08,ms,2,3201917,"Finlandiya Veikkausliiga, Şampiyonluk Gr",HJK Helsinki,Vaasan Ps,2026-10-08T15:00:00Z,MS,1,1.45,0.6361,0.922,1,1,5.27,20.0,kaybetti,0.0,1,iddaa geçmişi + lig
+2026-10-08,ms,3,3291749,Fas Botola,Mas Maghrib A Fes,R Casablanca,2026-10-08T20:00:00Z,MS,0,2.56,0.3579,0.916,,,5.27,20.0,kaybetti,0.0,3,iddaa geçmişi + lig
 2026-10-08,iyms_deger,1,3194419,İrlanda Premier Lig,Shamrock R,Drogheda,2026-10-08T19:00:00Z,İY/MS,0/1,4.02,0.2246,0.903,,,73.78,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
 2026-10-08,iyms_deger,2,3201917,"Finlandiya Veikkausliiga, Şampiyonluk Gr",HJK Helsinki,Vaasan Ps,2026-10-08T15:00:00Z,İY/MS,0/1,4.37,0.206,0.9,1/1,0,73.78,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
-2026-10-08,iyms_deger,3,3201922,"Finlandiya Veikkausliiga, Şampiyonluk Gr",Kuopion,Oulu,2026-10-08T16:00:00Z,İY/MS,0/1,4.2,0.206,0.865,,,73.78,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
+2026-10-08,iyms_deger,3,3201922,"Finlandiya Veikkausliiga, Şampiyonluk Gr",Kuopion,Oulu,2026-10-08T16:00:00Z,İY/MS,0/1,4.2,0.206,0.865,2/2,0,73.78,20.0,kaybetti,0.0,1,iddaa geçmişi (benzer maçlar)
 2026-10-08,gol,1,3201917,"Finlandiya Veikkausliiga, Şampiyonluk Gr",HJK Helsinki,Vaasan Ps,2026-10-08T15:00:00Z,Toplam gol,2-3 gol,1.92,0.4549,0.873,6 gol,0,8.15,20.0,kaybetti,0.0,1,iddaa geçmişi + lig
-2026-10-08,gol,2,3201922,"Finlandiya Veikkausliiga, Şampiyonluk Gr",Kuopion,Oulu,2026-10-08T16:00:00Z,Toplam gol,2-3 gol,1.87,0.4656,0.871,,,8.15,20.0,kaybetti,0.0,1,iddaa geçmişi + lig
+2026-10-08,gol,2,3201922,"Finlandiya Veikkausliiga, Şampiyonluk Gr",Kuopion,Oulu,2026-10-08T16:00:00Z,Toplam gol,2-3 gol,1.87,0.4656,0.871,1 gol,0,8.15,20.0,kaybetti,0.0,1,iddaa geçmişi + lig
 2026-10-08,gol,3,3225605,Birleşik Arap Emirlikleri Pro Lig Kupası,Shabab AL Ahli Dubai Club,Dubai United,2026-10-08T13:10:00Z,Toplam gol,2-3 gol,2.27,0.379,0.86,3 gol,1,8.15,20.0,kaybetti,0.0,3,iddaa geçmişi
