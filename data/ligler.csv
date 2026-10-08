@@ -4,6 +4,7 @@ lig_id,ulke,ad,kisa_ad
 19,FI,Finlandiya Ykkonen,Ykkosliiga
 21,BR,Brezilya Seri B,Seri B
 24,GB,İngiltere 1. Lig,1. Lig
+37,MX,"Meksika Primera Ligi, Açılış",Primera Li
 43,GB,İngiltere Premier Lig,PremierLig
 45,DE,Almanya Bundesliga,Bundesliga
 49,CL,Şili Premier Lig,Premier Li
@@ -55,6 +56,7 @@ lig_id,ulke,ad,kisa_ad
 957,DE,Almanya Amatör Bölgesel Lig Kuzey,Bölgeselli
 958,INT,Kulüplerarası Hazırlık Maçları,Hazırlık
 970,US,ABD Championship,ABD Champi
+985,SG,Singapur Premier Lig,Primera Li
 987,CZ,Çekya Kupası,Çek Kupa
 994,DE,Almanya Amatör Bölgesel Lig Bavyera,Bölgeselli
 997,PL,Polonya 1. Lig,1. Lig
@@ -66,6 +68,7 @@ lig_id,ulke,ad,kisa_ad
 1207,AR,Arjantin Kupası,Kupa
 1208,AU,Avustralya A-Ligi Playofflar,A-Ligi
 1209,AT,"Avusturya Bundesliga, Şampiyonluk Turu",Bundesliga
+1215,BY,Belarus Premier Lig,Premier Li
 1220,BE,"Belçika Pro Lig, Şampiyona Turu",Pro Lig
 1234,CL,Şili Primera B,Primera B
 1238,CN,Çin 1. Lig,1. Lig
@@ -73,6 +76,7 @@ lig_id,ulke,ad,kisa_ad
 1257,HR,Hırvatistan Kupası,Kupa
 1258,CZ,"Çekya 1. Lig, Şampiyonluk Turu",1. Lig
 1262,DK,"Danimarka Süper Lig, Şampiyonluk Turu",Süper Lig
+1273,EG,Mısır Premier Lig,Premier Li
 1281,GB,"İngiltere Futbol Ligi Kupası, Kuzey Grub",Futbol Lig
 1282,GB,"İngiltere Futbol Ligi Kupası, Kuzey Grub",Futbol Lig
 1283,GB,"İngiltere Futbol Ligi Kupası, Kuzey Grub",Futbol Lig
@@ -128,6 +132,7 @@ lig_id,ulke,ad,kisa_ad
 1940,SK,"Slovakya Superliga, Şampiyonluk Turu",Superliga
 1951,ES,İspanya La Liga 2,La Liga 2
 1961,ES,İspanya Federasyon Kupası,Federasyon
+1978,TN,Tunus 1. Lig,1. Lig
 1980,TR,Türkiye 1. Lig,1. Lig
 1995,UA,Ukrayna Premier Lig,Premier Li
 2004,AE,Birleşik Arap Emirlikleri Pro Lig Kupası,ProLig Kup
@@ -144,6 +149,7 @@ lig_id,ulke,ad,kisa_ad
 2672,NO,"Norveç 3. Lig, 3. Grup",3. Lig
 2673,NO,"Norveç 3. Lig, 2. Grup",3. Lig
 2674,BE,"Belçika 2. Lig, İlk Etap",2.Lig 1.Et
+2702,HU,Macaristan NB II,NB II
 2864,INT,"CONCACAF Uluslar A Ligi, Grp B",CONC. Ulus
 2901,PY,Paraguay Intermedia Ligi,Intermedia
 2902,INT,"CONCACAF Uluslar A Ligi, Grp A",CONC. Ulus
@@ -155,15 +161,19 @@ lig_id,ulke,ad,kisa_ad
 3528,INT,"CONCACAF Uluslar B Ligi, Grp A",CONC. Ulus
 3530,INT,"CONCACAF Uluslar C Ligi, Grp B",CONC. Ulus
 5441,GR,"Yunanistan Süper Lig, Şampiyonluk Grubu","SüperLig,Ş"
+5576,SA,Suudi Arabistan 1. Lig,1. Lig
 5582,UZ,Özbekistan PFL,Özbekistan
 5591,JM,Jamaika Premier Lig,PremierLig
 5593,NG,Nijerya Profesyonel Futbol Ligi,PremierLig
+5610,BH,Bahreyn Premier Lig,PremierLig
 16061,EE,Estonya Kupası,EstonKupa
+16184,IR,İran Pro Ligi,Pro Ligi
 16326,GE,Gürcistan Erovnuli Ligi,GürcüUlusa
 16328,JP,Japonya J.Lig 3,J.Lig 3
 16330,JO,Ürdün Pro Ligi,Ürdün ProL
 16331,KR,Güney Kore K-Lig 3,K-Lig 3
 16338,US,ABD USL 1.Lig,USL 1.Lig
+16340,VN,Vietnam V-Ligi,V-Ligi
 16461,SK,Slovakya 2. Lig,2. Lig
 16504,NI,Nikaragua Primera Ligi Açılış,Primera Li
 16562,CZ,Çekya 3. Lig,3. Lig
@@ -178,7 +188,9 @@ lig_id,ulke,ad,kisa_ad
 17606,CZ,Çekya Çek Cumhuriyeti U19 1. Ligi,U19 1.Lig
 17609,CZ,Çekya Çek Lig D,Lig D
 17610,CZ,Çekya Çek Lig B,Lig B
+17664,KW,Kuveyt Premier League,Kuveyt PL
 18284,NL,"Hollanda Eredivisie, Women",Eredivisie
+19114,TZ,Tanzanya Premier Lig,PremierLig
 19843,SCO,"İskoçya Premiership, Şampiyona Turu",Premiershi
 20147,SCO,İskoçya 2. Lig Şampiyonluk Turu,2. Lig Şam
 20182,SCO,"İskoçya 1. Lig, Şampiyonluk Turu","1. Lig, Şa"
@@ -255,6 +267,7 @@ lig_id,ulke,ad,kisa_ad
 34097,ES,İspanya Division de Honor Juvenil - Gr,Gençler Kl
 34443,ES,İspanya Division de Honor Juvenil - Gr,Gençler Kl
 34447,CZ,Çekya Çek Lig C,Lig C
+34590,MZ,Mozambique Moçambola,Moçambola
 35104,CZ,Çekya Divize F,Lig F
 35401,ES,"İspanya Cup, Women",İspanya Ku
 37159,EG,Mısır 2nd Division,2. Lig
@@ -280,6 +293,7 @@ lig_id,ulke,ad,kisa_ad
 46868,ENG,"İngiltere Ulusal Lig Kupası, Grup C",Ulusal Li
 46869,ENG,"İngiltere Ulusal Lig Kupası , Grup B",Ulusal Li
 48386,CL,Şili Kupası,Kupa
+48663,EC,Ekvador Ecuador Serie A,Ekvador Pr
 49038,AR,"Arjantin Primera LPF, Kapanış",Primera LP
 49356,RO,Romanya Romania Liga 1,1. Lig
 49452,CZ,Czech Republic Second Division,2. Lig
@@ -314,15 +328,18 @@ lig_id,ulke,ad,kisa_ad
 54573,CL,Chile Şili Kupası,Şili Kupas
 54684,INT,UEFA Şamp. Ligi Kadınlar,UEFA ŞL Ka
 54774,ENG,"England İngiltere Lig Kupası, Kadınlar",Lig Kupası
+54971,EC,"Ekvador Pro Lig, Düşme Turu",Pro Lig
 55005,CI,Ivory Coast Cote d'Ivoire Ligue 1,Fildişi 1
 55613,DZ,Algeria Ligue Professionnelle,2. Lig
+55629,INT,International Friendlies Women,U19 Hazırl
+55637,CA,Canada Premier League,Premier Li
 56014,CZ,Czech Republic Cup,Çek Kupa
 57705,CH,Switzerland Super League,Süper Lig
 58023,DE,Germany 3.Liga,3.Lig
 58615,GR,Greece Super League,Süper Lig
-58674,EG,"Mısır League Cup, Group B",MısırLigK
-58676,EG,"Mısır League Cup, Group A",MısırLigK
-58677,EG,"Mısır League Cup, Group C",MısırLigK
+58674,EG,Mısır Lig Kupası Grup B,MısırLigK
+58676,EG,Mısır Lig Kupası Grup A,MısırLigK
+58677,EG,Mısır Lig Kupası Grup C,MısırLigK
 69898,SE,İsveç 2.Lig Kuzey Svealand,2.Lig
 71425,SE,İsveç 2.Lig Kuzey Gotaland,2.Lig
 71426,SE,İsveç 2. Lig Güney Götaland,2. Lig
@@ -351,7 +368,7 @@ lig_id,ulke,ad,kisa_ad
 82472,ZM,"Zambiya Süper Lig, Grup A",Süper Lig
 82473,ZM,"Zambiya Süper Lig, Grup B",Süper Lig
 82486,INT,FIFA ASEAN Kupası 1. Lig Final,FIFA ASEAN
-82653,EG,"Mısır League Cup, Group D",Lig Kupası
+82653,EG,Mısır Lig Kupası Grup D,Lig Kupası
 82749,UY,Uruguay Kupası Eleme,Kupa
 90600,IT,İtalya Serie C,
 90700,ES,İspanya Primera RFEF,
