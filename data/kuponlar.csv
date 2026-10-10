@@ -116,3 +116,15 @@ tarih,tur,sira,mac_id,lig,ev,dep,baslama_utc,market,secim,oran,tutma,beklenen,ge
 2026-10-09,gol,1,3195065,Hollanda Eredivisie,PSV,Heerenveen,2026-10-09T18:00:00Z,Toplam gol,2-3 gol,2.94,0.3065,0.901,2 gol,1,11.94,20.0,kaybetti,0.0,1,iddaa geçmişi + lig
 2026-10-09,gol,2,3193809,İngiltere Championship,West Ham,Queens Park Rangers,2026-10-09T19:00:00Z,Toplam gol,2-3 gol,2.01,0.4429,0.89,2 gol,1,11.94,20.0,kaybetti,0.0,1,iddaa geçmişi + lig
 2026-10-09,gol,3,3194947,İsveç Allsvenskan,IFK Göteborg,Vasteraas,2026-10-09T17:00:00Z,Toplam gol,2-3 gol,2.02,0.4401,0.889,1 gol,0,11.94,20.0,kaybetti,0.0,1,iddaa geçmişi + lig
+2026-10-10,iyms,1,3195067,Rusya Premier Lig,Krasnodar,Zenit,2026-10-10T16:30:00Z,İY/MS,1/2,30.5,0.0294,0.898,,,27907.5,20.0,bekliyor,,1,iddaa geçmişi (benzer maçlar)
+2026-10-10,iyms,2,3195138,Danimarka 1.Lig,Hobro,Kolding,2026-10-10T16:30:00Z,İY/MS,1/2,30.0,0.0294,0.883,,,27907.5,20.0,bekliyor,,2,iddaa geçmişi (benzer maçlar)
+2026-10-10,iyms,3,3196433,Belçika Pro Lig,Zulte Waregem,KAA Gent,2026-10-10T18:45:00Z,İY/MS,1/2,30.5,0.0294,0.898,,,27907.5,20.0,bekliyor,,1,iddaa geçmişi (benzer maçlar)
+2026-10-10,ms,1,3199675,"Arjantin Primera LPF, Kapanış",Barracas,CA Huracan,2026-10-10T18:45:00Z,MS,0,2.56,0.3673,0.94,,,23.12,20.0,bekliyor,,2,iddaa geçmişi + lig
+2026-10-10,ms,2,3196084,İtalya Serie B,SS Arezzo,Cremonese,2026-10-10T17:30:00Z,MS,0,3.0,0.3119,0.936,,,23.12,20.0,bekliyor,,1,iddaa geçmişi + lig
+2026-10-10,ms,3,3195780,İtalya Serie B,Virtus Entella,Juve Stabia,2026-10-10T13:00:00Z,MS,0,3.01,0.3106,0.935,,,23.12,20.0,bekliyor,,1,iddaa geçmişi + lig
+2026-10-10,iyms_deger,1,3194679,Çin Süper Lig,Shanghai Shenhua,Yunnan Yukun,2026-10-10T11:35:00Z,İY/MS,0/0,9.28,0.1113,1.033,,,1104.25,20.0,bekliyor,,1,iddaa geçmişi (benzer maçlar)
+2026-10-10,iyms_deger,2,3198607,Türkiye Süper Lig,Rizespor,Fenerbahçe,2026-10-10T16:00:00Z,İY/MS,1/2,22.2,0.0456,1.012,,,1104.25,20.0,bekliyor,,1,iddaa geçmişi (benzer maçlar)
+2026-10-10,iyms_deger,3,3196101,Fransa Ligue 2,Nantes,Reims,2026-10-10T12:00:00Z,İY/MS,0/1,5.36,0.1844,0.988,,,1104.25,20.0,bekliyor,,1,iddaa geçmişi (benzer maçlar)
+2026-10-10,gol,1,3199359,Norveç Eliteserien,Bodo Glimt,Kristiansund,2026-10-10T14:00:00Z,Toplam gol,2-3 gol,3.25,0.2777,0.902,,,19.67,20.0,bekliyor,,1,iddaa geçmişi + lig
+2026-10-10,gol,2,3199498,İspanya La Liga,Barcelona,Getafe,2026-10-10T16:30:00Z,Toplam gol,2-3 gol,2.45,0.3681,0.902,,,19.67,20.0,bekliyor,,1,iddaa geçmişi + lig
+2026-10-10,gol,3,3199705,İspanya La Liga,Real Madrid,Villarreal,2026-10-10T19:00:00Z,Toplam gol,2-3 gol,2.47,0.365,0.902,,,19.67,20.0,bekliyor,,1,iddaa geçmişi + lig
