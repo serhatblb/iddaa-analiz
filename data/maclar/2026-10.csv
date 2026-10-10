@@ -2394,7 +2394,7 @@ mac_id,lig_id,lig,ulke,ev,dep,baslama_utc,ilk_gorulme_utc,acilis,kapanis,iyms_va
 3198891,90600,İtalya Serie C,IT,Novara Calcio,Cittadella,2026-10-10T15:30:00Z,2026-10-08T07:36:43Z,1,0,0,2026-10-10T11:22:16Z,3,1,4535141,İtalya|İTC
 3199163,90600,İtalya Serie C,IT,AS Ostia Mare Lido Calcio,US Pianese,2026-10-10T15:30:00Z,2026-10-08T07:36:43Z,1,0,0,2026-10-10T11:22:16Z,3,1,4535518,İtalya|İTC
 3199492,33593,"İspanya Amatör Tercera Federacion, Group 4",ES,Real Sociedad C,Amurrio Club,2026-10-10T15:30:00Z,2026-10-09T16:30:44Z,1,0,0,2026-10-10T11:22:16Z,3,1,,
-3305849,17982,,,Dhofar Scsc,Samail SC,2026-10-10T15:30:00Z,2026-10-10T12:25:47Z,1,0,0,2026-10-10T12:25:47Z,3,1,,
+3305849,17982,,,Dhofar Scsc,Samail SC,2026-10-10T15:30:00Z,2026-10-10T12:25:47Z,1,0,0,2026-10-10T12:25:47Z,3,1,4573339,Umman|UMM
 3107042,22392,"Fransa Championnat National U19, Grou",FR,US Orleans U19,PSG U19,2026-10-10T16:00:00Z,2026-10-09T09:09:02Z,1,0,0,2026-10-10T12:25:47Z,3,1,4561719,Fransa|FRU19
 3193693,1984,,,Muş Spor Kulübü,Kastamonuspor,2026-10-10T16:00:00Z,2026-10-10T12:25:47Z,1,0,0,2026-10-10T12:25:47Z,3,1,4499967,Türkiye|T2L-B
 3193739,16326,Gürcistan Erovnuli Ligi,GE,FC Spaeri,Torpedo,2026-10-10T16:00:00Z,2026-10-08T08:36:36Z,1,0,0,2026-10-10T12:25:47Z,3,1,4435447,Gürcistan|GUR
@@ -3104,7 +3104,7 @@ mac_id,lig_id,lig,ulke,ev,dep,baslama_utc,ilk_gorulme_utc,acilis,kapanis,iyms_va
 3198875,21641,"El Salvador Primera Division, Açılış",SV,Alianza FC,Fundacion Formado Un Atleta,2026-10-11T23:30:00Z,2026-10-08T08:36:36Z,1,0,0,2026-10-10T12:25:47Z,3,1,4504391,El Salvador|ELSAL
 3290684,20546,Bolivya Profesyonel Lig,BO,Club Bolivar,Blooming,2026-10-11T23:30:00Z,2026-10-08T08:36:36Z,1,0,0,2026-10-10T12:25:47Z,3,1,4540576,Bolivya|BOLİ
 3199488,49038,"Arjantin Primera LPF, Kapanış",AR,Talleres,Independiente,2026-10-12T00:30:00Z,2026-10-08T07:36:43Z,1,0,1,2026-10-10T12:25:47Z,2,1,4475879,Arjantin|ARJ
-3201936,37,"Meksika Primera Ligi, Açılış",MX,Pumas Unam,Cruz Azul,2026-10-12T01:00:00Z,2026-10-08T08:36:36Z,1,0,0,2026-10-08T08:36:36Z,2,1,,
+3201936,37,"Meksika Primera Ligi, Açılış",MX,Pumas Unam,Cruz Azul,2026-10-12T01:00:00Z,2026-10-08T08:36:36Z,1,0,0,2026-10-08T08:36:36Z,2,1,4476449,Meksika|MEK
 3189321,16961,"Guatemala Ulusal Lig, Açılış",GT,Antigua GFC,CSD Imperial,2026-10-12T01:10:00Z,2026-10-10T12:25:47Z,1,0,0,2026-10-10T12:25:47Z,3,1,,
 3201977,77379,"Kolombiya Liga DIMAYOR, Finalizacion",CO,America De Cali,Indep.Medell,2026-10-12T01:15:00Z,2026-10-08T08:36:36Z,1,0,0,2026-10-08T08:36:36Z,3,1,,
 3194447,1995,Ukrayna Premier Lig,UA,FC Levy Bereg Kiev,Zory Luhansk,2026-10-12T10:00:00Z,2026-10-08T08:36:36Z,1,0,0,2026-10-08T08:36:36Z,3,1,,
